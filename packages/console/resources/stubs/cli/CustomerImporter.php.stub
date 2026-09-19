@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+final class CustomerImporter
+{
+    public function run(): int
+    {
+        // Replace with real work. Services are injected through constructors like any other.
+        return 3;
+    }
+}

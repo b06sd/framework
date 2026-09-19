@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use Psr\Container\ContainerInterface;
+use Trunk\Container\ContainerBuilder;
+use Trunk\Contracts\Module;
+use Trunk\Router\Definition\RouteCollector;
+use Trunk\Router\Definition\RouteProvider;
+
+/**
+ * Your application's module: register services here, and load the route files.
+ *
+ * Controllers do not need registering. Trunk wires any class they depend on from constructor
+ * types; bind interfaces to implementations with $builder->bind(...).
+ */
+final class AppModule implements Module, RouteProvider
+{
+    public function register(ContainerBuilder $builder): void
+    {
+        // $builder->bind(SomeInterface::class, SomeImplementation::class);
+        // $builder->scoped(RequestScopedService::class);
+    }
+
+    public function boot(ContainerInterface $container): void {}
+
+    public function routes(RouteCollector $routes): void
+    {
+%%routes%%
+    }
+}

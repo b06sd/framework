@@ -1,0 +1,46 @@
+{
+    "name": "trunk/cache",
+    "description": "PSR-16 cache for Trunk with array, file and null stores. Data only: values are stored as JSON, never unserialized.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "psr/simple-cache": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Cache\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "cache",
+                "name": "Cache",
+                "description": "PSR-16 cache (array, file, null stores)",
+                "modules": [
+                    "Trunk\\Cache\\CacheModule"
+                ],
+                "config": {
+                    "cache": "resources/config/cache.php"
+                },
+                "env": {
+                    "CACHE_DRIVER": "file"
+                },
+                "integrations": {
+                    "console": [
+                        "Trunk\\Cache\\Console\\CacheConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "suggest": {
+        "trunk/console": "Enables the cache:clear command when the console capability is enabled"
+    }
+}

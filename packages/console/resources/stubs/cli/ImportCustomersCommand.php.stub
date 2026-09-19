@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Commands;
+
+use App\Services\CustomerImporter;
+use Trunk\Contracts\Console\Command;
+use Trunk\Contracts\Console\CommandDefinition;
+use Trunk\Contracts\Console\CommandInput;
+use Trunk\Contracts\Console\CommandOutput;
+
+final readonly class ImportCustomersCommand implements Command
+{
+    public function __construct(private CustomerImporter $importer) {}
+
+    public function definition(): CommandDefinition
+    {
+        return new CommandDefinition('customers:import', 'Import customers (example command)');
+    }
+
+    public function handle(CommandInput $input, CommandOutput $output): int
+    {
+        $count = $this->importer->run();
+        $output->success(\sprintf('Imported %d customers.', $count));
+
+        return 0;
+    }
+}

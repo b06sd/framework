@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\DTOs\Customer;
+
+/**
+ * Replace the in-memory list with a repository once you add a database capability.
+ */
+final class CustomerService
+{
+    /**
+     * @return list<Customer>
+     */
+    public function all(): array
+    {
+        return [new Customer(1, 'Ada Lovelace', 'ada@example.com'), new Customer(2, 'Grace Hopper', 'grace@example.com')];
+    }
+
+    public function find(int $id): ?Customer
+    {
+        foreach ($this->all() as $customer) {
+            if ($customer->id === $id) {
+                return $customer;
+            }
+        }
+
+        return null;
+    }
+}

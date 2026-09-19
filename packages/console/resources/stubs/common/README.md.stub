@@ -1,0 +1,42 @@
+# %%title%%
+
+A Trunk **%%type%%** application.
+
+## Getting started
+
+```bash
+composer install
+%%start%%
+```
+
+Application settings (`APP_ENV`, `APP_DEBUG`, `APP_PORT`, secrets...) live in `.env` (created for you, git-ignored;
+`.env.example` is the committed template). Real environment variables override `.env`.
+
+## Everyday commands
+
+```bash
+trunk list              # everything available
+trunk doctor            # check the project is healthy
+trunk make:service Name # generate code (controller, service, middleware, command, module, test)
+trunk test              # run the tests
+trunk build             # compile for production (then run with APP_ENV=production)
+```
+
+## What this application is made of
+
+`trunk.php` lists the modules (capabilities) this application uses:
+
+%%modules_md%%
+
+Add or remove a module there and run `trunk doctor`. Nothing you do not list is loaded or compiled.
+
+## Layout
+
+```text
+app/         your code (namespace App\)
+config/      configuration (arrays, or closures receiving the Runtime)
+%%layout%%storage/     caches and logs (not committed)
+tests/       PHPUnit tests
+trunk.php    the module list
+```
+%%extra%%

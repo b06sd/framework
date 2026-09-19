@@ -1,0 +1,37 @@
+{
+    "name": "trunk/tusk",
+    "description": "Tusk: Trunk's native, compiled and auto-escaping template engine (.tusk.php).",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Tusk\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "tusk",
+                "name": "Tusk",
+                "description": "Tusk templates (*.tusk.php)",
+                "modules": [
+                    "Trunk\\Tusk\\TuskModule"
+                ],
+                "config": {
+                    "views": "resources/config/views.php"
+                },
+                "directories": [
+                    "resources/views"
+                ]
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

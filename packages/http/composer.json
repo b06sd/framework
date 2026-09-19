@@ -1,0 +1,31 @@
+{
+    "name": "trunk/http",
+    "description": "Strict, immutable PSR-7 / PSR-17 HTTP messages, server request creation and response emission for Trunk.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "psr/log": "^3.0",
+        "trunk/router": "^0.1"
+    },
+    "provide": {
+        "psr/http-message-implementation": "2.0",
+        "psr/http-factory-implementation": "1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Http\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

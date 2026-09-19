@@ -1,0 +1,53 @@
+{
+    "name": "trunk/database",
+    "description": "TrunkDB database layer: PDO connections, a parameter-bound immutable query builder, schema builder and migrations for SQLite, MySQL and PostgreSQL.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-pdo": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Database\\": "src/"
+        }
+    },
+    "suggest": {
+        "trunk/console": "Enables migrate, migrate:rollback, migrate:status, migrate:fresh and make:migration",
+        "ext-pdo_sqlite": "SQLite connections",
+        "ext-pdo_mysql": "MySQL connections",
+        "ext-pdo_pgsql": "PostgreSQL connections"
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "database",
+                "name": "Database",
+                "description": "TrunkDB database layer: connections, query builder, schema and migrations",
+                "modules": [
+                    "Trunk\\Database\\DatabaseModule"
+                ],
+                "config": {
+                    "database": "resources/config/database.php"
+                },
+                "env": {
+                    "DB_CONNECTION": "sqlite",
+                    "DB_DATABASE": "storage/database.sqlite"
+                },
+                "directories": [
+                    "database/migrations"
+                ],
+                "integrations": {
+                    "console": [
+                        "Trunk\\Database\\Console\\DatabaseConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

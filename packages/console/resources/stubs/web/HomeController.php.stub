@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use Psr\Http\Message\ResponseInterface;
+use Trunk\Mvc\Responder;
+
+final readonly class HomeController
+{
+    public function __construct(private Responder $responder) {}
+
+    public function index(): ResponseInterface
+    {
+        return $this->responder->view('home', ['title' => '%%title%%']);
+    }
+}

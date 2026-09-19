@@ -1,0 +1,22 @@
+{
+    "name": "trunk/console",
+    "description": "The trunk command line: project scaffolding, build, serve, doctor and code generators.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunk/router": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Console\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

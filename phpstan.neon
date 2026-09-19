@@ -1,0 +1,20 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - packages/http/src
+        - packages/router/src
+        - packages/tusk/src
+        - packages/mvc/src
+        - packages/console/src
+        - packages/cache/src
+        - packages/database/src
+        - packages/orm/src
+        - packages/queue/src
+        - packages/observability/src
+        - packages/auth/src
+        - tests
+    tmpDir: .phpstan.cache
+    treatPhpDocTypesAsCertain: true
+    excludePaths:
+        - tests/Fixtures/views

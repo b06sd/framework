@@ -1,0 +1,25 @@
+/vendor/
+/.phpunit.cache/
+/.phpstan.cache/
+/.php-cs-fixer.cache
+/coverage/
+/build/
+/storage/
+
+.env
+.env.*
+!.env.example
+
+.phpunit.result.cache
+
+.idea/
+.vscode/
+.DS_Store
+tests/Browser/node_modules/
+
+# Local tooling and machine-specific files
+*.swp
+*.log
+Thumbs.db
+/composer.phar
+.claude/

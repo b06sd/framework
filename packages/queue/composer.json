@@ -1,0 +1,55 @@
+{
+    "name": "trunk/queue",
+    "description": "TrunkQueue: typed jobs with compiled codecs, a database queue driver, and a safe long-running worker.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunk/database": "^0.1",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Queue\\": "src/"
+        }
+    },
+    "suggest": {
+        "trunk/console": "Enables queue:work, queue:table, queue:failed, queue:retry, queue:flush and make:job",
+        "ext-pcntl": "Per-job timeouts and graceful shutdown for queue:work"
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "queue",
+                "name": "Queue",
+                "description": "TrunkQueue: typed jobs, a database queue and a worker",
+                "modules": [
+                    "Trunk\\Queue\\QueueModule"
+                ],
+                "requires": [
+                    "database",
+                    "logging"
+                ],
+                "config": {
+                    "queue": "resources/config/queue.php"
+                },
+                "env": {
+                    "QUEUE_CONNECTION": "sqlite"
+                },
+                "directories": [
+                    "app/Jobs"
+                ],
+                "integrations": {
+                    "console": [
+                        "Trunk\\Queue\\Console\\QueueConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

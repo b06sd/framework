@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: trunk_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: trunk_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      # The live database suites run only when these are set (see tests/Support/DatabaseHarness.php).
+      TRUNK_TEST_MYSQL_HOST: 127.0.0.1
+      TRUNK_TEST_MYSQL_DATABASE: trunk_test
+      TRUNK_TEST_MYSQL_USER: root
+      TRUNK_TEST_PGSQL_HOST: 127.0.0.1
+      TRUNK_TEST_PGSQL_DATABASE: trunk_test
+      TRUNK_TEST_PGSQL_USER: postgres
+      TRUNK_TEST_PGSQL_PASSWORD: ci-only-password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, pdo_pgsql, pdo_sqlite, pcntl
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Validate composer.json (root and every package)
+        run: |
+          composer validate --strict
+          for f in packages/*/composer.json; do
+            (cd "$(dirname "$f")" && composer validate --strict)
+          done
+
+      - name: Security audit
+        run: composer audit
+
+      - name: Code style
+        run: composer format:check
+
+      - name: Static analysis
+        run: composer analyse
+
+      - name: Tests
+        run: composer test
+
+  lowest:
+    name: Lowest supported dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+      - run: composer update --prefer-lowest --prefer-stable --no-interaction --no-progress
+      - run: composer test
+
+  install:
+    name: Real install (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite
+          tools: composer:v2
+          coverage: none
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      # Scaffolds every project type, runs a real `composer install` (no dev dependencies, no borrowed
+      # autoloader), then doctor, build and a request through the project's own entry points.
+      - name: Fresh projects install, build and run
+        run: composer test:install
+
+  browser:
+    name: Real browser (PHP 8.5, Chrome)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_sqlite
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      # Drives the Google Chrome that GitHub's Ubuntu runners already have (playwright-core downloads no
+      # browser): sign-in, CSRF, cross-site forms, framing, fixation, timeouts, lockout and tokens.
+      - name: Browser tests
+        run: composer test:browser

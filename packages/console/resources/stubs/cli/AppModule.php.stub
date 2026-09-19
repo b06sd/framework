@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use App\Commands\ImportCustomersCommand;
+use Psr\Container\ContainerInterface;
+use Trunk\Contracts\Console\CommandCollector;
+use Trunk\Contracts\Console\CommandProvider;
+use Trunk\Container\ContainerBuilder;
+use Trunk\Contracts\Module;
+
+/**
+ * Your application's module: register services here and list your console commands.
+ */
+final class AppModule implements Module, CommandProvider
+{
+    public function register(ContainerBuilder $builder): void
+    {
+        // $builder->bind(SomeInterface::class, SomeImplementation::class);
+    }
+
+    public function boot(ContainerInterface $container): void {}
+
+    public function commands(CommandCollector $commands): void
+    {
+        $commands->add(ImportCustomersCommand::class);
+    }
+}

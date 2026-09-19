@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// 1. Trunk's own autoloader (whether installed as a dependency or run from a checkout).
+foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php', getcwd() . '/vendor/autoload.php'] as $autoload) {
+    if (is_file($autoload)) {
+        require_once $autoload;
+
+        break;
+    }
+}
+
+if (!class_exists(Trunk\Console\ConsoleKernelFactory::class)) {
+    fwrite(STDERR, "Trunk is not installed. Run `composer install` first.\n");
+    exit(1);
+}
+
+// 2. The project's autoloader, so its own classes (App\...) can be found.
+$root = (new Trunk\Foundation\Project\ProjectLoader())->locate((string) getcwd());
+
+if ($root !== null && is_file($root . '/vendor/autoload.php')) {
+    require_once $root . '/vendor/autoload.php';
+}
+
+// 3. PHP-level failures: warnings are reported on stderr, an uncaught exception or fatal error leaves
+//    an emergency log line and a generic message instead of a raw PHP error dump.
+(new Trunk\Error\ErrorHandlers(new Trunk\Error\EmergencyLog(($root ?? (string) getcwd()) . '/storage/logs/emergency.log'), false, 'cli'))->register();
+
+$argv = $_SERVER['argv'] ?? [];
+
+exit((new Trunk\Console\ConsoleKernelFactory())
+    ->create((string) getcwd(), Trunk\Console\Output\Output::forTerminal(), getenv())
+    ->handle(is_array($argv) ? array_values(array_filter($argv, 'is_string')) : []));

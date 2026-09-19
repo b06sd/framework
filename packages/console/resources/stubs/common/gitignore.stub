@@ -1,0 +1,11 @@
+/vendor/
+/build/
+/storage/*
+!/storage/.gitkeep
+.env
+.env.*
+!.env.example
+.phpunit.cache/
+.idea/
+.vscode/
+.DS_Store

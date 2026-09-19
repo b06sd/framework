@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests;
+
+use App\AppModule;
+use PHPUnit\Framework\TestCase;
+use Trunk\Contracts\Module;
+
+final class AppModuleTest extends TestCase
+{
+    public function test_the_application_module_is_a_trunk_module(): void
+    {
+        // Arrange
+
+        // Act
+        $module = new AppModule();
+
+        // Assert
+        self::assertInstanceOf(Module::class, $module);
+    }
+}

@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+namespace %%namespace%%\Services;
+
+final class %%class%%
+{
+    // Dependencies go in the constructor; Trunk wires them from their types.
+}

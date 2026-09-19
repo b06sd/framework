@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Jobs;
+
+use Psr\Log\LoggerInterface;
+use Trunk\Queue\Job\Job;
+use Trunk\Queue\Job\JobOptions;
+
+/**
+ * A queued job. The constructor is the payload: pass ids, not entities. handle() receives its
+ * services from the container, in a fresh scope for every job.
+ */
+final readonly class SendWelcome implements Job
+{
+    public function __construct(public int $userId) {}
+
+    public function handle(LoggerInterface $logger): void
+    {
+        $logger->info('Welcome sent to user {userId}', ['userId' => $this->userId]);
+    }
+
+    public static function options(): JobOptions
+    {
+        return new JobOptions(tries: 3, backoff: [10, 60, 300], timeout: 60, queue: 'default');
+    }
+}

@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+use Trunk\Foundation\Runtime;
+
+// Read settings with $runtime->variable('NAME', 'default'): they come from the environment and .env.
+return static fn(Runtime $runtime): array => [
+    'name' => $runtime->variable('APP_NAME', '%%title%%'),
+];

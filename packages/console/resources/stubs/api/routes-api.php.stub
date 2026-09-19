@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Controllers\CustomerController;
+use Trunk\Router\Definition\RouteCollector;
+
+return static function (RouteCollector $routes): void {
+    $routes->group('/api', static function (RouteCollector $api): void {
+        $api->get('/customers', [CustomerController::class, 'index'], 'customers.index');
+        $api->get('/customers/{id:int}', [CustomerController::class, 'show'], 'customers.show');
+    });
+};

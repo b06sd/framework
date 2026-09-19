@@ -1,0 +1,12 @@
+{
+    "name": "trunk-browser-tests",
+    "private": true,
+    "type": "module",
+    "description": "Real-browser tests for Trunk's auth stack: PHP's built-in server plus Chrome driven by playwright-core.",
+    "scripts": {
+        "test": "node --test --test-concurrency=1 browser.test.mjs"
+    },
+    "devDependencies": {
+        "playwright-core": "^1.63.0"
+    }
+}

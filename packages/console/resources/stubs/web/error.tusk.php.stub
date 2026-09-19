@@ -1,0 +1,7 @@
+<layout name="app">
+    <fill slot="title">{{ status }} {{ message }}</fill>
+
+    <h1>{{ status }} {{ message }}</h1>
+    <p>Something went wrong. If you contact support, quote the request ID below.</p>
+    <if test="requestId"><p><small>Request ID: {{ requestId }}</small></p></if>
+</layout>

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace %%namespace%%\Commands;
+
+use Trunk\Contracts\Console\Command;
+use Trunk\Contracts\Console\CommandDefinition;
+use Trunk\Contracts\Console\CommandInput;
+use Trunk\Contracts\Console\CommandOutput;
+
+final class %%class%% implements Command
+{
+    public function definition(): CommandDefinition
+    {
+        return new CommandDefinition('%%commandName%%', 'Describe what this command does');
+    }
+
+    public function handle(CommandInput $input, CommandOutput $output): int
+    {
+        $output->success('%%class%% ran.');
+
+        return 0;
+    }
+}

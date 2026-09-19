@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace %%namespace%%\Controllers;
+
+use Psr\Http\Message\ResponseInterface;
+use Trunk\Http\Response\ResponseBuilder;
+
+final readonly class %%class%%
+{
+    public function __construct(private ResponseBuilder $responses) {}
+
+    public function index(): ResponseInterface
+    {
+        return $this->responses->json(['message' => '%%class%% works']);
+    }
+}

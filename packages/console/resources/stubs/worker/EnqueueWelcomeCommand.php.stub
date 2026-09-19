@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Commands;
+
+use App\Jobs\SendWelcome;
+use Trunk\Contracts\Console\Command;
+use Trunk\Contracts\Console\CommandDefinition;
+use Trunk\Contracts\Console\CommandInput;
+use Trunk\Contracts\Console\CommandOutput;
+use Trunk\Queue\Queue;
+
+final readonly class EnqueueWelcomeCommand implements Command
+{
+    public function __construct(private Queue $queue) {}
+
+    public function definition(): CommandDefinition
+    {
+        return new CommandDefinition('welcome:enqueue', 'Queue two welcome jobs (example command)');
+    }
+
+    public function handle(CommandInput $input, CommandOutput $output): int
+    {
+        $stored = $this->queue->dispatchMany([new SendWelcome(1), new SendWelcome(2)]);
+        $output->success($stored . ' job(s) queued. Run "trunk queue:work --stop-when-empty" to process them.');
+
+        return 0;
+    }
+}

@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace %%namespace%%\%%name%%;
+
+use Psr\Container\ContainerInterface;
+use Trunk\Container\ContainerBuilder;
+use Trunk\Contracts\Module;
+
+final class %%name%%Module implements Module
+{
+    public function register(ContainerBuilder $builder): void
+    {
+        // Register this module's services.
+    }
+
+    public function boot(ContainerInterface $container): void {}
+}

@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Services\CustomerService;
+use Psr\Http\Message\ResponseInterface;
+use Trunk\Http\Exception\HttpException;
+use Trunk\Http\Response\ResponseBuilder;
+
+final readonly class CustomerController
+{
+    public function __construct(
+        private CustomerService $customers,
+        private ResponseBuilder $responses,
+    ) {}
+
+    public function index(): ResponseInterface
+    {
+        return $this->responses->json($this->customers->all());
+    }
+
+    public function show(int $id): ResponseInterface
+    {
+        $customer = $this->customers->find($id) ?? throw HttpException::notFound();
+
+        return $this->responses->json($customer);
+    }
+}

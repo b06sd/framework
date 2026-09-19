@@ -1,0 +1,25 @@
+{
+    "name": "trunk/mvc",
+    "description": "Controller helpers for Trunk: an injectable Responder for views, JSON, text and safe redirects.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^2.0",
+        "trunk/http": "^0.1",
+        "trunk/tusk": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Mvc\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

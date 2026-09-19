@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+    beStrictAboutOutputDuringTests="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    failOnDeprecation="true"
+    failOnNotice="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Security">
+            <directory>tests/Security</directory>
+        </testsuite>
+        <testsuite name="Architecture">
+            <directory>tests/Architecture</directory>
+        </testsuite>
+        <testsuite name="Install">
+            <directory>tests/Install</directory>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Performance</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src</directory>
+            <directory>packages/http/src</directory>
+            <directory>packages/router/src</directory>
+            <directory>packages/tusk/src</directory>
+            <directory>packages/mvc/src</directory>
+            <directory>packages/console/src</directory>
+            <directory>packages/cache/src</directory>
+            <directory>packages/database/src</directory>
+            <directory>packages/orm/src</directory>
+            <directory>packages/queue/src</directory>
+            <directory>packages/observability/src</directory>
+            <directory>packages/auth/src</directory>
+        </include>
+    </source>
+</phpunit>

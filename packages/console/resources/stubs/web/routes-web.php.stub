@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Controllers\HomeController;
+use Trunk\Router\Definition\RouteCollector;
+
+return static function (RouteCollector $routes): void {
+    $routes->get('/', [HomeController::class, 'index'], 'home');
+};
