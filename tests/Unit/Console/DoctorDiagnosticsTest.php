@@ -78,7 +78,7 @@ final class DoctorDiagnosticsTest extends TestCase
 
         // Assert
         self::assertSame(1, $code);
-        self::assertStringContainsString('Capability dependencies: missing Composer packages; run `composer require psr/http-factory:^1.0 psr/http-server-handler:^1.0 psr/http-server-middleware:^1.0`', $without);
+        self::assertStringContainsString('Capability dependencies: missing Composer packages; run `composer require psr/http-factory:^1.1 psr/http-server-handler:^1.0 psr/http-server-middleware:^1.0`', $without);
         self::assertStringContainsString('✓ Capability dependencies', $none);
     }
 

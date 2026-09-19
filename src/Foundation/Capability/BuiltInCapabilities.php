@@ -18,7 +18,7 @@ final class BuiltInCapabilities
         $root = \dirname(__DIR__, 3);
 
         return [
-            new Capability('http', 'HTTP', 'HTTP kernel, router and middleware', ['Trunk\\Http\\HttpModule'], config: ['http' => $root . '/packages/http/resources/config/http.php'], composer: ['psr/http-factory' => '^1.0', 'psr/http-message' => '^2.0', 'psr/http-server-handler' => '^1.0', 'psr/http-server-middleware' => '^1.0']),
+            new Capability('http', 'HTTP', 'HTTP kernel, router and middleware', ['Trunk\\Http\\HttpModule'], config: ['http' => $root . '/packages/http/resources/config/http.php'], composer: ['psr/http-factory' => '^1.1', 'psr/http-message' => '^2.0', 'psr/http-server-handler' => '^1.0', 'psr/http-server-middleware' => '^1.0']),
             new Capability(
                 'logging',
                 'Logging',
