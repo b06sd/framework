@@ -14,7 +14,7 @@ Each fix is pinned by tests; the architecture rules behind them run in the `Arch
 | --- | --- | --- |
 | F1 Console contracts in an optional package | **Resolved** | `Trunk\Contracts\Console\*` in core; cache/database/orm/queue implement the core contract. `ArchitectureRulesTest` (layering, manifest honesty). |
 | F2 Core distribution pulled optional requirements | **Resolved after a second pass** (the first fix broke a real install; see ARCHITECTURE_REVIEW_2.md, R1, fixed and covered by `tests/Install`) | Root `require` is `php`, `psr/container`, `psr/log`. `ScopedIds` are contributed by `HttpModule`. |
-| F3 `console` required `trunk/http` | **Resolved** | Manifest honesty test: every required `trunk/*` package is imported. |
+| F3 `console` required `trunkphp/http` | **Resolved** | Manifest honesty test: every required `trunkphp/*` package is imported. |
 | F4 Secrets in `build/`, artifact permissions | **Resolved** | `secret()` / `EnvSecret` resolved from the real environment at run time; build files 0640, directories 0750; `doctor` warns. `SecretsEndToEndTest`, `EnvSecretTest`. |
 | F5 No module dependency metadata | **Resolved** | `ModuleDependencies` + `ModuleGraph` (dev, build, doctor); errors name the fix. `ModuleGraphTest`. |
 | F6 No request input limits | **Resolved** | `RequestLimits`, `BoundedStream`, `JsonBody`, upload bounds (413/415/400). `RequestLimitsTest`, upload fuzz test. |
@@ -54,7 +54,7 @@ Measurements below were re-run after Section 17.
                                    Trunk
                                      │
         ┌────────────────────────────┴───────────────────────────────┐
-        │  CORE  (src/, package trunk/framework)                        │
+        │  CORE  (src/, package trunkphp/framework)                        │
         │  Application lifecycle · Container (DI, lifetimes, scopes)    │
         │  Compiler/BuildRunner · Module + Capability system            │
         │  Foundation (Runtime, Configuration, .env, Project)           │
@@ -90,7 +90,7 @@ Note: `packages/auth` is an empty directory. Mail, storage, events and scheduler
 | Error pipeline | `src/Error` | CORE FOUNDATION | Shared by HTTP/CLI/worker. | Keep. `ErrorHandlers` echoing HTTP headers is HTTP-aware; acceptable (kind-switched). |
 | Logging (PSR-3, redaction) | `src/Logging`, `Foundation/Logging` | CORE FOUNDATION | Required by error pipeline. | Keep. Consider splitting the *concrete* structured logger into an optional package later; the interfaces stay. |
 | Lifecycle / MemoryMonitor | `src/Lifecycle` | CORE FOUNDATION | Runtime lifecycle concern. | Keep. |
-| Health, Metrics, Tracer | `src/Health`, `src/Observability` | CORE FOUNDATION (interfaces) / DEVELOPER CONVENIENCE (`InMemoryMetrics`, `PrometheusFormatter`, `LogTracer`) | Interfaces are seams; implementations are conveniences. | Keep interfaces in core; move implementations to a `trunk/observability` package when a second implementation appears (F9). |
+| Health, Metrics, Tracer | `src/Health`, `src/Observability` | CORE FOUNDATION (interfaces) / DEVELOPER CONVENIENCE (`InMemoryMetrics`, `PrometheusFormatter`, `LogTracer`) | Interfaces are seams; implementations are conveniences. | Keep interfaces in core; move implementations to a `trunkphp/observability` package when a second implementation appears (F9). |
 | `ArtifactWriter::SCOPED_IDS` mentions PSR-7 `ServerRequestInterface` | `src/Compiler` | CORE, but HTTP-shaped | Only HTTP leak found in core. | Let packages declare scoped ids through a contribution (F2). |
 | HTTP (PSR-7/15, kernel) | `packages/http` | OPTIONAL PACKAGE | Needed only for web/API. | Keep. |
 | Router | `packages/router` | OPTIONAL PACKAGE (depends on nothing but PSR-7) | Good boundary. | Keep. |
@@ -122,13 +122,13 @@ observability -> core
 ```
 
 * **Cycles: none**, and a test fails if one appears.
-* **Direction: correct at source and metadata level.** Core imports no package; each package's `composer.json` requires exactly the `trunk/*` packages it imports; the root `require` is `php`, `psr/container`, `psr/log` only.
-* Resolved in Section 17: the console contracts moved to core (F1), the root requirements were trimmed (F2), `console` no longer requires `trunk/http` (F3).
+* **Direction: correct at source and metadata level.** Core imports no package; each package's `composer.json` requires exactly the `trunkphp/*` packages it imports; the root `require` is `php`, `psr/container`, `psr/log` only.
+* Resolved in Section 17: the console contracts moved to core (F1), the root requirements were trimmed (F2), `console` no longer requires `trunkphp/http` (F3).
 
 ## 5. Critical findings
 
 **F1: Console contracts live in an optional package that four other packages implement.**
-*Why it matters*: `database/orm/queue/cache` contain `Console/` classes that will not load without `trunk/console`; static analysis, IDEs and Composer cannot tell. The capability system prevents loading them at runtime (verified by tests), which is why this is not P0.
+*Why it matters*: `database/orm/queue/cache` contain `Console/` classes that will not load without `trunkphp/console`; static analysis, IDEs and Composer cannot tell. The capability system prevents loading them at runtime (verified by tests), which is why this is not P0.
 *Evidence*: import scan (`console` edges from cache 6, database 24, orm 11, queue 30); `suggest` blocks in their composer.json.
 *Risk*: a third-party package copying the pattern gets the same hidden coupling; a project without console gets broken references in tooling.
 *Change*: move `Command`, `CommandDefinition`, `CommandProvider`, `CommandCollector`, `Input`, `Output` (interfaces only) into core contracts; keep the implementations in `packages/console`.
@@ -137,10 +137,10 @@ observability -> core
 **F2: The core distribution is not minimal.**
 *Evidence*: root `composer.json` requires `ext-pdo`, `psr/http-factory`, `psr/http-message`, `psr/http-server-*`, `psr/simple-cache`; `src/Compiler/ArtifactWriter.php` names `Psr\Http\Message\ServerRequestInterface` in `SCOPED_IDS`.
 *Risk*: "Trunk Core" cannot honestly claim to run without HTTP/DB today; a CLI-only app installs HTTP PSR packages.
-*Change*: publish `trunk/framework` (core) with only `psr/container`, `psr/log`; let packages contribute scoped ids and PSR requirements. The monorepo root can stay as a dev aggregate.
+*Change*: publish `trunkphp/framework` (core) with only `psr/container`, `psr/log`; let packages contribute scoped ids and PSR requirements. The monorepo root can stay as a dev aggregate.
 *Priority*: **P1** (before the first tagged release).
 
-**F3: `trunk/console` requires `trunk/http` without importing it.**
+**F3: `trunkphp/console` requires `trunkphp/http` without importing it.**
 *Priority*: **P2** (trim the requirement after F1).
 
 **F4: Production build embeds secrets in a world-readable file.**
@@ -256,7 +256,7 @@ Open improvement: measure a realistic large application (F-section §6) before m
 
 ## 11. Recommended next sequence
 
-1. **Fix the core boundary**: move console contracts to core (F1); make `trunk/framework` minimal and drop HTTP/PDO/cache requirements from it (F2); trim `console`'s composer requirements (F3).
+1. **Fix the core boundary**: move console contracts to core (F1); make `trunkphp/framework` minimal and drop HTTP/PDO/cache requirements from it (F2); trim `console`'s composer requirements (F3).
 2. **Build artifact hygiene**: `0640/0750` permissions and a runtime-secret mechanism (F4).
 3. **Module dependencies and ordering** with build-time cycle detection (F5).
 4. **HTTP hardening**: body size limit, bounded JSON body reader, upload policy (F6), with security tests.

@@ -43,7 +43,7 @@ final readonly class PackageRemoveCommand implements Command
         }
 
         if ($input->flag('purge') && $capability->isBuiltIn()) {
-            throw new CommandFailedException(\sprintf('"%s" ships with trunk/framework, so there is no package to purge. Run without --purge to disable it.', $capability->id));
+            throw new CommandFailedException(\sprintf('"%s" ships with trunkphp/framework, so there is no package to purge. Run without --purge to disable it.', $capability->id));
         }
 
         foreach ($this->capabilities->disable($this->project, $capability->id) as $change) {

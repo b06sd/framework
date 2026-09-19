@@ -1,5 +1,5 @@
 {
-    "name": "trunk/http",
+    "name": "trunkphp/http",
     "description": "Strict, immutable PSR-7 / PSR-17 HTTP messages, server request creation and response emission for Trunk.",
     "type": "library",
     "license": "MIT",
@@ -10,7 +10,7 @@
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "psr/log": "^3.0",
-        "trunk/router": "^0.1"
+        "trunkphp/router": "^0.1"
     },
     "provide": {
         "psr/http-message-implementation": "2.0",

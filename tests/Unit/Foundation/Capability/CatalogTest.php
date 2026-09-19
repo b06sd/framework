@@ -107,7 +107,7 @@ final class CatalogTest extends TestCase
         $catalog = $this->catalog();
 
         // Assert
-        self::assertSame('trunk/framework', $catalog->find('cache')?->package);
+        self::assertSame('trunkphp/framework', $catalog->find('cache')?->package);
         self::assertStringContainsString('already exists', $catalog->problems()[0]);
     }
 

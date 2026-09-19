@@ -1,5 +1,5 @@
 {
-    "name": "trunk/observability",
+    "name": "trunkphp/observability",
     "description": "Metrics (Prometheus text format) and log-based tracing for Trunk.",
     "type": "library",
     "license": "MIT",

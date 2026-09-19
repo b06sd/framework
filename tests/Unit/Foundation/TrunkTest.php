@@ -12,7 +12,7 @@ final class TrunkTest extends TestCase
     public function test_trunk_is_alive(): void
     {
         // Arrange
-        $package = 'trunk/framework';
+        $package = 'trunkphp/framework';
 
         // Act
         $result = InstalledVersions::isInstalled($package);

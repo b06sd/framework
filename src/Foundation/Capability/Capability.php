@@ -33,13 +33,13 @@ final readonly class Capability
         public array $env = [],
         public array $directories = [],
         public array $integrations = [],
-        public string $package = 'trunk/framework',
+        public string $package = 'trunkphp/framework',
         public array $composer = [],
     ) {}
 
     public function isBuiltIn(): bool
     {
-        return $this->package === 'trunk/framework';
+        return $this->package === 'trunkphp/framework';
     }
 
     /**

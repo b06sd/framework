@@ -1,5 +1,5 @@
 {
-    "name": "trunk/tusk",
+    "name": "trunkphp/tusk",
     "description": "Tusk: Trunk's native, compiled and auto-escaping template engine (.tusk.php).",
     "type": "library",
     "license": "MIT",

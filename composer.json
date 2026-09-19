@@ -1,5 +1,5 @@
 {
-    "name": "trunk/framework",
+    "name": "trunkphp/framework",
     "description": "A fast, secure, modular PHP application framework.",
     "type": "library",
     "license": "MIT",
@@ -69,8 +69,8 @@
         "bin/trunk"
     ],
     "suggest": {
-        "trunk/http": "HTTP kernel, PSR-7/15 messages and middleware",
-        "trunk/database": "Query builder, schema and migrations (needs ext-pdo)",
-        "trunk/cache": "PSR-16 cache"
+        "trunkphp/http": "HTTP kernel, PSR-7/15 messages and middleware",
+        "trunkphp/database": "Query builder, schema and migrations (needs ext-pdo)",
+        "trunkphp/cache": "PSR-16 cache"
     }
 }

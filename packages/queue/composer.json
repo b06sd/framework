@@ -1,11 +1,11 @@
 {
-    "name": "trunk/queue",
+    "name": "trunkphp/queue",
     "description": "TrunkQueue: typed jobs with compiled codecs, a database queue driver, and a safe long-running worker.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "trunk/database": "^0.1",
+        "trunkphp/database": "^0.1",
         "psr/log": "^3.0"
     },
     "autoload": {
@@ -14,7 +14,7 @@
         }
     },
     "suggest": {
-        "trunk/console": "Enables queue:work, queue:table, queue:failed, queue:retry, queue:flush and make:job",
+        "trunkphp/console": "Enables queue:work, queue:table, queue:failed, queue:retry, queue:flush and make:job",
         "ext-pcntl": "Per-job timeouts and graceful shutdown for queue:work"
     },
     "extra": {

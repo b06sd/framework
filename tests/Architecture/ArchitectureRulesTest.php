@@ -65,17 +65,17 @@ final class ArchitectureRulesTest extends TestCase
         // Act
         foreach (self::packageEdges() as $name => $imported) {
             $composer = self::composer(self::root() . '/packages/' . $name . '/composer.json');
-            $required = array_map(static fn(string $r): string => substr($r, \strlen('trunk/')), array_filter(array_keys(\is_array($composer['require'] ?? null) ? $composer['require'] : []), static fn(string $r): bool => str_starts_with($r, 'trunk/')));
+            $required = array_map(static fn(string $r): string => substr($r, \strlen('trunkphp/')), array_filter(array_keys(\is_array($composer['require'] ?? null) ? $composer['require'] : []), static fn(string $r): bool => str_starts_with($r, 'trunkphp/')));
 
             foreach (array_keys($imported) as $dependency) {
                 if (!\in_array($dependency, $required, true)) {
-                    $problems[] = $name . ' imports ' . $dependency . ' but does not require trunk/' . $dependency;
+                    $problems[] = $name . ' imports ' . $dependency . ' but does not require trunkphp/' . $dependency;
                 }
             }
 
             foreach ($required as $dependency) {
                 if (!isset($imported[$dependency])) {
-                    $problems[] = $name . ' requires trunk/' . $dependency . ' but never imports it';
+                    $problems[] = $name . ' requires trunkphp/' . $dependency . ' but never imports it';
                 }
             }
         }

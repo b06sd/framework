@@ -28,7 +28,7 @@ The design is sound. The one serious problem is one I introduced: the first revi
 
 Unchanged in substance from the first review and now test-enforced. Two observations:
 
-* **Confirmed, boundary is honest at source and metadata level**: root `require` is `php`, `psr/container`, `psr/log`; every package requires exactly the `trunk/*` packages it imports (`ArchitectureRulesTest`).
+* **Confirmed, boundary is honest at source and metadata level**: root `require` is `php`, `psr/container`, `psr/log`; every package requires exactly the `trunkphp/*` packages it imports (`ArchitectureRulesTest`).
 * **Confirmed, boundary is dishonest at distribution level** (R1): the root `autoload` maps all ten package namespaces, so "core" is minimal in metadata but ships every package's code and none of their third-party requirements.
 
 ## 4. Dependency graph (recomputed from every `use Trunk\...` import)
@@ -47,22 +47,22 @@ queue         -> core (79), database (8)
 observability -> core (27)
 ```
 
-No cycles; no package imports console; `console` is imported by nothing. `composer.json` requirements of every package match these edges (no `trunk/http` on console any more).
+No cycles; no package imports console; `console` is imported by nothing. `composer.json` requirements of every package match these edges (no `trunkphp/http` on console any more).
 
 ## 5. Findings
 
 ### R1 (P1, Confirmed): a real install of an HTTP project has no PSR-7/15 packages
 
-*Evidence.* `trunk new real-api --type=api --repository=<checkout>`, then `composer install`. Composer installed `psr/container`, `psr/log`, `trunk/framework` and PHPUnit, and **no** `psr/http-message`, `psr/http-factory`, `psr/http-server-*`. `trunk build` succeeded. The first request then failed: `Fatal error: Uncaught Error: Interface "Psr\Http\Server\MiddlewareInterface" not found in packages/http/src/Middleware/ErrorHandlingMiddleware.php:33`. The same holds for anything needing `psr/simple-cache` (cache) or `ext-pdo` (database).
+*Evidence.* `trunk new real-api --type=api --repository=<checkout>`, then `composer install`. Composer installed `psr/container`, `psr/log`, `trunkphp/framework` and PHPUnit, and **no** `psr/http-message`, `psr/http-factory`, `psr/http-server-*`. `trunk build` succeeded. The first request then failed: `Fatal error: Uncaught Error: Interface "Psr\Http\Server\MiddlewareInterface" not found in packages/http/src/Middleware/ErrorHandlingMiddleware.php:33`. The same holds for anything needing `psr/simple-cache` (cache) or `ext-pdo` (database).
 
-*Cause.* The first review's F2 moved those requirements from `require` to `require-dev` in the root, correctly for a minimal core, but the consumer installs `trunk/framework` (whose autoload includes every package) and nothing else. The package `composer.json` files that do declare the PSR requirements are never installed separately, because the packages are not published or split. The end-to-end tests use a stand-in `vendor/autoload.php` that borrows the monorepo's own vendor directory, so they see every dev dependency.
+*Cause.* The first review's F2 moved those requirements from `require` to `require-dev` in the root, correctly for a minimal core, but the consumer installs `trunkphp/framework` (whose autoload includes every package) and nothing else. The package `composer.json` files that do declare the PSR requirements are never installed separately, because the packages are not published or split. The end-to-end tests use a stand-in `vendor/autoload.php` that borrows the monorepo's own vendor directory, so they see every dev dependency.
 
 *Why it was missed.* My Section 17 verification claim ("a scaffolded CLI project that never loads an HTTP class") was checked through that stand-in. `trunk doctor` also reports "Composer dependencies installed" as passing for this project (R3).
 
 *Fix (recommended).*
 1. Give each built-in capability a `composer` requirement list in its metadata (`http`: the four `psr/http-*`; `cache`: `psr/simple-cache`; `database`: `ext-pdo`), used by `trunk new` (profile decides) and by `trunk package:install` (runs `composer require` for missing ones, through the existing allow-listed launcher).
 2. Add a CI job that scaffolds each profile, runs a real `composer install`, builds, and issues a request (or runs a command). This is the test that would have caught R1.
-3. Longer term: publish the packages as separate Composer packages and make `trunk/framework` truly minimal. Until then the honest alternative is to put the PSR packages back in the root `require`.
+3. Longer term: publish the packages as separate Composer packages and make `trunkphp/framework` truly minimal. Until then the honest alternative is to put the PSR packages back in the root `require`.
 
 Not changed in this pass (review only): this needs your decision on 1 versus 3.
 

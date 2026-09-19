@@ -26,7 +26,7 @@ final readonly class NewCommand implements Command
             ['name' => 'the project (and directory) name, e.g. customer-api'],
             [
                 '--type=<type>' => 'api, web (default), self-contained, cli or worker',
-                '--repository=<path>' => 'use a local checkout of trunk/framework (composer path repository)',
+                '--repository=<path>' => 'use a local checkout of trunkphp/framework (composer path repository)',
                 '--force' => 'write into a non-empty directory',
             ],
             1,

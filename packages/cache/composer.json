@@ -1,5 +1,5 @@
 {
-    "name": "trunk/cache",
+    "name": "trunkphp/cache",
     "description": "PSR-16 cache for Trunk with array, file and null stores. Data only: values are stored as JSON, never unserialized.",
     "type": "library",
     "license": "MIT",
@@ -41,6 +41,6 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "suggest": {
-        "trunk/console": "Enables the cache:clear command when the console capability is enabled"
+        "trunkphp/console": "Enables the cache:clear command when the console capability is enabled"
     }
 }

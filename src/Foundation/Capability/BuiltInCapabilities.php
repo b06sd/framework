@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Trunk\Foundation\Capability;
 
 /**
- * The capabilities shipped inside trunk/framework. Module names are strings on purpose: the core
+ * The capabilities shipped inside trunkphp/framework. Module names are strings on purpose: the core
  * must not depend on the packages it describes.
  */
 final class BuiltInCapabilities

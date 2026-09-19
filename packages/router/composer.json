@@ -1,5 +1,5 @@
 {
-    "name": "trunk/router",
+    "name": "trunkphp/router",
     "description": "Compilable, ReDoS-safe HTTP router for Trunk.",
     "type": "library",
     "license": "MIT",

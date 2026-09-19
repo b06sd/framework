@@ -1,12 +1,12 @@
 {
-    "name": "trunk/auth",
+    "name": "trunkphp/auth",
     "description": "Authentication and authorization for Trunk: password hashing, sessions, CSRF, bearer tokens, login throttling and policies.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "trunk/http": "^0.1",
-        "trunk/database": "^0.1"
+        "trunkphp/http": "^0.1",
+        "trunkphp/database": "^0.1"
     },
     "autoload": {
         "psr-4": {
@@ -14,7 +14,7 @@
         }
     },
     "suggest": {
-        "trunk/console": "Enables auth:table, auth:token and auth:prune"
+        "trunkphp/console": "Enables auth:table, auth:token and auth:prune"
     },
     "extra": {
         "branch-alias": {

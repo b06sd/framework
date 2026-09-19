@@ -1,11 +1,11 @@
 {
-    "name": "trunk/console",
+    "name": "trunkphp/console",
     "description": "The trunk command line: project scaffolding, build, serve, doctor and code generators.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "trunk/router": "^0.1"
+        "trunkphp/router": "^0.1"
     },
     "autoload": {
         "psr-4": {

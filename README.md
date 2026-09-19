@@ -2,7 +2,7 @@
 
 **Trunk is a fast, secure, modular PHP framework designed for modern MVC applications.**
 
-- **Modular.** Functionality ships as independent packages (`trunk/router`, `trunk/http`, `trunk/cache`, …). Third-party packages keep their own namespaces (`Acme\Payment\`) and are not required to live under `Trunk\`.
+- **Modular.** Functionality ships as independent packages (`trunkphp/router`, `trunkphp/http`, `trunkphp/cache`, …). Third-party packages keep their own namespaces (`Acme\Payment\`) and are not required to live under `Trunk\`.
 - **Lightweight core.** The core stays small; you pull in only what you need.
 - **Fast by design.** Minimal bootstrap work, no runtime reflection or filesystem scanning where avoidable, OPcache-friendly, and built to support compiled config, routes and container in production.
 - **Secure by default.** Security is a framework-level concern, enforced in CI (`composer audit`, PHPStan at max level, security tests). Performance never trades against security.
@@ -67,7 +67,7 @@ variables override the file, and config files read settings with `$runtime->vari
 An API project compiles no view engine; a CLI project compiles no HTTP artifacts. Production
 (`APP_ENV` unset or `production`) runs the compiled build and refuses to start without one;
 `APP_ENV=local` runs the development container. Your own commands implement
-`Trunk\Contracts\Console\Command` (a core contract, so packages can ship commands without depending on `trunk/console`), are listed by your module (`CommandProvider`), and get their
+`Trunk\Contracts\Console\Command` (a core contract, so packages can ship commands without depending on `trunkphp/console`), are listed by your module (`CommandProvider`), and get their
 dependencies injected like any other service.
 
 ## Capabilities and packages
@@ -105,7 +105,7 @@ $connection->transaction(fn (Connection $c) => $c->table('customers')->insert(['
 $connection->select('SELECT * FROM customers WHERE id = :id', ['id' => $id]);
 ```
 
-Values are always bound (native prepared statements); identifiers are validated and quoted; `Raw` is the only unsafe escape hatch. With the console enabled: `trunk make:migration create_customers_table`, `migrate`, `migrate:status`, `migrate:rollback [--step=N]`, `migrate:fresh` (refused in production). The ORM is a separate package (`trunk/orm`) built on this layer. MySQL/PostgreSQL live tests run when `TRUNK_TEST_MYSQL_*` / `TRUNK_TEST_PGSQL_*` (`HOST`, `DATABASE`, `USER`, `PASSWORD`, `PORT`) are set.
+Values are always bound (native prepared statements); identifiers are validated and quoted; `Raw` is the only unsafe escape hatch. With the console enabled: `trunk make:migration create_customers_table`, `migrate`, `migrate:status`, `migrate:rollback [--step=N]`, `migrate:fresh` (refused in production). The ORM is a separate package (`trunkphp/orm`) built on this layer. MySQL/PostgreSQL live tests run when `TRUNK_TEST_MYSQL_*` / `TRUNK_TEST_PGSQL_*` (`HOST`, `DATABASE`, `USER`, `PASSWORD`, `PORT`) are set.
 
 ## ORM (TrunkORM)
 
@@ -159,7 +159,7 @@ Inject `Auth` (`attempt($email, $password)`, `login()`, `logout()`, `user()`, `i
 - **Tokens**: `trk_<id>.<secret>`; only the secret's hash is stored; abilities and expiry; `trunk auth:token <user-id> <name>` prints one once.
 - **Throttling**: failed logins are counted per account+address and per address in the database (atomic updates, `Retry-After`, uses the trusted-proxy `client_ip`).
 - **Authorization**: `Gate` denies by default. Tag a `Policy` (for objects) or an `Ability` (general permissions) service with `auth.policy` / `auth.ability`; the build rejects tags on classes of the wrong kind. A bearer token can only do what it lists.
-- **Users** come from the `UserProvider` interface; the default reads a configurable table through `trunk/database`, and an ORM app can bind its own.
+- **Users** come from the `UserProvider` interface; the default reads a configurable table through `trunkphp/database`, and an ORM app can bind its own.
 
 Tokens are tied to the owner's `session_version`, so changing it (a password change) ends sessions **and** tokens together, and one address can start only `auth.throttle.max_new_sessions_per_ip` anonymous sessions per window. Measured on this machine (PHP 8.5, SQLite file): an authenticated session request costs about 41 µs against 17 µs for an unauthenticated route (one session read and one user read, no writes while the session is in use); a bearer-token request about 38 µs; a login is dominated by argon2id (about 150 ms at the default 64 MiB / 4 passes; 19 MiB / 2 passes, the OWASP minimum, is 19 ms). Lower `auth.password.memory_cost` and `time_cost` if login concurrency matters more than margin.
 

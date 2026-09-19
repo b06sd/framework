@@ -46,8 +46,8 @@ final class PackageCommandsTest extends TestCase
         $out = $this->capture->stdout();
 
         // Assert
-        self::assertMatchesRegularExpression('/http\s+enabled\s+trunk\/framework/', $out);
-        self::assertMatchesRegularExpression('/cache\s+available\s+trunk\/framework/', $out);
+        self::assertMatchesRegularExpression('/http\s+enabled\s+trunkphp\/framework/', $out);
+        self::assertMatchesRegularExpression('/cache\s+available\s+trunkphp\/framework/', $out);
         self::assertMatchesRegularExpression('/payments\s+installed, not enabled\s+acme\/payments/', $out);
     }
 
@@ -209,7 +209,7 @@ final class PackageCommandsTest extends TestCase
 
         // Assert
         self::assertCount(3, $messages);
-        self::assertStringContainsString('ships with trunk/framework', $messages[0]);
+        self::assertStringContainsString('ships with trunkphp/framework', $messages[0]);
         self::assertStringContainsString('not a known capability', $messages[1]);
         self::assertStringContainsString('not a known capability', $messages[2]);
         self::assertSame([], $composer->calls);

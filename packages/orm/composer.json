@@ -1,11 +1,11 @@
 {
-    "name": "trunk/orm",
-    "description": "TrunkORM: explicit-mapping Data Mapper on top of trunk/database. Compiled metadata and hydrators, unit of work, identity map, explicit eager loading and N+1 detection.",
+    "name": "trunkphp/orm",
+    "description": "TrunkORM: explicit-mapping Data Mapper on top of trunkphp/database. Compiled metadata and hydrators, unit of work, identity map, explicit eager loading and N+1 detection.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "trunk/database": "^0.1"
+        "trunkphp/database": "^0.1"
     },
     "autoload": {
         "psr-4": {
@@ -13,7 +13,7 @@
         }
     },
     "suggest": {
-        "trunk/console": "Enables make:entity and orm:validate"
+        "trunkphp/console": "Enables make:entity and orm:validate"
     },
     "extra": {
         "trunk": {

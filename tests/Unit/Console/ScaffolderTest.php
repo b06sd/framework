@@ -117,7 +117,7 @@ final class ScaffolderTest extends TestCase
             $scaffolder->create('p-' . $type, Profile::from($type), $this->base . '/p-' . $type);
             $composer = json_decode((string) file_get_contents($this->base . '/p-' . $type . '/composer.json'), true, 16, \JSON_THROW_ON_ERROR);
             $require = \is_array($composer) && \is_array($composer['require'] ?? null) ? $composer['require'] : [];
-            $extra = array_values(array_diff(array_keys($require), ['php', 'trunk/framework']));
+            $extra = array_values(array_diff(array_keys($require), ['php', 'trunkphp/framework']));
             sort($extra);
 
             // Assert
@@ -139,12 +139,12 @@ final class ScaffolderTest extends TestCase
         // Assert
         self::assertIsArray($published);
         self::assertIsArray($published['require']);
-        self::assertSame('^0.1', $published['require']['trunk/framework']);
+        self::assertSame('^0.1', $published['require']['trunkphp/framework']);
         self::assertSame('stable', $published['minimum-stability']);
         self::assertArrayNotHasKey('repositories', $published);
         self::assertIsArray($linked);
         self::assertIsArray($linked['require']);
-        self::assertSame('*', $linked['require']['trunk/framework'], 'a local checkout is a dev version, so any version');
+        self::assertSame('*', $linked['require']['trunkphp/framework'], 'a local checkout is a dev version, so any version');
         self::assertSame('dev', $linked['minimum-stability']);
     }
 
