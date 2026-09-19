@@ -6,17 +6,23 @@ PHP 8.4 or newer with `mbstring`, `json`, `ctype`, `tokenizer` (and `pdo_sqlite`
 
 ## Get the framework
 
-Trunk is not published on Packagist yet, so you use a local checkout of this repository as a Composer path repository. Below, `~/trunk` is that checkout.
+Trunk is on Packagist as [`trunkphp/framework`](https://packagist.org/packages/trunkphp/framework) (the PHP namespace is `Trunk\`). Install it once, globally, so the `trunk` command exists:
 
 ```bash
-alias trunk='php ~/trunk/bin/trunk'      # only needed for `trunk new`
-trunk new blog --type=web --repository=~/trunk
+composer global require trunkphp/framework
+export PATH="$(composer global config bin-dir --absolute):$PATH"     # add this line to your shell profile
+
+trunk new blog --type=web
 cd blog
 composer install
 php vendor/bin/trunk serve               # http://127.0.0.1:8006
 ```
 
-Project types are only starting points (`api`, `web`, `self-contained`, `cli`, `worker`); everything is a capability you can add later with `trunk package:install`. Inside a project use `php vendor/bin/trunk ...` (the examples below write `trunk`).
+Inside a project use `php vendor/bin/trunk ...` (the examples below write `trunk`): it runs the framework version the project locked. `trunk new` writes `"trunkphp/framework": "^0.1"` into the project's `composer.json`.
+
+**Working on the framework itself?** Clone https://github.com/b06sd/framework, run `composer install`, and create projects against your checkout: `php ~/framework/bin/trunk new blog --type=web --repository=~/framework` (a Composer path repository with `dev` stability).
+
+Project types are only starting points (`api`, `web`, `self-contained`, `cli`, `worker`); everything is a capability you can add later with `trunk package:install`.
 
 Open <http://127.0.0.1:8006>. `trunk doctor` reports whether the project is healthy.
 

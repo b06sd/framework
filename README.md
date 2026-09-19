@@ -11,6 +11,16 @@
 
 > Status: a working framework: core, compiler (lifetimes, automatic wiring), HTTP, router, Tusk, MVC, cache, the capability/package system and the `trunk` CLI. TrunkDB (database layer and ORM) and the queue are built; auth is not built yet.
 
+## Install
+
+```bash
+composer global require trunkphp/framework
+export PATH="$(composer global config bin-dir --absolute):$PATH"
+trunk new blog --type=web && cd blog && composer install && php vendor/bin/trunk serve
+```
+
+Requires PHP 8.4+ and Composer 2. Package page: <https://packagist.org/packages/trunkphp/framework>.
+
 ## Documentation
 
 Start with [docs/README.md](docs/README.md): [getting started](docs/getting-started.md) (a real app in about ten minutes), [concepts](docs/concepts.md), one guide per package, the [command](docs/cli.md) and [configuration](docs/configuration.md) references, [testing and trying to break it](docs/testing.md), [deployment](docs/deployment.md) and [troubleshooting](docs/troubleshooting.md).

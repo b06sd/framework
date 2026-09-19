@@ -1,6 +1,6 @@
 # Command line reference
 
-Outside a project run `php ~/trunk/bin/trunk new ...`; inside one, `php vendor/bin/trunk <command>`. `trunk help <command>` shows usage; `-v` shows technical details of a failure. Which commands exist depends on the capabilities enabled (and `console` must be enabled for those a package adds).
+Outside a project run `trunk new ...` (after `composer global require trunkphp/framework`); inside one, `php vendor/bin/trunk <command>`. `trunk help <command>` shows usage; `-v` shows technical details of a failure. Which commands exist depends on the capabilities enabled (and `console` must be enabled for those a package adds).
 
 ## Project
 
