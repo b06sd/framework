@@ -105,6 +105,59 @@ final class RealInstallTest extends TestCase
         self::assertSame(0, $pruneCode, $pruneOut);
     }
 
+    public function test_a_fresh_web_project_serves_its_page_and_its_static_files_over_a_real_http_server(): void
+    {
+        // Arrange
+        $project = $this->project = new ScaffoldedProject('served', 'web', realInstall: true);
+        $socket = stream_socket_server('tcp://127.0.0.1:0', $errno, $error);
+        self::assertNotFalse($socket, (string) $error);
+        $port = (int) substr((string) stream_socket_get_name($socket, false), (int) strrpos((string) stream_socket_get_name($socket, false), ':') + 1);
+        fclose($socket);
+        $server = proc_open([\PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $project->directory . '/public', $project->directory . '/public/index.php'], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $project->directory, ['APP_ENV' => 'local', 'APP_DEBUG' => '0', 'PATH' => (string) getenv('PATH')]);
+        self::assertIsResource($server);
+
+        try {
+            $get = static function (string $path) use ($port): array {
+                for ($attempt = 0; $attempt < 60; ++$attempt) {
+                    $body = @file_get_contents('http://127.0.0.1:' . $port . $path, false, stream_context_create(['http' => ['ignore_errors' => true, 'header' => "Accept: text/html\r\n"]]));
+
+                    if ($body !== false) {
+                        $headers = http_get_last_response_headers() ?? [];
+
+                        return [(int) substr($headers[0] ?? 'HTTP/1.1 0', 9, 3), implode("\n", $headers), $body];
+                    }
+
+                    usleep(50_000);
+                }
+
+                return [0, '', ''];
+            };
+
+            // Act
+            [$pageStatus, , $page] = $get('/');
+            [$cssStatus, $cssHeaders, $css] = $get('/styles.css');
+            [$jsStatus, , $js] = $get('/script.js');
+            [$sourceStatus] = $get('/index.php');
+            [$outsideStatus] = $get('/composer.json');
+            [$missingStatus, , $missing] = $get('/nothing-here');
+        } finally {
+            proc_terminate($server);
+            proc_close($server);
+        }
+
+        // Assert
+        self::assertSame(200, $pageStatus);
+        self::assertStringContainsString('<h1>Served</h1>', $page);
+        self::assertSame(200, $cssStatus);
+        self::assertStringContainsString('text/css', $cssHeaders);
+        self::assertStringContainsString('--accent', $css);
+        self::assertSame(200, $jsStatus);
+        self::assertStringContainsString('clock', $js);
+        self::assertSame([404, 404], [$sourceStatus, $outsideStatus], 'only real static files under public/ are served; never the entry script or anything outside it');
+        self::assertSame(404, $missingStatus);
+        self::assertStringContainsString('Page not found', $missing, 'the project\'s own styled error page');
+    }
+
     public function test_enabling_a_capability_installs_what_it_needs(): void
     {
         // Arrange

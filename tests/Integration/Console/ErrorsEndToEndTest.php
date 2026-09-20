@@ -34,7 +34,7 @@ final class ErrorsEndToEndTest extends TestCase
         // Assert
         self::assertSame(0, $buildCode, $buildOut);
         self::assertStringContainsString('Page not found', $notFound, 'the project’s own Tusk error page is used (text/plain would say Not Found)');
-        self::assertStringContainsString('Request ID:', $notFound);
+        self::assertStringContainsString('Request ID', $notFound);
         self::assertStringNotContainsString('secret database password', $boom);
         self::assertStringNotContainsString('BoomController', $boom);
         self::assertStringNotContainsString('.php', $boom);

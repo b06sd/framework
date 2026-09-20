@@ -1,7 +1,10 @@
 <layout name="app">
     <fill slot="title">Page not found</fill>
 
-    <h1>Page not found</h1>
-    <p>The page you asked for does not exist.</p>
-    <if test="requestId"><p><small>Request ID: {{ requestId }}</small></p></if>
+    <section class="card">
+        <span class="status is-warn">404</span>
+        <h1>Page not found</h1>
+        <p class="lead">The page you asked for does not exist. Check the address, or <a href="/">go back home</a>.</p>
+        <if test="requestId"><p class="request-id">Request ID <code class="path">{{ requestId }}</code></p></if>
+    </section>
 </layout>

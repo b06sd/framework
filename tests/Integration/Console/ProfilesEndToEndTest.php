@@ -58,7 +58,17 @@ final class ProfilesEndToEndTest extends TestCase
         self::assertFileExists($project->directory . '/build/views.php');
         self::assertStringContainsString('<title>Shop</title>', $production);
         self::assertStringContainsString('<h1>Shop</h1>', $production);
-        self::assertSame($production, $development);
+        // The compiled build and the source views render the same page; the only difference is the label that
+        // names the environment.
+        self::assertStringContainsString('>Production</span>', $production);
+        self::assertStringContainsString('>Local</span>', $development);
+        self::assertSame($production, str_replace('>Local</span>', '>Production</span>', $development));
+        // The default layout ships its own styles and script, links them from the site root, and has no icons.
+        self::assertStringContainsString('<link rel="stylesheet" href="/styles.css">', $production);
+        self::assertStringContainsString('<script src="/script.js"></script>', $production);
+        self::assertStringNotContainsString('<svg', $production);
+        self::assertFileExists($project->directory . '/public/styles.css');
+        self::assertFileExists($project->directory . '/public/script.js');
     }
 
     public function test_a_self_contained_project_serves_web_and_api_from_one_application(): void

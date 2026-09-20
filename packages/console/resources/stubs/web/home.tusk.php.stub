@@ -1,6 +1,13 @@
 <layout name="app">
     <fill slot="title">{{ title }}</fill>
 
-    <h1>{{ title }}</h1>
-    <p>Your Trunk application is running. Edit <code>resources/views/home.tusk.php</code> to change this page.</p>
+    <fill slot="tools">
+        <span class="chip"><span class="beat"></span><span class="env-label">{{ environment }}</span></span>
+    </fill>
+
+    <section class="card">
+        <span class="status"><span class="pulse"></span>Application running</span>
+        <h1>{{ title }}</h1>
+        <p class="lead">Your Trunk application is running. Edit <code class="path" id="path" title="Click to copy">resources/views/home.tusk.php</code> to change this page.</p>
+    </section>
 </layout>

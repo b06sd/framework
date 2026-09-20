@@ -1,0 +1,55 @@
+// Live local clock (the footer)
+(function () {
+  var clock = document.getElementById('clock');
+  if (!clock) return;
+  function tick() {
+    clock.textContent = new Date().toLocaleTimeString([], { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+// Click (or Enter/Space) a file path to copy it
+(function () {
+  var path = document.getElementById('path');
+  var toast = document.getElementById('toast');
+  if (!path) return;
+  var toastTimer;
+
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1600);
+  }
+
+  async function copyPath() {
+    var text = path.textContent.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(path);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        sel.removeAllRanges();
+      } catch (_) {
+        showToast('Copy not available');
+        return;
+      }
+    }
+    path.classList.add('copied');
+    showToast('Copied ' + text);
+    setTimeout(function () { path.classList.remove('copied'); }, 1200);
+  }
+
+  path.setAttribute('tabindex', '0');
+  path.addEventListener('click', copyPath);
+  path.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyPath(); }
+  });
+})();

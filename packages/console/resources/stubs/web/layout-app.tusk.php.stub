@@ -1,13 +1,42 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><slot name="title">%%title%%</slot></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+
+    <header class="topbar">
+        <div class="wrap topbar-inner">
+            <a class="brand" href="/">
+                <span class="brand-name">%%title%%</span>
+            </a>
+            <div class="tools">
+                <slot name="tools"></slot>
+            </div>
+        </div>
+    </header>
+
     <main>
-        <slot />
+        <div class="wrap">
+            <slot />
+        </div>
     </main>
+
+    <footer>
+        <div class="wrap footer-inner">
+            <span>Built with Trunk</span>
+            <span class="clock" id="clock">--:--:--</span>
+        </div>
+    </footer>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/script.js"></script>
 </body>
 </html>

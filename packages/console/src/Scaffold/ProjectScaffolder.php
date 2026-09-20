@@ -148,6 +148,8 @@ final readonly class ProjectScaffolder
             $files['app/Controllers/HomeController.php'] = $this->stub('web/HomeController.php.stub', $vars);
             $files['resources/views/layouts/app.tusk.php'] = $this->stub('web/layout-app.tusk.php.stub', $vars);
             $files['resources/views/home.tusk.php'] = $this->stub('web/home.tusk.php.stub', $vars);
+            $files['public/styles.css'] = $this->stub('web/styles.css.stub', $vars);
+            $files['public/script.js'] = $this->stub('web/script.js.stub', $vars);
             $files['resources/views/errors/404.tusk.php'] = $this->stub('web/error-404.tusk.php.stub', $vars);
             $files['resources/views/errors/error.tusk.php'] = $this->stub('web/error.tusk.php.stub', $vars);
         }
@@ -178,7 +180,7 @@ final readonly class ProjectScaffolder
         $lines = [];
 
         if ($profile->hasHttp()) {
-            $lines[] = 'public/      the web entry point (public/index.php)';
+            $lines[] = 'public/      the web entry point (public/index.php) and static files (styles.css, script.js)';
             $lines[] = 'routes/      route definitions';
         }
 

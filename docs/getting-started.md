@@ -24,7 +24,7 @@ Inside a project use `php vendor/bin/trunk ...` (the examples below write `trunk
 
 Project types are only starting points (`api`, `web`, `self-contained`, `cli`, `worker`); everything is a capability you can add later with `trunk package:install`.
 
-Open <http://127.0.0.1:8006>. `trunk doctor` reports whether the project is healthy.
+Open <http://127.0.0.1:8006>: a web project starts with a styled home page (light and dark, responsive) that shows the application name and environment. Its look lives in three files you own: `resources/views/layouts/app.tusk.php` (header, footer, and `<slot />` for each page's content), `public/styles.css` and `public/script.js`. The 404 and error pages (`resources/views/errors/`) use the same layout. `trunk serve` serves files from `public/` itself; in production your web server does. `trunk doctor` reports whether the project is healthy.
 
 ## What you got
 
@@ -36,7 +36,7 @@ app/Controllers/       controllers
 config/*.php           one file per capability (see the configuration reference)
 resources/views/       Tusk templates
 routes/web.php         routes
-public/index.php       the web entry point
+public/index.php       the web entry point; public/styles.css and script.js are the default page's assets
 storage/               logs, caches, sqlite database
 build/                 written by `trunk build` (production only)
 ```

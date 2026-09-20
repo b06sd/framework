@@ -37,6 +37,20 @@ Template names are validated (no `..`, no absolute paths, no NUL), so a name bui
 
 **Escaping is for HTML text and quoted attributes.** A value placed in a URL attribute (`href="{{ link }}"`) is HTML-escaped but is not checked for a `javascript:` scheme; validate URLs you accept from users.
 
+## The default layout
+
+A new web project's `layouts/app.tusk.php` is a complete page: `<slot name="title">`, a header with the application name and a `<slot name="tools">` for page-specific controls, the page content in the default `<slot />`, and a footer. A view fills only what it needs:
+
+```html
+<layout name="app">
+    <fill slot="title">Orders</fill>
+    <fill slot="tools"><span class="chip">3 open</span></fill>
+    <section class="card"><h1>Orders</h1>…</section>
+</layout>
+```
+
+Styles are in `public/styles.css` (CSS variables for colours, automatic dark mode from the visitor's system setting) and the small script in `public/script.js`. The layout loads the Inter font from Google Fonts; remove those three `<link>` lines from the layout if you do not want a request to a third party.
+
 ## Development and production
 
 Development compiles templates on demand into `storage/views`; `trunk build` precompiles them into `build/views` and production loads only those. `config/views.php` chooses the mode.
