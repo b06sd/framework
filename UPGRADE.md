@@ -2,7 +2,9 @@
 
 Public API changes are listed here (see `docs/API.md` for what counts as public). Newest first.
 
-## Unreleased (0.1.x development)
+## Unreleased
+
+## 0.1.2
 
 * `trunk make:entity Name` now writes `app/Entities/Name.php` (namespace `App\Entities`) and `app/Orm/NameMap.php` instead of both into `app/Orm`. Nothing to do for existing projects: maps are still discovered as `app/Orm/*Map.php` and a map names its entity by class, so entities that stay in `app/Orm` keep working. Move them if you want the new layout: change the entity's namespace and add `use App\Entities\Name;` to the map.
 * `Trunk\Orm\Exception\InvalidFilter` and `UnknownProperty` now implement `PublicError`: a request filter or sort the entity map rejects is a `400` (code `BAD_REQUEST`, generic message) instead of a 500. Code that caught them is unaffected. `UnknownProperty::__construct()` takes a second argument (`$fromRequest`, default `false`); create it with `UnknownProperty::for()`.

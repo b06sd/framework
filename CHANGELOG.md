@@ -4,6 +4,9 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+## 0.1.2
+
+* Added: the `validation` capability: attribute rules on request classes, `Validator`, `RequestValidator`, `make:request`, compiled plans in `build/validation.php`, and the guide `docs/validation.md`.
 * Changed: `trunk make:entity` writes the entity to `app/Entities/` (`App\Entities`) and its map to `app/Orm/`, and `package:install orm` creates both folders. Maps are found exactly as before, so existing projects need no change.
 * Documentation: the ORM guide explains why there is no `Model` class ("Coming from Laravel or another framework?").
 * Fixed: an ORM filter or sort taken from a request that the entity map does not allow (`InvalidFilter`, `UnknownProperty`) is now a `400` with a generic message, as the docs promised; it was a 500. `UnknownProperty` from application code stays a 500.
@@ -12,7 +15,6 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 * Fixed: `trunk --version` and the banner show the installed Composer version instead of a hard-coded `0.1.0`.
 * Fixed: an empty `/metrics` export is a comment line explaining that metrics are per process; the deployment docs no longer suggest php-fpm accumulates them.
 * Fixed: the troubleshooting page shows the full route-group prefix message.
-* Added: the `validation` capability (`trunkphp/validation`, `Trunk\Validation`): attribute rules on request classes, `Validator` and `RequestValidator`, `Trunk\Error\ValidationException` (the existing core exception, now also carrying rule codes and safe old input) for a `422` with per-field details, compiled plans in `build/validation.php`, `make:request`, and the guide `docs/validation.md`.
 
 ## 0.1.1
 
