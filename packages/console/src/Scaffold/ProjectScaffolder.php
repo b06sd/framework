@@ -195,7 +195,7 @@ final readonly class ProjectScaffolder
     {
         $files = array_filter([$profile->hasWebRoutes() ? 'web' : null, $profile->hasApiRoutes() ? 'api' : null]);
 
-        return implode("\n", array_map(static fn(string $f): string => "        (require __DIR__ . '/../routes/" . $f . ".php')(\$routes);", $files));
+        return implode("\n", array_map(static fn(string $f): string => "        RouteFile::load(__DIR__ . '/../routes/" . $f . ".php')(\$routes);", $files));
     }
 
     /**

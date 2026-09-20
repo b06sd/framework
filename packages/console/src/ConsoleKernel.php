@@ -20,11 +20,9 @@ use Trunk\Contracts\Kernel;
  */
 final class ConsoleKernel implements Kernel
 {
-    public const string VERSION = '0.1.0';
-
     /**
      * @param array<string, Closure(): Command>      $builtIn             built-in commands, constructed lazily
-     * @param (Closure(): array<string, Command>)|null $applicationCommands commands contributed by the application's modules
+     * @param (Closure(): CommandSet)|null            $applicationCommands commands contributed by the application's modules
      */
     public function __construct(
         private readonly array $builtIn,
@@ -48,7 +46,7 @@ final class ConsoleKernel implements Kernel
 
         try {
             if ($input->wantsVersion()) {
-                $this->output->line('trunk ' . self::VERSION);
+                $this->output->line('trunk ' . Version::current());
 
                 return 0;
             }
@@ -93,38 +91,56 @@ final class ConsoleKernel implements Kernel
             return ($this->builtIn[$name])();
         }
 
-        $application = $this->applicationCommands === null ? [] : ($this->applicationCommands)();
+        $application = $this->application();
 
-        if (isset($application[$name])) {
-            return $application[$name];
+        if (isset($application->commands[$name])) {
+            return $application->commands[$name];
         }
 
-        $known = [...array_keys($this->builtIn), ...array_keys($application)];
+        $known = [...array_keys($this->builtIn), ...array_keys($application->commands)];
         $closest = $this->closest($name, $known);
+        $notes = array_map(static fn(string $problem): string => "\nNote: " . $problem, $application->problems);
 
-        throw new UsageException(\sprintf('There is no command "%s".%s', $name, $closest === null ? '' : \sprintf(' Did you mean "%s"?', $closest)));
+        throw new UsageException(\sprintf('There is no command "%s".%s', $name, $closest === null ? '' : \sprintf(' Did you mean "%s"?', $closest)) . implode('', $notes));
+    }
+
+    /**
+     * The application's commands, or none plus the reason when the application cannot be booted, so
+     * that the built-in commands and the "no such command" message keep working.
+     */
+    private function application(): CommandSet
+    {
+        if ($this->applicationCommands === null) {
+            return new CommandSet();
+        }
+
+        try {
+            return ($this->applicationCommands)();
+        } catch (Throwable $e) {
+            return new CommandSet([], ['Application commands are unavailable: ' . $e->getMessage()]);
+        }
     }
 
     private function list(): int
     {
         $definitions = array_map(static fn(Closure $make): CommandDefinition => $make()->definition(), $this->builtIn);
-        $this->output->title('Trunk ' . self::VERSION);
+        $this->output->title('Trunk ' . Version::current());
         $this->output->line();
         $this->output->line('Usage: trunk <command> [arguments] [--options]');
         $this->output->line();
 
-        if ($this->applicationCommands !== null) {
-            try {
-                foreach (($this->applicationCommands)() as $name => $command) {
-                    $definitions[$name] = $command->definition();
-                }
-            } catch (Throwable $e) {
-                $this->output->warning('Application commands are unavailable: ' . $e->getMessage());
-            }
+        $application = $this->application();
+
+        foreach ($application->commands as $name => $command) {
+            $definitions[$name] = $command->definition();
         }
 
         ksort($definitions);
         $this->output->table(['Command', 'Description'], array_values(array_map(static fn(CommandDefinition $d): array => [$d->name, $d->description], $definitions)));
+
+        foreach ($application->problems as $problem) {
+            $this->output->warning($problem);
+        }
 
         return 0;
     }

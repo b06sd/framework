@@ -61,6 +61,20 @@ final class TelemetryTest extends TestCase
         self::assertStringContainsString('trunk_metrics_dropped_total 4950', new PrometheusFormatter()->format($metrics));
     }
 
+    public function test_an_export_with_no_samples_says_why_instead_of_being_empty(): void
+    {
+        // Arrange
+        $metrics = new InMemoryMetrics();
+
+        // Act
+        $text = new PrometheusFormatter()->format($metrics);
+
+        // Assert
+        self::assertStringStartsWith('# No samples yet.', $text);
+        self::assertStringContainsString('php -S', $text);
+        self::assertSame(1, substr_count($text, "\n"), 'a single comment line, which is valid Prometheus text');
+    }
+
     public function test_counters_gauges_and_histograms_export_in_prometheus_format_with_escaped_labels(): void
     {
         // Arrange

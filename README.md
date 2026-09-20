@@ -9,7 +9,7 @@
 - **MVC.** MVC remains the application development model.
 - **Explicit dependencies.** No facades, no service locator, no global framework state.
 
-> Status: a working framework: core, compiler (lifetimes, automatic wiring), HTTP, router, Tusk, MVC, cache, the capability/package system and the `trunk` CLI. TrunkDB (database layer and ORM) and the queue are built; auth is not built yet.
+> Status: a working framework: core, compiler (lifetimes, automatic wiring), HTTP, router, Tusk, MVC, cache, the capability/package system and the `trunk` CLI. TrunkDB (database layer and ORM), the queue, auth and request validation are built.
 
 ## Install
 
@@ -23,7 +23,7 @@ Requires PHP 8.4+ and Composer 2. Package page: <https://packagist.org/packages/
 
 ## Documentation
 
-Start with [docs/README.md](docs/README.md): [getting started](docs/getting-started.md) (a real app in about ten minutes), [concepts](docs/concepts.md), one guide per package, the [command](docs/cli.md) and [configuration](docs/configuration.md) references, [testing and trying to break it](docs/testing.md), [deployment](docs/deployment.md) and [troubleshooting](docs/troubleshooting.md).
+Start with [docs/README.md](docs/README.md): [getting started](docs/getting-started.md) (a real app in about ten minutes), [concepts](docs/concepts.md), one guide per package (including [validation](docs/validation.md)), the [command](docs/cli.md) and [configuration](docs/configuration.md) references, [testing and trying to break it](docs/testing.md), [deployment](docs/deployment.md) and [troubleshooting](docs/troubleshooting.md).
 
 ## Project layout
 
@@ -45,6 +45,7 @@ packages/<name>/          split packages, each with its own composer.json and sr
   database/src/           Connection/ Driver/ Query/ Schema/ Migration/ Console/ Exception/
   orm/src/                Mapping/ Compiler/ Repository/ UnitOfWork/ Relation/ Diagnostics/ Console/
   queue/src/              Job/ Compiler/ Driver/ Worker/ Console/ Exception/
+  validation/src/         Rules/ Attribute/ Plan/ Compiler/ Http/ Console/ (attribute rules on request classes)
   console/src/            Input/ Output/ Command/ Commands/ Scaffold/ Process/ (the trunk binary is bin/trunk)
 tests/                    mirrors the source tree
   Unit/  Integration/  Security/  Performance/
@@ -119,7 +120,7 @@ Values are always bound (native prepared statements); identifiers are validated 
 
 ## ORM (TrunkORM)
 
-`trunk package:install orm` (it needs `database`). Entities are plain PHP; you describe them in explicit map classes (`app/Orm/*Map.php`, `trunk make:entity Customer` creates both). `trunk build` validates every map and generates hydrators into `build/orm.php`; production runs only generated code, with no reflection.
+`trunk package:install orm` (it needs `database`). Entities are plain PHP; you describe them in explicit map classes. `trunk make:entity Customer` creates both: the entity in `app/Entities/`, its map in `app/Orm/` (maps are discovered as `app/Orm/*Map.php`). There is no `Model` base class; see ["Coming from Laravel?"](docs/orm.md#coming-from-laravel-or-another-framework). `trunk build` validates every map and generates hydrators into `build/orm.php`; production runs only generated code, with no reflection.
 
 ```php
 public function __construct(private EntityManager $orm) {}
@@ -195,6 +196,25 @@ $queue->dispatchMany($jobs);                                            // one m
 `trunk queue:work [--queue=a,b] [--once] [--stop-when-empty] [--max-jobs=N] [--max-time=S] [--memory=MB]` runs jobs; `queue:failed`, `queue:retry {id|all}`, `queue:flush`, `make:job Name` manage them. Jobs are found in `app/Jobs`; `trunk build` validates them (unsafe constructors, container-injecting `handle()`, timeouts that do not fit the visibility window) and generates codecs into `build/queue.php`.
 
 Safety: payloads are JSON only (no `unserialize`), the stored job name is just a key into the compiled allowlist (an unknown name never touches the autoloader), decoding is strict and errors never echo values, failure messages are stored only in development, an attempt is counted when a job is claimed (a job that kills its worker still runs out of tries), claiming is an atomic conditional `UPDATE` (no `SKIP LOCKED`; verified with 4 concurrent worker processes on SQLite, MySQL and PostgreSQL), and a job dispatched inside a database transaction commits or rolls back with your data. Timeouts and graceful shutdown need `ext-pcntl`. Long-running workers share singletons across jobs, so recycle them (`--max-jobs`, `--max-time`, `--memory`) under a process supervisor.
+
+## Validation (TrunkValidation)
+
+`trunk package:install validation`, then `trunk make:request Signup`. A request is a class whose constructor parameters are the fields; attributes are the rules. Valid input becomes an object, invalid input a `422` that names each wrong field and never repeats what was sent.
+
+```php
+final readonly class Signup
+{
+    public function __construct(
+        #[Required, Email] public string $email,
+        #[Required, Length(min: 12), Sensitive] public string $password,
+        #[Range(13, 120)] public ?int $age = null,
+    ) {}
+}
+
+$signup = $this->requests->validate(Signup::class, $request);   // inject RequestValidator; a Signup or a 422
+```
+
+JSON stays strictly typed, form and query values are read strictly from text, backed enums, nested objects and lists of objects work, and a wrong type is a field error, never a server error. `trunk build` checks every request class and writes `build/validation.php`. Full guide: [docs/validation.md](docs/validation.md).
 
 ## Dependency injection in one minute
 

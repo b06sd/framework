@@ -77,7 +77,7 @@ return new Migration(
 ```
 
 ```php
-// app/Orm/Post.php  (a plain PHP class; no base class)
+// app/Entities/Post.php  (what the domain is: a plain PHP class, no base class)
 final class Post
 {
     public function __construct(
@@ -89,7 +89,7 @@ final class Post
 ```
 
 ```php
-// app/Orm/PostMap.php  (the mapping is explicit, in a separate class)
+// app/Orm/PostMap.php  (how it is stored: explicit, in a separate class)
 final class PostMap implements EntityMap
 {
     public function entity(): string { return Post::class; }
@@ -278,4 +278,4 @@ Production refuses to start without a build. See [Deployment](deployment.md).
 
 ## Next
 
-[Concepts](concepts.md) explains what just happened. The [testing guide](testing.md) explains how to run the framework's own suites and how to test your app.
+[Concepts](concepts.md) explains what just happened. Check what users send with [Validation](validation.md). The [testing guide](testing.md) explains how to run the framework's own suites and how to test your app.

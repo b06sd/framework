@@ -21,6 +21,7 @@ A **capability** is metadata: a named set of modules plus the config files, `.en
 | `diagnostics` | Error pipeline, request/job lifecycle reset, health checker | logging |
 | `tusk` | Template engine (`*.tusk.php`) | |
 | `mvc` | `Responder`: views, JSON, safe redirects | http, tusk |
+| `validation` | Request classes with attribute rules; 422 errors | http |
 | `console` | Application commands | |
 | `cache` | PSR-16 cache (array, file, null) | |
 | `database` | Connections, query builder, schema, migrations | |
@@ -76,5 +77,6 @@ The same building blocks run jobs: one scope per job, the same reset, and the jo
 ## Conventions worth knowing
 
 * **No base classes.** You implement interfaces (`Module`, `Command`, `Job`, `EntityMap`, `Policy`...). The only abstract classes in the framework are internal.
+* **Entities, not models.** What other frameworks call a model is an *entity* (`app/Entities`, a plain class) plus a *map* (`app/Orm`, how it is stored); see [ORM](orm.md#coming-from-laravel-or-another-framework).
 * **Public API.** Only types tagged `@api` are supported; see [API.md](API.md). Everything else may change in any release.
 * **Errors** carry stable codes (`NOT_FOUND`, `VALIDATION_FAILED`, `CSRF_TOKEN_INVALID`, `TOO_MANY_REQUESTS`...). You can add your own by implementing `HasErrorCode` / `PublicError`.

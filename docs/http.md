@@ -64,7 +64,7 @@ Order per request: global, error handling, routing, group/route middleware (oute
 {"error":{"code":"NOT_FOUND","message":"Not Found","requestId":"req_01M2..."}}
 ```
 
-In `local` with `APP_DEBUG=1` the response adds the exception, the source lines (for a template failure, the template lines), a trace without arguments and the request with secret headers redacted. Force a format with `errors.format` (`auto`, `json`, `html`, `text`). Your own error pages: `resources/views/errors/404.tusk.php` and `error.tusk.php`.
+In `local` with `APP_DEBUG=1` the response adds the exception, the source lines (for a template failure, the template lines), a trace without arguments and the request with secret headers redacted. Force a format with `errors.format` (`auto`, `json`, `html`, `text`). Your own error pages: `resources/views/errors/404.tusk.php` and `error.tusk.php`. Bad input is a `422` with a field-by-field list: see [Validation](validation.md).
 
 ## Limits (`config/http.php`)
 
@@ -87,4 +87,4 @@ Applied to every response (error pages included), never overwriting a header a h
 
 ## Health and metrics
 
-`trunk package:install health` adds `/health/live` (never touches dependencies), `/health/ready` (runs the checks tagged `trunk.health_check`, such as the database; production shows only up/down) and `/metrics` (Prometheus text, off until `health.metrics_token` is set, then `Authorization: Bearer <token>`; needs the `observability` capability).
+`trunk package:install health` adds `/health/live` (never touches dependencies), `/health/ready` (runs the checks tagged `trunk.health_check`, such as the database; production shows only up/down) and `/metrics` (Prometheus text, off until `health.metrics_token` is set, then `Authorization: Bearer <token>`; needs the `observability` capability). **Metrics are kept in memory, per PHP process.** A server that starts a fresh process for every request (`php -S`, php-fpm) always starts empty, so `/metrics` answers with a single comment line there; useful numbers need a long-lived process (FrankenPHP worker mode, RoadRunner, Swoole, the queue worker) or an external exporter.

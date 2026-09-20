@@ -19,7 +19,7 @@ final class ArchitectureRulesTest extends TestCase
     /** namespace prefix per package directory name */
     private const array PACKAGES = [
         'router' => 'Trunk\\Router', 'http' => 'Trunk\\Http', 'tusk' => 'Trunk\\Tusk', 'mvc' => 'Trunk\\Mvc', 'console' => 'Trunk\\Console',
-        'cache' => 'Trunk\\Cache', 'database' => 'Trunk\\Database', 'orm' => 'Trunk\\Orm', 'queue' => 'Trunk\\Queue', 'observability' => 'Trunk\\Telemetry', 'auth' => 'Trunk\\Auth',
+        'cache' => 'Trunk\\Cache', 'database' => 'Trunk\\Database', 'orm' => 'Trunk\\Orm', 'queue' => 'Trunk\\Queue', 'observability' => 'Trunk\\Telemetry', 'auth' => 'Trunk\\Auth', 'validation' => 'Trunk\\Validation',
     ];
 
     public function test_core_imports_nothing_from_optional_packages(): void

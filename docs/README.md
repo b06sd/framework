@@ -1,6 +1,6 @@
 # Trunk documentation
 
-Trunk is a PHP 8.4+ framework built around three ideas: **explicit** (constructor injection, no facades, no global helpers, no base classes), **compiled** (`trunk build` validates and precompiles the container, routes, views, ORM maps and job codecs, and production runs only that build), and **safe by default** (generic errors in production, strict input limits, secrets kept out of the build, layered defences in the auth and http packages).
+Trunk is a PHP 8.4+ framework built around three ideas: **explicit** (constructor injection, no facades, no global helpers, no base classes), **compiled** (`trunk build` validates and precompiles the container, routes, views, ORM maps, job codecs and request plans, and production runs only that build), and **safe by default** (generic errors in production, strict input limits, secrets kept out of the build, layered defences in the auth and http packages).
 
 Every example in these guides was run in a real project created with `trunk new` and installed with `composer install`, in development and in the compiled production mode.
 
@@ -19,8 +19,9 @@ Every example in these guides was run in a real project created with `trunk new`
 * [HTTP: routing, controllers, middleware, errors, limits, security headers](http.md)
 * [Views: Tusk templates and the Responder](views.md)
 * [Database: connections, query builder, schema, migrations](database.md)
-* [ORM: entities, maps, repositories, the unit of work](orm.md)
+* [ORM: entities, maps, repositories, the unit of work (and "where is the model?")](orm.md)
 * [Queue: jobs and workers](queue.md)
+* [Validation: request classes, rules, 422 errors, forms](validation.md)
 * [Auth: passwords, sessions, CSRF, tokens, throttling, policies](auth.md)
 * [Deployment](deployment.md)
 * [Troubleshooting](troubleshooting.md)

@@ -2,9 +2,27 @@
 
 A data mapper with an identity map and a unit of work. **Entities are plain PHP classes; mapping is explicit in a separate class**, so nothing about the database leaks into your domain objects and nothing is discovered by reflection at run time. There is no Active Record and no lazy loading: relations load only when you ask (`with(...)`), so an accidental N+1 cannot hide.
 
+## Coming from Laravel or another framework?
+
+There is no `Model` class to extend. What other frameworks call a *model* is two small things here, kept apart on purpose:
+
+| | Where | What it is |
+| --- | --- | --- |
+| **Entity** | `app/Entities/Customer.php` | a plain PHP class: what your domain *is*. No base class, no database code. |
+| **Map** | `app/Orm/CustomerMap.php` | how it is *stored*: table, columns, relations. `implements EntityMap`. |
+
+Why: an object that extends a base class and saves itself (Active Record) needs global state to find its database connection, mixes storage into every domain object, and hides queries behind property access (the N+1 problem). Here the entity stays testable without a database, the map is checked by `trunk orm:validate` and `trunk build` instead of by reflection at run time, and every query is explicit.
+
+| In Eloquent | In Trunk |
+| --- | --- |
+| `class Customer extends Model { protected $hidden = ['password']; }` | an entity class plus `$map->string('passwordHash', 'password_hash')->hidden();` in its map |
+| `Customer::find(7)`, `Customer::where('status', 'active')->get()` | `$manager->repository(Customer::class)->find(7)`, `->query()->where('status', 'active')->get()` (inject `EntityManager`; no static access) |
+| `$customer->save()` | `$manager->persist($customer); $manager->flush();` (one unit of work, one transaction) |
+| `public function orders(): HasMany` and lazy `$customer->orders` | `$map->hasMany('orders', Order::class, foreignKey: 'customerId')`, loaded only when you ask: `->with('orders')` |
+
 ## Entity and map
 
-`trunk make:entity Post` creates both files in `app/Orm/` (maps are discovered as `app/Orm/*Map.php`).
+`trunk make:entity Post` creates both files: the entity in `app/Entities/` and its map in `app/Orm/` (maps are discovered as `app/Orm/*Map.php`; a map names its entity by class, so an entity may live anywhere, and projects that keep entities in `app/Orm` keep working).
 
 ```php
 final class Customer
@@ -58,7 +76,7 @@ foreach ($repo->query()->cursor(500) as $c) { ... }        // streams a huge tab
 
 ### Untrusted input
 
-Request parameters reach the query only through `filter()` and `sortBy()`, which accept **only properties marked `filterable()` / `sortable()`**; unknown properties, wrong types, too many values or fields are `InvalidFilter` / `UnknownProperty` (a 4xx, never a database error or a 500).
+Request parameters reach the query only through `filter()` and `sortBy()`, which accept **only properties marked `filterable()` / `sortable()`**; unknown properties, wrong types, too many values or fields are `InvalidFilter` / `UnknownProperty`: a `400 BAD_REQUEST` with the fixed message "The filter or sort is not valid." (never a database error, a 500, or your property names; the detail is in the log). An `UnknownProperty` raised by your own code, such as `with('typo')`, is a bug and stays a 500.
 
 ```php
 $repo->query()->readOnly()->filter($request->getQueryParams())->sortBy($request->getQueryParams()['sort'] ?? 'name')->paginate();

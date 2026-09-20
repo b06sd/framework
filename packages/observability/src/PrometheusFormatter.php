@@ -43,7 +43,7 @@ final class PrometheusFormatter
             $lines[] = 'trunk_metrics_dropped_total ' . $metrics->dropped();
         }
 
-        return implode("\n", $lines) . "\n";
+        return $lines === [] ? "# No samples yet. Metrics are kept per PHP process, so a server that starts a new process for every request (php -S, php-fpm) always starts empty.\n" : implode("\n", $lines) . "\n";
     }
 
     /**

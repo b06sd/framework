@@ -80,7 +80,7 @@ final readonly class ConsoleKernelFactory
 
         $applicationCommands = $project === null
             ? null
-            : fn(): array => new ApplicationCommands($project, $this->applications->runtime($project, $variables), $this->applications)->load();
+            : fn(): CommandSet => new ApplicationCommands($project, $this->applications->runtime($project, $variables), $this->applications)->load();
 
         return new ConsoleKernel($builtIn, $applicationCommands, $output);
     }

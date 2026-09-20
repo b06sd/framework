@@ -22,9 +22,11 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 | `package:remove <id> [--purge]` | Disable a capability (refused while another needs it) |
 | `package:sync` | Add or remove integration modules (e.g. `cache:clear` appears when cache and console are both enabled) |
 
+`trunk --version` prints the installed Composer version (`0.1.1`, or `dev-main` on a branch). If one of your application's commands cannot be built, `trunk list` and `trunk <unknown>` still work and print a note naming it and the reason; only that command is unavailable.
+
 ## Generators (never overwrite)
 
-`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:migration` (database), `make:job` (queue). Each prints where to register or use the result.
+`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:migration` (database), `make:job` (queue), `make:request` (validation). Each prints where to register or use the result.
 
 ## Database, ORM, cache
 

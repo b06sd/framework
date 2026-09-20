@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Trunk\Container\ContainerBuilder;
 use Trunk\Contracts\Module;
 use Trunk\Router\Definition\RouteCollector;
+use Trunk\Router\Definition\RouteFile;
 use Trunk\Router\Definition\RouteProvider;
 
 /**

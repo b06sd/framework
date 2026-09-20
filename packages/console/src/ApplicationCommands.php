@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Trunk\Console;
 
+use Throwable;
 use Trunk\Container\Scopable;
 use Trunk\Contracts\Console\Command;
 use Trunk\Contracts\Console\CommandCollector;
@@ -25,10 +26,7 @@ final readonly class ApplicationCommands
         private ApplicationFactory $factory = new ApplicationFactory(),
     ) {}
 
-    /**
-     * @return array<string, Command>
-     */
-    public function load(): array
+    public function load(): CommandSet
     {
         $collector = new CommandCollector();
 
@@ -41,7 +39,7 @@ final readonly class ApplicationCommands
         }
 
         if ($collector->classes() === []) {
-            return [];
+            return new CommandSet();
         }
 
         $container = $this->factory->create($this->project, $this->runtime)->container();
@@ -51,23 +49,28 @@ final readonly class ApplicationCommands
         }
 
         $commands = [];
+        $problems = [];
 
         foreach ($collector->classes() as $class) {
-            $command = $container->beginScope()->get($class);
+            try {
+                $command = $container->beginScope()->get($class);
 
-            if (!$command instanceof Command) {
-                throw new CommandFailedException(\sprintf('"%s" did not resolve to a console command.', $class));
+                if (!$command instanceof Command) {
+                    throw new CommandFailedException(\sprintf('"%s" did not resolve to a console command.', $class));
+                }
+
+                $name = $command->definition()->name;
+
+                if (isset($commands[$name])) {
+                    throw new CommandFailedException(\sprintf('Two commands are named "%s".', $name));
+                }
+
+                $commands[$name] = $command;
+            } catch (Throwable $e) {
+                $problems[] = \sprintf('%s could not be loaded: %s', $class, trim(strtok($e->getMessage(), "\n") ?: $e::class));
             }
-
-            $name = $command->definition()->name;
-
-            if (isset($commands[$name])) {
-                throw new CommandFailedException(\sprintf('Two commands are named "%s".', $name));
-            }
-
-            $commands[$name] = $command;
         }
 
-        return $commands;
+        return new CommandSet($commands, $problems);
     }
 }

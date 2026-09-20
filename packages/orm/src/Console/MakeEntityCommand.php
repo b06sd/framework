@@ -14,7 +14,8 @@ use Trunk\Orm\Mapping\MapBuilder;
 use Trunk\Support\FileWriter;
 
 /**
- * `trunk make:entity Customer` writes app/Orm/Customer.php and app/Orm/CustomerMap.php. It never
+ * `trunk make:entity Customer` writes app/Entities/Customer.php (what the domain is: a plain class) and
+ * app/Orm/CustomerMap.php (how it is stored: the map). It never
  * overwrites, and the name must be a plain PascalCase identifier.
  */
 final readonly class MakeEntityCommand implements Command
@@ -34,16 +35,21 @@ final readonly class MakeEntityCommand implements Command
             throw new CommandFailedException('The entity name must be PascalCase letters and digits, e.g. Customer.');
         }
 
-        $directory = $this->runtime->basePath . '/app/Orm';
-        $entity = $directory . '/' . $name . '.php';
-        $map = $directory . '/' . $name . 'Map.php';
+        $entity = $this->runtime->basePath . '/app/Entities/' . $name . '.php';
+        $map = $this->runtime->basePath . '/app/Orm/' . $name . 'Map.php';
 
-        if (file_exists($entity) || file_exists($map)) {
-            throw new CommandFailedException($name . ' already exists in app/Orm; nothing was overwritten.');
+        foreach (['app/Entities/' . $name . '.php' => $entity, 'app/Orm/' . $name . 'Map.php' => $map] as $relative => $path) {
+            if (file_exists($path)) {
+                throw new CommandFailedException($relative . ' already exists; nothing was overwritten.');
+            }
         }
 
-        if (!is_dir($directory) && !mkdir($directory, 0o755, true) && !is_dir($directory)) {
-            throw new CommandFailedException('app/Orm could not be created.');
+        foreach (['app/Entities', 'app/Orm'] as $relative) {
+            $directory = $this->runtime->basePath . '/' . $relative;
+
+            if (!is_dir($directory) && !mkdir($directory, 0o755, true) && !is_dir($directory)) {
+                throw new CommandFailedException($relative . ' could not be created.');
+            }
         }
 
         $table = MapBuilder::snake($name) . 's';
@@ -52,7 +58,7 @@ final readonly class MakeEntityCommand implements Command
 
             declare(strict_types=1);
 
-            namespace App\\Orm;
+            namespace App\\Entities;
 
             final class {$name}
             {
@@ -70,6 +76,7 @@ final readonly class MakeEntityCommand implements Command
 
             namespace App\\Orm;
 
+            use App\\Entities\\{$name};
             use Trunk\\Orm\\Mapping\\EntityMap;
             use Trunk\\Orm\\Mapping\\MapBuilder;
 
@@ -90,7 +97,7 @@ final readonly class MakeEntityCommand implements Command
 
             PHP);
 
-        $output->success('Created app/Orm/' . $name . '.php and app/Orm/' . $name . 'Map.php');
+        $output->success('Created app/Entities/' . $name . '.php and app/Orm/' . $name . 'Map.php');
         $output->line('  Create the "' . $table . '" table with `trunk make:migration create_' . $table . '_table`, then `trunk orm:validate`.');
 
         return 0;

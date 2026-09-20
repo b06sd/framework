@@ -44,6 +44,17 @@ final class BuiltInCapabilities
                 directories: ['resources/views'],
             ),
             new Capability('mvc', 'MVC', 'MVC responder: views, JSON and safe redirects', ['Trunk\\Mvc\\MvcModule'], requires: ['http', 'tusk']),
+            new Capability(
+                'validation',
+                'Validation',
+                'Request validation with attribute rules, compiled at build time',
+                ['Trunk\\Validation\\ValidationModule'],
+                requires: ['http'],
+                config: ['validation' => $root . '/packages/validation/resources/config/validation.php'],
+                directories: ['app/Requests'],
+                composer: ['ext-mbstring' => '*'],
+                integrations: ['console' => ['Trunk\\Validation\\Console\\ValidationConsoleModule']],
+            ),
             new Capability('console', 'Console', 'Application console commands', ['Trunk\\Console\\ConsoleModule']),
             new Capability(
                 'cache',
@@ -73,7 +84,7 @@ final class BuiltInCapabilities
                 ['Trunk\\Orm\\OrmModule'],
                 requires: ['database'],
                 config: ['orm' => $root . '/packages/orm/resources/config/orm.php'],
-                directories: ['app/Orm'],
+                directories: ['app/Entities', 'app/Orm'],
                 integrations: ['console' => ['Trunk\\Orm\\Console\\OrmConsoleModule']],
             ),
             new Capability(

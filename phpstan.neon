@@ -13,8 +13,10 @@ parameters:
         - packages/queue/src
         - packages/observability/src
         - packages/auth/src
+        - packages/validation/src
         - tests
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: true
     excludePaths:
         - tests/Fixtures/views
+        - tests/Fixtures/Validation/Broken

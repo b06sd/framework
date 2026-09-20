@@ -1,0 +1,50 @@
+{
+    "name": "trunkphp/validation",
+    "description": "Request validation for Trunk: rules are attributes on a request class, compiled at build time. Bad input becomes a 422 with per-field errors and never echoes what was sent.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-mbstring": "*",
+        "trunkphp/http": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Validation\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "validation",
+                "name": "Validation",
+                "description": "Request validation with attribute rules, compiled at build time",
+                "modules": [
+                    "Trunk\\Validation\\ValidationModule"
+                ],
+                "requires": [
+                    "http"
+                ],
+                "config": {
+                    "validation": "resources/config/validation.php"
+                },
+                "directories": [
+                    "app/Requests"
+                ],
+                "integrations": {
+                    "console": [
+                        "Trunk\\Validation\\Console\\ValidationConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "suggest": {
+        "trunkphp/console": "Enables the make:request command when the console capability is enabled"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

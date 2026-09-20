@@ -46,4 +46,4 @@ Cron: `trunk auth:prune` (dead sessions, tokens, throttle counters). Run `trunk 
 
 ## Observability
 
-Logs are JSON lines with request and trace ids. `trunk package:install health` adds `/health/live` (liveness) and `/health/ready` (dependency checks); set `METRICS_TOKEN` to expose `/metrics` (Prometheus text; metrics are per process, so under php-fpm each worker reports its own requests).
+Logs are JSON lines with request and trace ids. `trunk package:install health` adds `/health/live` (liveness) and `/health/ready` (dependency checks); set `METRICS_TOKEN` to expose `/metrics` (Prometheus text; metrics live in one PHP process, so they only accumulate in a long-lived one (FrankenPHP worker mode, RoadRunner, Swoole, the queue worker); under `php -S` or php-fpm every request starts empty and `/metrics` says so in a comment line).

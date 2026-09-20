@@ -6,7 +6,9 @@ namespace Trunk\Tests\Unit\Console;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Trunk\Console\CommandSet;
 use Trunk\Console\ConsoleKernel;
+use Trunk\Console\Version;
 use Trunk\Contracts\Console\Command;
 use Trunk\Tests\Fixtures\Console\BoomCommand;
 use Trunk\Tests\Fixtures\Console\EchoCommand;
@@ -92,7 +94,7 @@ final class ConsoleKernelTest extends TestCase
         self::assertStringContainsString('demo:boom', $list);
         self::assertStringContainsString('Usage: trunk demo:echo <text>', $this->capture->stdout());
         self::assertStringContainsString('--loud', $this->capture->stdout());
-        self::assertStringContainsString('trunk ' . ConsoleKernel::VERSION, $this->capture->stdout());
+        self::assertStringContainsString('trunk ' . Version::current(), $this->capture->stdout());
     }
 
     public function test_a_failing_application_boot_does_not_break_listing_built_in_commands(): void
@@ -100,7 +102,7 @@ final class ConsoleKernelTest extends TestCase
         // Arrange
         $kernel = new ConsoleKernel(
             ['demo:echo' => static fn(): Command => new EchoCommand()],
-            static fn(): array => throw new RuntimeException('config is broken'),
+            static fn(): CommandSet => throw new RuntimeException('config is broken'),
             $this->capture->output,
         );
 
@@ -113,11 +115,50 @@ final class ConsoleKernelTest extends TestCase
         self::assertStringContainsString('Application commands are unavailable: config is broken', $this->capture->stdout());
     }
 
+    public function test_a_command_that_could_not_be_loaded_does_not_hide_the_others_or_the_unknown_command_message(): void
+    {
+        // Arrange
+        $kernel = new ConsoleKernel(
+            ['demo:echo' => static fn(): Command => new EchoCommand()],
+            static fn(): CommandSet => new CommandSet(['demo:boom' => new BoomCommand()], ['App\\Commands\\CreateUser could not be loaded: Cannot resolve "PasswordHasher"']),
+            $this->capture->output,
+        );
+
+        // Act
+        $unknown = $kernel->handle(['trunk', 'nope']);
+        $unknownOutput = $this->capture->stderr();
+        $known = $kernel->handle(['trunk', 'demo:boom']);
+        $list = $kernel->handle(['trunk', 'list']);
+
+        // Assert
+        self::assertSame(2, $unknown);
+        self::assertStringContainsString('There is no command "nope".', $unknownOutput);
+        self::assertStringContainsString('Note: App\\Commands\\CreateUser could not be loaded: Cannot resolve "PasswordHasher"', $unknownOutput);
+        self::assertSame(1, $known, 'a working command still runs (BoomCommand fails on purpose)');
+        self::assertSame(0, $list);
+        self::assertStringContainsString('demo:boom', $this->capture->stdout());
+        self::assertStringContainsString('CreateUser could not be loaded', $this->capture->stdout());
+    }
+
+    public function test_an_application_that_cannot_boot_still_answers_an_unknown_command_with_the_reason(): void
+    {
+        // Arrange
+        $kernel = new ConsoleKernel([], static fn(): CommandSet => throw new RuntimeException('config is broken'), $this->capture->output);
+
+        // Act
+        $code = $kernel->handle(['trunk', 'nope']);
+
+        // Assert
+        self::assertSame(2, $code);
+        self::assertStringContainsString('There is no command "nope".', $this->capture->stderr());
+        self::assertStringContainsString('Note: Application commands are unavailable: config is broken', $this->capture->stderr());
+    }
+
     private function kernel(bool $withApplicationCommands = true): ConsoleKernel
     {
         return new ConsoleKernel(
             ['demo:echo' => static fn(): Command => new EchoCommand()],
-            $withApplicationCommands ? static fn(): array => ['demo:boom' => new BoomCommand()] : null,
+            $withApplicationCommands ? static fn(): CommandSet => new CommandSet(['demo:boom' => new BoomCommand()]) : null,
             $this->capture->output,
         );
     }

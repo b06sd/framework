@@ -46,6 +46,7 @@
             <directory>packages/queue/src</directory>
             <directory>packages/observability/src</directory>
             <directory>packages/auth/src</directory>
+            <directory>packages/validation/src</directory>
         </include>
     </source>
 </phpunit>
