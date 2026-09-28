@@ -7,6 +7,7 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 * New public types `Trunk\Doctor\DoctorCheck` (interface) and `Trunk\Doctor\DoctorFinding` (class), and a new container tag `trunk.doctor_check`. `trunk doctor` boots the real application and runs every tagged check, alongside its existing file/config checks. Additive; nothing to change in an existing project.
 * New public types `Trunk\Http\Security\Cors` and `Trunk\Http\Middleware\CorsMiddleware`, and a new `cors` block in `config/http.php`. `HttpModule` now also implements `MiddlewareProvider` and registers `CorsMiddleware` as global middleware, unconditionally; it is a no-op unless `cors.enabled` is set. Additive; nothing to change in an existing project.
 * New capability **`rate-limit`** (`packages/ratelimit`, `Trunk\RateLimit`): see `docs/API.md` for its public types (`RateLimiter`, `RateLimitMiddleware`). Enable it with `trunk package:install rate-limit`; it needs the `database` capability. Nothing changes for an existing project until it does.
+* New public types `Trunk\Testing\TestApp`, `Trunk\Testing\TestClient` and `Trunk\Testing\TestResponse` (`packages/testing`), bundled with `trunkphp/framework` like every other package — not a capability, nothing in `trunk.php`. Additive; nothing to change in an existing project.
 
 ## 0.1.2
 

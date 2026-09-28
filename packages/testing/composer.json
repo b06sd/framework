@@ -1,0 +1,23 @@
+{
+    "name": "trunkphp/testing",
+    "description": "A test client for Trunk applications: boot the real app and drive its HTTP kernel with cookies, JSON and fluent assertions, in development or the compiled build.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunkphp/http": "^0.1",
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Testing\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

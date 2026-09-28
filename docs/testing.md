@@ -4,40 +4,46 @@ Three different things: testing **your application**, running **the framework's 
 
 ## 1. Test your application
 
-A project comes with PHPUnit configured (`trunk test`, or `vendor/bin/phpunit`). Test services and jobs as plain classes (constructor injection makes that easy), and test HTTP behaviour through the real kernel:
+A project comes with PHPUnit configured (`trunk test`, or `vendor/bin/phpunit`). Test services and jobs as plain classes (constructor injection makes that easy). For HTTP, `Trunk\Testing\TestApp` (bundled with `trunkphp/framework`, nothing extra to install) gives you a real test client: it boots your actual application (`trunk.php`, `config/*.php`) and drives its kernel with cookies, JSON and fluent assertions.
 
 ```php
-final class HttpTest extends TestCase
+final class HomeTest extends TestCase
 {
-    private static function kernel(): HttpKernel
-    {
-        $project = new ProjectLoader()->load(dirname(__DIR__));
-        $factory = new ApplicationFactory();
-        // The real project: its trunk.php, config/*.php and development container; override settings here.
-        $runtime = $factory->runtime($project, ['APP_ENV' => 'local', 'APP_DEBUG' => '0', 'LOG_CHANNEL' => 'null']);
-
-        return new HttpKernelFactory()->development($factory->create($project, $runtime), new ModuleManifest($project->modules));
-    }
-
     public function test_the_home_page_renders(): void
     {
-        $response = self::kernel()->handle(new ServerRequest('GET', 'http://app.test/'));
-
-        self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('<h1>Demo</h1>', (string) $response->getBody());
+        TestApp::client(dirname(__DIR__))->get('/')->assertOk()->assertSee('<h1>Demo</h1>');
     }
 
-    public function test_unknown_paths_are_a_json_404_for_api_clients(): void
+    public function test_unknown_paths_are_a_json_404(): void
     {
-        $response = self::kernel()->handle(new ServerRequest('GET', 'http://app.test/nope', ['Accept' => 'application/json']));
-
-        self::assertSame(404, $response->getStatusCode());
-        self::assertNotSame('', $response->getHeaderLine('X-Request-Id'));
+        TestApp::client(dirname(__DIR__))->get('/nope')->assertStatus(404)->assertHeader('X-Request-Id');
     }
 }
 ```
 
-(`ServerRequest` is `Trunk\Http\Message\ServerRequest`; any PSR-7 request works.) To exercise a database, point `DB_DATABASE` at a temporary SQLite file in the runtime overrides and run your migrations there. Use the same style to test the compiled build: run `trunk build`, then use `HttpKernelFactory::compiled(...)`.
+`TestApp::client($root)` is `Trunk\Testing\TestApp` (`$root` is the directory holding `trunk.php`, typically `dirname(__DIR__)`). It returns a `Trunk\Testing\TestClient`: `get`, `post`, `put`, `patch`, `delete` (form bodies) and `json($method, $uri, $data)` (a JSON body), each returning a `Trunk\Testing\TestResponse` with `assertStatus`, `assertOk`, `assertRedirect`, `assertHeader`, `assertHeaderMissing`, `assertSee`, `assertDontSee`, `assertJson` (a subset of the top-level keys), `json()` and `status()`. `withHeader()` and `withAddress()` set something on every request the client makes from then on (an `Authorization` header, or a specific `client_ip` for testing rate limits and login throttling). Cookies are kept and sent back automatically, so a login followed by a request to a page behind it needs no extra wiring:
+
+```php
+$client = TestApp::client(dirname(__DIR__));
+$csrf = $client->get('/login')->csrfToken();                 // reads the real <input name="_csrf"> from the page
+$client->post('/login', ['_csrf' => $csrf, 'email' => 'ada@example.com', 'password' => 'correct horse battery'])
+    ->assertRedirect('/account');
+$client->get('/account')->assertOk()->assertSee('ada@example.com');   // the session cookie carried over
+```
+
+`csrfToken(string $field = '_csrf')` reads the value the same way a browser would: from the page it just fetched, before submitting a form (an HTML `<input>` of that name, in any attribute order, or that key in a JSON body). `TestClient` sends `Accept: application/json`, so a route guarded by `RequireLogin` answers a signed-out request with `401`, not the redirect it gives an actual browser — assert `401` there, not a redirect.
+
+To exercise a database, pass `variables: ['DB_DATABASE' => $tempFile]` as `TestApp::client()`'s third argument and run your migrations against it first. To test the compiled build, run `trunk build`, then `TestApp::client($root, 'production')`.
+
+Prefer the raw kernel yourself, or a PSR-7 request that is not `Trunk\Http\Message\ServerRequest`? `TestApp::client()` is a thin wrapper around exactly this:
+
+```php
+$project = new ProjectLoader()->load($root);
+$factory = new ApplicationFactory();
+$runtime = $factory->runtime($project, ['APP_ENV' => 'local', 'APP_DEBUG' => '0']);
+$kernel = new HttpKernelFactory()->development($factory->create($project, $runtime), new ModuleManifest($project->modules));
+$response = $kernel->handle($request);   // any PSR-7 ServerRequestInterface
+```
 
 ## 2. Run the framework's own suites
 
@@ -68,7 +74,7 @@ TRUNK_TEST_PGSQL_HOST=localhost TRUNK_TEST_PGSQL_DATABASE=<db> TRUNK_TEST_PGSQL_
 vendor/bin/phpunit
 ```
 
-(Also `..._PASSWORD` and `..._PORT` for MySQL.) Without them 26 tests skip; with them, the reference run is 1577 tests, 0 skipped.
+(Also `..._PASSWORD` and `..._PORT` for MySQL.) Without them 26 tests skip; with them, the reference run is 1841 tests, 0 skipped.
 
 **Another PHP version:** put its `bin` first on `PATH` (`PATH=/opt/homebrew/opt/php@8.4/bin:$PATH vendor/bin/phpunit`). The suite passes on 8.4.25 and 8.5.5. **Lowest dependencies:** `composer update --prefer-lowest --prefer-stable` in a copy, then `composer test`.
 
@@ -109,4 +115,4 @@ Deeper attacks are already automated: `vendor/bin/phpunit --testsuite Security`,
 
 ## What is not tested
 
-GitHub Actions has never run; browsers other than Chrome; a production web server (php-fpm with nginx, FrankenPHP, RoadRunner) in place of PHP's built-in server; realistic large applications; comparisons with other frameworks.
+Browsers other than Chrome; a production web server (php-fpm with nginx, FrankenPHP, RoadRunner) in place of PHP's built-in server; realistic large applications; comparisons with other frameworks.

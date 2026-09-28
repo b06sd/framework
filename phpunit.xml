@@ -48,6 +48,7 @@
             <directory>packages/auth/src</directory>
             <directory>packages/validation/src</directory>
             <directory>packages/ratelimit/src</directory>
+            <directory>packages/testing/src</directory>
         </include>
     </source>
 </phpunit>
