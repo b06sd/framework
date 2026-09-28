@@ -85,6 +85,17 @@ Enabled by the `config/http.php` that `trunk new` publishes:
 
 Applied to every response (error pages included), never overwriting a header a handler set, with `Strict-Transport-Security` only on https requests. A value can be `false` to leave a header out. `SecurityHeadersMiddleware` applies the same policy to one route group when the global switch is off. The default CSP is only the always-safe directives; a full `default-src`/`script-src` policy depends on your pages, so set it yourself.
 
+## CORS
+
+Off by default: most APIs are not meant to be called from arbitrary web pages. Turn it on in `config/http.php` and list the origins you actually want to allow:
+
+```php
+'cors' => ['enabled' => true, 'allowed_origins' => ['https://app.example.com'], 'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    'allowed_headers' => ['*'], 'exposed_headers' => [], 'allow_credentials' => false, 'max_age' => 86400],
+```
+
+A preflight (`OPTIONS` with `Access-Control-Request-Method`) from an allowed origin is answered before routing runs, with a 204 and no controller involved — the router has no way to match `OPTIONS` on a route only ever declared for `GET`, so without this a preflight would be a 404 or 405. A real request from an allowed origin gets `Access-Control-Allow-Origin` on every response, error pages included. `allow_credentials` (send cookies or `Authorization` cross-origin) needs an exact origin list; browsers refuse to combine it with `allowed_origins: ["*"]`, and the build refuses it too. If you also turn CORS on, set `security_headers.cross_origin_resource_policy` to `"cross-origin"` (or `false`): its default, `"same-origin"`, blocks a cross-origin fetch before CORS headers are even considered.
+
 ## Health and metrics
 
 `trunk package:install health` adds `/health/live` (never touches dependencies), `/health/ready` (runs the checks tagged `trunk.health_check`, such as the database; production shows only up/down) and `/metrics` (Prometheus text, off until `health.metrics_token` is set, then `Authorization: Bearer <token>`; needs the `observability` capability). **Metrics are kept in memory, per PHP process.** A server that starts a fresh process for every request (`php -S`, php-fpm) always starts empty, so `/metrics` answers with a single comment line there; useful numbers need a long-lived process (FrankenPHP worker mode, RoadRunner, Swoole, the queue worker) or an external exporter.

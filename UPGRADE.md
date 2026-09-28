@@ -5,6 +5,7 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 ## Unreleased
 
 * New public types `Trunk\Doctor\DoctorCheck` (interface) and `Trunk\Doctor\DoctorFinding` (class), and a new container tag `trunk.doctor_check`. `trunk doctor` boots the real application and runs every tagged check, alongside its existing file/config checks. Additive; nothing to change in an existing project.
+* New public types `Trunk\Http\Security\Cors` and `Trunk\Http\Middleware\CorsMiddleware`, and a new `cors` block in `config/http.php`. `HttpModule` now also implements `MiddlewareProvider` and registers `CorsMiddleware` as global middleware, unconditionally; it is a no-op unless `cors.enabled` is set. Additive; nothing to change in an existing project.
 
 ## 0.1.2
 

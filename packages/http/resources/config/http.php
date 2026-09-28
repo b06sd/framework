@@ -39,4 +39,25 @@ return [
         'hsts_include_subdomains' => true,
         'hsts_preload' => false,
     ],
+    // Cross-origin resource sharing: lets a browser page on another origin call this API. Off by
+    // default; most APIs are not meant to be called from arbitrary web pages. If you turn this on,
+    // also set security_headers.cross_origin_resource_policy above to "cross-origin" (or false):
+    // "same-origin" blocks a cross-origin fetch itself, before CORS headers are even considered.
+    'cors' => [
+        'enabled' => false,
+        // Exact origins ("https://app.example.com"), or ["*"] for any. "*" cannot be combined with
+        // allow_credentials (browsers refuse that combination).
+        'allowed_origins' => ['*'],
+        'allowed_methods' => ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        // Request headers a preflight may ask for; ["*"] echoes back whatever the browser asked for.
+        'allowed_headers' => ['*'],
+        // Response headers client-side JavaScript may read (Content-Type and a few others are always
+        // readable; list anything else your frontend needs, e.g. ['X-Request-Id']).
+        'exposed_headers' => [],
+        // Send cookies and the Authorization header on cross-origin requests. Needs an exact origin
+        // list above, never "*".
+        'allow_credentials' => false,
+        // How long a browser may cache a preflight answer, in seconds.
+        'max_age' => 86400,
+    ],
 ];

@@ -25,18 +25,23 @@ use Trunk\Foundation\Configuration;
 use Trunk\Http\Build\HttpArtifactBuilder;
 use Trunk\Http\Error\ErrorRenderers;
 use Trunk\Http\Factory\HttpFactory;
+use Trunk\Http\Middleware\CorsMiddleware;
+use Trunk\Http\Pipeline\MiddlewareCollector;
+use Trunk\Http\Pipeline\MiddlewareProvider;
 use Trunk\Http\Response\ResponseBuilder;
+use Trunk\Http\Security\Cors;
 use Trunk\Http\Security\SecurityHeaders;
 use Trunk\Http\Security\SecurityHeadersFactory;
 use Trunk\Http\Server\RequestLimits;
 use Trunk\Http\Server\TrustedProxies;
 
 /**
- * Makes the PSR-17 factories available to controllers and services through the container.
+ * Makes the PSR-17 factories available to controllers and services through the container, and
+ * answers CORS preflights (opt-in, `cors` in config/http.php) ahead of routing.
  *
  * @api
  */
-final class HttpModule implements Module, BuildContributor
+final class HttpModule implements Module, BuildContributor, MiddlewareProvider
 {
     public function register(ContainerBuilder $builder): void
     {
@@ -61,12 +66,18 @@ final class HttpModule implements Module, BuildContributor
 
     public function boot(ContainerInterface $container): void {}
 
+    public function middleware(MiddlewareCollector $middleware): void
+    {
+        $middleware->add(CorsMiddleware::class);
+    }
+
     public function plan(BuildContext $context): BuildContribution
     {
         try {
             RequestLimits::fromConfiguration($context->configuration);
             TrustedProxies::fromConfiguration($context->configuration);
             SecurityHeaders::configured($context->configuration);
+            Cors::configured($context->configuration);
         } catch (InvalidArgumentException $e) {
             throw new CompilationException(['config/http.php: ' . $e->getMessage()]);
         }

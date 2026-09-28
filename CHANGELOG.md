@@ -9,6 +9,7 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 * Added: `trunk doctor` now boots the real application and checks that a capability's own tables actually exist (`auth`, `queue`), catching a missing `queue:table`/`auth:table` migration before it becomes a 500. Capabilities can add their own check by implementing the new `Trunk\Doctor\DoctorCheck` and tagging it `trunk.doctor_check`.
 * Fixed: `packages/queue`'s own `composer.json` listed `logging` as a required capability where it should have said `diagnostics` (matching what the queue module actually needs); `src/Foundation/Capability/BuiltInCapabilities.php` already had it right.
 * Added: a `redis` cache driver (`CACHE_DRIVER=redis`, needs `composer require predis/predis`) — the only store that stays correct once an application runs on more than one server; `file` and `array` are local to one box. A project whose `config/cache.php` predates this change (no `redis` block) is unaffected.
+* Added: CORS support (`cors` in `config/http.php`, off by default). `Trunk\Http\Security\Cors` and `Trunk\Http\Middleware\CorsMiddleware` answer a preflight before routing runs (the router cannot otherwise match `OPTIONS` on a route only ever declared for `GET`/etc.) and add `Access-Control-Allow-Origin` and friends to real cross-origin responses, error pages included. A project whose `config/http.php` predates this change is unaffected (`cors.enabled` defaults to false).
 
 ## 0.1.2
 
