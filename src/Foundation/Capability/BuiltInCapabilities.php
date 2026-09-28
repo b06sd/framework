@@ -59,7 +59,7 @@ final class BuiltInCapabilities
             new Capability(
                 'cache',
                 'Cache',
-                'PSR-16 cache (array, file, null stores)',
+                'PSR-16 cache (array, file, null, Redis stores)',
                 ['Trunk\\Cache\\CacheModule'],
                 config: ['cache' => $root . '/packages/cache/resources/config/cache.php'],
                 env: ['CACHE_DRIVER' => 'file'],

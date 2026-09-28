@@ -13,6 +13,7 @@ use Trunk\Container\Definition\ConfigValue;
 use Trunk\Container\Definition\Reference;
 use Trunk\Contracts\Clock;
 use Trunk\Contracts\Module;
+use Trunk\Foundation\Configuration;
 use Trunk\Support\SystemClock;
 
 /**
@@ -27,7 +28,12 @@ final class CacheModule implements Module
     {
         $builder->bindDefault(Clock::class, SystemClock::class);
         $builder->autowire(StoreFactory::class);
-        $builder->factory(Store::class, [StoreFactory::class, 'make'], [new ConfigValue('cache.driver', 'string'), new ConfigValue('cache.path', 'string')]);
+        $builder->factory(Store::class, [StoreFactory::class, 'make'], [
+            new ConfigValue('cache.driver', 'string'),
+            new ConfigValue('cache.path', 'string'),
+            new ConfigValue('cache.prefix', 'string'),
+            new Reference(Configuration::class),
+        ]);
         $builder->service(Cache::class, Cache::class, [new Reference(Store::class), new Reference(Clock::class), new ConfigValue('cache.prefix', 'string')]);
         $builder->alias(CacheInterface::class, Cache::class);
     }
