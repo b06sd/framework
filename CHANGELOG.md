@@ -4,6 +4,8 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+## 0.1.3
+
 * Fixed: `make:request` printed its usage hint with stray backslashes (`\$requests`).
 * Documentation: the validation guide's form template now reads errors and old input with `|default('')`, so it renders on the first visit (Tusk treats a missing key as an error, on purpose; the Tusk guide now says so); the guide also documents `#[From(Source::Json)]` for JSON-only endpoints (`415` for other content types).
 * Added: `trunk doctor` now boots the real application and checks that a capability's own tables actually exist (`auth`, `queue`), catching a missing `queue:table`/`auth:table` migration before it becomes a 500. Capabilities can add their own check by implementing the new `Trunk\Doctor\DoctorCheck` and tagging it `trunk.doctor_check`.
