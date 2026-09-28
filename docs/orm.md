@@ -95,6 +95,41 @@ $manager->flush();                       // one transaction: inserts (batched), 
 
 `flush()` is all-or-nothing. After a failed flush call `clear()` and start again (the manager is not meant to be reused half-applied). `StaleEntity` is thrown when the optimistic-lock version changed under you. In a long-running process call `clear()` between units of work; a worker that does keeps flat memory, one that does not grows with the rows.
 
+## Factories and seeding
+
+`trunk make:factory Customer` reads Customer's map and writes `app/Factories/CustomerFactory.php`: one [fakerphp/faker](https://fakerphp.org) call per mapped column, keyed off its type. It needs Faker installed (`composer require --dev fakerphp/faker`; it is a dev dependency, not bundled) and the entity already mapped (`trunk make:entity` first).
+
+```php
+$factory = new CustomerFactory();
+$customer = $factory->make();                              // realistic, unsaved
+$vip = $factory->make(['email' => 'ada@example.com']);      // override anything by property name
+```
+
+The generated `id`, soft-delete and version columns are never faked (the ORM manages them); a hidden column is skipped too, since its constructor parameter already has a usable default.
+
+`trunk db:seed` runs `database/seeders/DatabaseSeeder.php`, a file you write yourself:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Factories\CustomerFactory;
+use Trunk\Orm\UnitOfWork\EntityManager;
+
+return static function (EntityManager $manager): void {
+    $factory = new CustomerFactory();
+
+    for ($i = 0; $i < 20; $i++) {
+        $manager->persist($factory->make());
+    }
+
+    $manager->flush();
+};
+```
+
+It refuses in production unless you pass `--force`, since it writes rows directly.
+
 ## Development versus production
 
 Development uses an interpreted mapper; `trunk build` generates hydrators into `build/orm.php` (no `eval`), about 1.4 µs per row against 2.6 µs. Both produce identical results.

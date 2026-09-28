@@ -64,4 +64,41 @@ final class GeneratedCodeAnalysisTest extends TestCase
         self::assertFileExists($project->directory . '/app/Entities/Customer.php');
         self::assertSame(0, $code, $out . $err);
     }
+
+    public function test_a_generated_factory_passes_phpstan_at_the_maximum_level(): void
+    {
+        // Arrange
+        $this->project = $project = new ScaffoldedProject('analysed', 'api');
+        $project->trunk(['package:install', 'orm']);
+        $project->trunk(['package:install', 'console']);
+        $project->trunk(['make:entity', 'Customer']);
+        $project->trunk(['make:factory', 'Customer']);
+        file_put_contents($project->directory . '/phpstan.neon', "parameters:\n    level: max\n    paths:\n        - app\n");
+
+        // Act
+        [$code, $out, $err] = new Cli()->run([\PHP_BINARY, \dirname(__DIR__, 3) . '/vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=1G', '--error-format=raw'], $project->directory);
+
+        // Assert
+        self::assertFileExists($project->directory . '/app/Factories/CustomerFactory.php');
+        self::assertSame(0, $code, $out . $err);
+    }
+
+    public function test_make_request_prints_a_usable_hint_and_writes_a_class_that_passes_phpstan_at_the_maximum_level(): void
+    {
+        // Arrange
+        $this->project = $project = new ScaffoldedProject('analysed', 'api');
+        $project->trunk(['package:install', 'validation']);
+        $project->trunk(['package:install', 'console']);
+
+        // Act
+        [$makeCode, $makeOut] = $project->trunk(['make:request', 'Signup']);
+        file_put_contents($project->directory . '/phpstan.neon', "parameters:\n    level: max\n    paths:\n        - app\n");
+        [$code, $out, $err] = new Cli()->run([\PHP_BINARY, \dirname(__DIR__, 3) . '/vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=1G', '--error-format=raw'], $project->directory);
+
+        // Assert
+        self::assertSame(0, $makeCode, $makeOut);
+        self::assertStringContainsString('Use it with $requests->validate(Signup::class, $request) in a controller.', $makeOut);
+        self::assertStringNotContainsString('\\$', $makeOut, 'no stray backslashes in the hint');
+        self::assertSame(0, $code, $out . $err);
+    }
 }

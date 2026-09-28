@@ -96,7 +96,7 @@ final class OrmEndToEndTest extends TestCase
         self::assertFileDoesNotExist($mapPath);
     }
 
-    public function test_the_orm_install_creates_both_folders(): void
+    public function test_the_orm_install_creates_every_folder_it_needs(): void
     {
         // Arrange
         $this->project = $project = new ScaffoldedProject('shop', 'api');
@@ -107,6 +107,8 @@ final class OrmEndToEndTest extends TestCase
         // Assert
         self::assertDirectoryExists($project->directory . '/app/Entities');
         self::assertDirectoryExists($project->directory . '/app/Orm');
+        self::assertDirectoryExists($project->directory . '/app/Factories');
+        self::assertDirectoryExists($project->directory . '/database/seeders');
     }
 
     public function test_a_project_that_keeps_its_entity_next_to_the_map_still_validates_and_builds(): void

@@ -23,6 +23,8 @@ final class OrmConsoleModule implements Module, CommandProvider
     public function commands(CommandCollector $commands): void
     {
         $commands->add(MakeEntityCommand::class);
+        $commands->add(MakeFactoryCommand::class);
         $commands->add(ValidateCommand::class);
+        $commands->add(SeedCommand::class);
     }
 }

@@ -13,7 +13,8 @@
         }
     },
     "suggest": {
-        "trunkphp/console": "Enables make:entity and orm:validate"
+        "trunkphp/console": "Enables make:entity and orm:validate",
+        "fakerphp/faker": "Enables make:factory's generated factories and db:seed"
     },
     "extra": {
         "trunk": {
@@ -32,7 +33,9 @@
                 },
                 "directories": [
                     "app/Entities",
-                    "app/Orm"
+                    "app/Orm",
+                    "app/Factories",
+                    "database/seeders"
                 ],
                 "integrations": {
                     "console": [

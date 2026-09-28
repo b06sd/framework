@@ -84,7 +84,7 @@ final class BuiltInCapabilities
                 ['Trunk\\Orm\\OrmModule'],
                 requires: ['database'],
                 config: ['orm' => $root . '/packages/orm/resources/config/orm.php'],
-                directories: ['app/Entities', 'app/Orm'],
+                directories: ['app/Entities', 'app/Orm', 'app/Factories', 'database/seeders'],
                 integrations: ['console' => ['Trunk\\Orm\\Console\\OrmConsoleModule']],
             ),
             new Capability(
