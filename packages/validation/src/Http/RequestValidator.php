@@ -6,6 +6,7 @@ namespace Trunk\Validation\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Trunk\Error\ValidationException;
+use Trunk\Http\Exception\HttpException;
 use Trunk\Http\Server\JsonBody;
 use Trunk\Validation\Plans;
 use Trunk\Validation\Source;
@@ -30,7 +31,8 @@ final readonly class RequestValidator
      *
      * @return T
      *
-     * @throws ValidationException
+     * @throws ValidationException when the input is not valid (422)
+     * @throws HttpException         when the body cannot be read as JSON (415, 413, 400)
      */
     public function validate(string $class, ServerRequestInterface $request): object
     {

@@ -173,20 +173,44 @@ final class RequestValidationTest extends TestCase
         new ValidationModule()->plan($bad);
     }
 
-    public function test_the_form_template_shown_in_the_guide_redisplays_safe_input_and_the_messages_escaped(): void
+    public function test_the_form_template_shown_in_the_guide_renders_on_the_first_visit_and_after_a_failure(): void
     {
-        // Arrange
-        $views = new ViewHarness(['signup' => "<input name=\"email\" value=\"{{ old.email }}\">\n<if test=\"errors.email\"><p class=\"error\">{{ errors.email }}</p></if>\n"]);
+        // Arrange: exactly the markup in docs/validation.md
+        $views = new ViewHarness(['signup' => "<input name=\"email\" value=\"{{ old.email|default('') }}\">\n<if test=\"errors.email|default('')\"><p class=\"error\">{{ errors.email }}</p></if>\n"]);
         $result = new \Trunk\Validation\Validator(new \Trunk\Validation\Compiler\ReflectionPlans())->check(RegisterRequest::class, ['email' => '"><script>x</script>', 'password' => 'p', 'passwordConfirmation' => 'p']);
+        $exception = new \Trunk\Error\ValidationException($result->errors->lists(), rules: $result->errors->rules(), old: $result->old);
 
         // Act
-        $html = $views->render('signup', ['errors' => $result->errors->messages(), 'old' => $result->old]);
+        $firstVisit = $views->render('signup', ['errors' => [], 'old' => []]);
+        $afterFailure = $views->render('signup', ['errors' => $exception->firstMessages(), 'old' => $exception->old()]);
         $views->cleanUp();
 
         // Assert
-        self::assertStringContainsString('value="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"', $html);
-        self::assertStringContainsString('<p class="error">Must be a valid email address.</p>', $html);
-        self::assertStringNotContainsString('<script>', $html);
+        self::assertStringContainsString('<input name="email" value="">', $firstVisit);
+        self::assertStringNotContainsString('class="error"', $firstVisit);
+        self::assertStringContainsString('value="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"', $afterFailure);
+        self::assertStringContainsString('<p class="error">Must be a valid email address.</p>', $afterFailure);
+        self::assertStringNotContainsString('<script>', $afterFailure);
+    }
+
+    public function test_a_class_marked_json_only_answers_415_to_a_form_and_the_unmarked_class_reads_it_as_a_form(): void
+    {
+        // Arrange
+        $plans = new \Trunk\Validation\Compiler\ReflectionPlans();
+        $requests = new \Trunk\Validation\Http\RequestValidator(new \Trunk\Validation\Validator($plans), new \Trunk\Http\Server\JsonBody(), $plans);
+        $form = new ServerRequest('POST', 'http://trunk.dev/x', ['Content-Type' => 'application/x-www-form-urlencoded'])->withParsedBody(['name' => 'Ada']);
+
+        // Act
+        $unmarked = $requests->validate(\Trunk\Tests\Fixtures\Validation\Address::class, $form->withParsedBody(['street' => 's', 'city' => 'c']));
+        try {
+            $requests->validate(\Trunk\Tests\Fixtures\Validation\JsonOnly::class, $form);
+            self::fail('expected a 415');
+        } catch (\Trunk\Http\Exception\HttpException $e) {
+            // Assert
+            self::assertSame(415, $e->statusCode);
+        }
+
+        self::assertSame('c', $unmarked->city);
     }
 
     /**

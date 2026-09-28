@@ -4,6 +4,9 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+* Fixed: `make:request` printed its usage hint with stray backslashes (`\$requests`).
+* Documentation: the validation guide's form template now reads errors and old input with `|default('')`, so it renders on the first visit (Tusk treats a missing key as an error, on purpose; the Tusk guide now says so); the guide also documents `#[From(Source::Json)]` for JSON-only endpoints (`415` for other content types).
+
 ## 0.1.2
 
 * Added: the `validation` capability: attribute rules on request classes, `Validator`, `RequestValidator`, `make:request`, compiled plans in `build/validation.php`, and the guide `docs/validation.md`.

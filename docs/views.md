@@ -20,6 +20,8 @@ return $this->responder->view('users/show', ['user' => $user]);   // renders res
 | `<layout name="app"><fill slot="title">…</fill>…</layout>` | Use `layouts/app.tusk.php`; content outside `<fill>` goes into the default `<slot />` |
 | `<slot name="title">default</slot>` | Where a layout receives content |
 
+**Missing data is an error, on purpose**, so a typo shows up instead of printing nothing: an undefined variable, a missing array key, a missing property, or a read from `null` stops the render with the template and line. For data that may legitimately be absent (form errors, old input, an optional filter) say so with `default`: `{{ old.email|default('') }}` and `<if test="errors.email|default('')">` render nothing when the key is missing.
+
 ```html
 <!-- resources/views/layouts/app.tusk.php -->
 <!doctype html>

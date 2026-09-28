@@ -56,7 +56,7 @@ Field names are paths (`email`, `address.city`, `tags.0`). Each field reports it
 | a form post | the parsed body | text, read strictly: `"30"` becomes `30`, `"on"` becomes `true` |
 | `GET` / `HEAD` | the query string | text, as for forms |
 
-Say otherwise on the class: `#[From(Source::Query)]`. Form and query numbers are parsed strictly (`30` yes; `0x1F`, `1e2`, ` 30`, `+30`, `30.5` for an int no), and a blank form field counts as *not sent* for numbers, enums and booleans (for text it is an empty string).
+Say otherwise on the class: `#[From(Source::Query)]`. A class marked `#[From(Source::Json)]` accepts only JSON, and any other content type is a `415`; without it, a form post to the same route is read as a form (and answers `422` if its fields are wrong). Form and query numbers are parsed strictly (`30` yes; `0x1F`, `1e2`, ` 30`, `+30`, `30.5` for an int no), and a blank form field counts as *not sent* for numbers, enums and booleans (for text it is an empty string).
 
 Outside HTTP use `Validator`: `$validator->validate(Signup::class, $array)` (throws) or `->check(...)` (returns a `ValidationResult` with `isValid()`, `value()`, `errors` and `old`).
 
@@ -113,11 +113,13 @@ public function store(ServerRequestInterface $request): ResponseInterface
 ```
 
 ```html
-<input name="email" value="{{ old.email }}">
-<if test="errors.email"><p class="error">{{ errors.email }}</p></if>
+<input name="email" value="{{ old.email|default('') }}">
+<if test="errors.email|default('')"><p class="error">{{ errors.email }}</p></if>
 ```
 
 `$e->old()` holds the submitted scalars (each at most 1000 bytes) **except** fields marked `#[Sensitive]`. Tusk escapes both.
+
+On the first visit (a plain `GET`) there are no errors and no old input, and Tusk treats a missing key as an error so that typos show up: that is why the template reads them with `|default('')`. See [Views](views.md).
 
 ## Rules only your code can check
 

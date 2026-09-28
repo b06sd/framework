@@ -69,7 +69,7 @@ final readonly class MakeRequestCommand implements Command
             PHP);
 
         $output->success('Created app/Requests/' . $name . '.php');
-        $output->line('  Use it with \$requests->validate(' . $name . '::class, \$request) in a controller.');
+        $output->line('  Use it with $requests->validate(' . $name . '::class, $request) in a controller.');
 
         return 0;
     }
