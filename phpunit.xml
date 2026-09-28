@@ -47,6 +47,7 @@
             <directory>packages/observability/src</directory>
             <directory>packages/auth/src</directory>
             <directory>packages/validation/src</directory>
+            <directory>packages/ratelimit/src</directory>
         </include>
     </source>
 </phpunit>

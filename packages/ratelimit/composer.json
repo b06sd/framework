@@ -1,0 +1,48 @@
+{
+    "name": "trunkphp/ratelimit",
+    "description": "General-purpose rate limiting for Trunk: a database-backed counter service and a ready-made PSR-15 middleware, correct across requests, processes and servers.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunkphp/http": "^0.1",
+        "trunkphp/database": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\RateLimit\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "rate-limit",
+                "name": "Rate limit",
+                "description": "A database-backed rate limiter and a ready-made middleware for any route",
+                "modules": [
+                    "Trunk\\RateLimit\\RateLimitModule"
+                ],
+                "requires": [
+                    "http",
+                    "database"
+                ],
+                "config": {
+                    "ratelimit": "resources/config/ratelimit.php"
+                },
+                "integrations": {
+                    "console": [
+                        "Trunk\\RateLimit\\Console\\RateLimitConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "suggest": {
+        "trunkphp/console": "Enables rate-limit:table and rate-limit:prune when the console capability is enabled"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

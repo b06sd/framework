@@ -99,6 +99,15 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Queue\\Console\\QueueConsoleModule']],
             ),
             new Capability(
+                'rate-limit',
+                'Rate limit',
+                'A database-backed rate limiter and a ready-made middleware for any route',
+                ['Trunk\\RateLimit\\RateLimitModule'],
+                requires: ['http', 'database'],
+                config: ['ratelimit' => $root . '/packages/ratelimit/resources/config/ratelimit.php'],
+                integrations: ['console' => ['Trunk\\RateLimit\\Console\\RateLimitConsoleModule']],
+            ),
+            new Capability(
                 'observability',
                 'Observability',
                 'Metrics (Prometheus text format) and log-based tracing',
