@@ -42,7 +42,7 @@ Restart=always
 User=www-data
 ```
 
-Cron: `trunk auth:prune` (dead sessions, tokens, throttle counters). Run `trunk migrate` as a deploy step.
+Cron: `trunk auth:prune` (dead sessions, tokens, throttle counters); `trunk rate-limit:prune` if `rate-limit` is installed. More than a task or two, or want them visible in the codebase instead of the crontab? `trunk package:install schedule`, define them in `app/Schedule.php`, and replace those lines with one: `* * * * * cd /app && php vendor/bin/trunk schedule:run >> /dev/null 2>&1`. See [Scheduling](scheduling.md). Run `trunk migrate` as a deploy step.
 
 ## Observability
 

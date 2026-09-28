@@ -99,6 +99,14 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Queue\\Console\\QueueConsoleModule']],
             ),
             new Capability(
+                'schedule',
+                'Schedule',
+                'Fluent recurring jobs and commands, one crontab line to run them',
+                ['Trunk\\Schedule\\ScheduleModule'],
+                requires: ['queue'],
+                integrations: ['console' => ['Trunk\\Schedule\\Console\\ScheduleConsoleModule']],
+            ),
+            new Capability(
                 'rate-limit',
                 'Rate limit',
                 'A database-backed rate limiter and a ready-made middleware for any route',

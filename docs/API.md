@@ -28,7 +28,7 @@ These are part of the promise as well:
 
 * The **format of `trunk.php`** (a returned module list) and of `extra.trunk.capability` metadata in a package's `composer.json`.
 * **Config keys** documented in the config files that `trunk` publishes into `config/`.
-* **Container tags** for extension: `trunk.lifecycle` (`LifecycleAware`), `trunk.error_reporter` (`ErrorReporter`), `trunk.health_check` (`HealthCheck`), `http.error_renderer` (`ErrorRenderer`), `orm.scope` (`Scope`), `auth.policy` (`Policy`), `auth.ability` (`Ability`), and `ContainerBuilder::bindDefault()` for replacing a core default.
+* **Container tags** for extension: `trunk.lifecycle` (`LifecycleAware`), `trunk.error_reporter` (`ErrorReporter`), `trunk.health_check` (`HealthCheck`), `trunk.doctor_check` (`DoctorCheck`), `http.error_renderer` (`ErrorRenderer`), `orm.scope` (`Scope`), `auth.policy` (`Policy`), `auth.ability` (`Ability`), and `ContainerBuilder::bindDefault()` for replacing a core default.
 * **Error codes** (`ErrorCode` values and your own `HasErrorCode` codes) and the JSON error shape `{"error":{"code","message","requestId"}}`.
 * **Validation**: the attribute vocabulary (`Required`, `Email`, `Length`, `Range`, `Items`, `OneOf`, `Pattern`, `Date`, `SameAs`, `RequiredIf`, `Each`, `Url`, `Uuid`, `Ip`, `Sensitive`, `From`, `ListOf`), the `validation` config keys (`mode`, `requests`, `build`), the error code `VALIDATION_FAILED` and its `422` body `{"error":{"code","message","requestId","details":{"fields":{"<path>":["message"]},"rules":{"<path>":"<rule code>"}}}}` (thrown as `Trunk\Error\ValidationException`), and the rule codes in `rules` (`required`, `type`, `email`, `min_length`, `max_length`, `min`, `max`, `one_of`, ...).
 * **`trunk` command names and their documented options**.
@@ -75,6 +75,8 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Contracts\Kernel` (interface)
 - `Trunk\Contracts\Module` (interface)
 - `Trunk\Contracts\ModuleDependencies` (interface)
+- `Trunk\Doctor\DoctorCheck` (interface)
+- `Trunk\Doctor\DoctorFinding` (class)
 - `Trunk\Error\DebugInfo` (class)
 - `Trunk\Error\DeveloperHint` (interface)
 - `Trunk\Error\ErrorCode` (enum)
@@ -111,10 +113,12 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Http\Exception\UnsafeRedirectException` (class)
 - `Trunk\Http\Health\HealthModule` (class)
 - `Trunk\Http\HttpModule` (class)
+- `Trunk\Http\Middleware\CorsMiddleware` (class)
 - `Trunk\Http\Middleware\SecurityHeadersMiddleware` (class)
 - `Trunk\Http\Pipeline\MiddlewareCollector` (class)
 - `Trunk\Http\Pipeline\MiddlewareProvider` (interface)
 - `Trunk\Http\Response\ResponseBuilder` (class)
+- `Trunk\Http\Security\Cors` (class)
 - `Trunk\Http\Security\SecurityHeaders` (class)
 - `Trunk\Http\Server\JsonBody` (class)
 
@@ -237,6 +241,12 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Queue\Queue` (class)
 - `Trunk\Queue\QueueModule` (class)
 
+### RateLimit
+
+- `Trunk\RateLimit\Middleware\RateLimitMiddleware` (class)
+- `Trunk\RateLimit\RateLimitModule` (class)
+- `Trunk\RateLimit\RateLimiter` (class)
+
 ### Telemetry
 
 - `Trunk\Telemetry\TelemetryModule` (class)
@@ -267,5 +277,17 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Auth\User\Authenticatable` (interface)
 - `Trunk\Auth\User\DatabaseUser` (class)
 - `Trunk\Auth\User\UserProvider` (interface)
+
+### Testing
+
+- `Trunk\Testing\TestApp` (class)
+- `Trunk\Testing\TestClient` (class)
+- `Trunk\Testing\TestResponse` (class)
+
+### Schedule
+
+- `Trunk\Schedule\ScheduleModule` (class)
+- `Trunk\Schedule\ScheduledTask` (class)
+- `Trunk\Schedule\Scheduler` (class)
 
 <!-- api-list:end -->

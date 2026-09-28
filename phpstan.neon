@@ -16,6 +16,7 @@ parameters:
         - packages/validation/src
         - packages/ratelimit/src
         - packages/testing/src
+        - packages/schedule/src
         - tests
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: true

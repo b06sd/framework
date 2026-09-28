@@ -49,6 +49,7 @@
             <directory>packages/validation/src</directory>
             <directory>packages/ratelimit/src</directory>
             <directory>packages/testing/src</directory>
+            <directory>packages/schedule/src</directory>
         </include>
     </source>
 </phpunit>

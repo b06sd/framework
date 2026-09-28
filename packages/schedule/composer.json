@@ -1,0 +1,41 @@
+{
+    "name": "trunkphp/schedule",
+    "description": "TrunkSchedule: fluent recurring jobs and commands, no cron-string parsing, one crontab line to run them.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunkphp/queue": "^0.1",
+        "trunkphp/console": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Schedule\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "schedule",
+                "name": "Schedule",
+                "description": "TrunkSchedule: fluent recurring jobs and commands, one crontab line",
+                "modules": [
+                    "Trunk\\Schedule\\ScheduleModule"
+                ],
+                "requires": [
+                    "queue"
+                ],
+                "integrations": {
+                    "console": [
+                        "Trunk\\Schedule\\Console\\ScheduleConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

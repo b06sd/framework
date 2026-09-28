@@ -96,7 +96,7 @@ final class PublicApiTest extends TestCase
      */
     public static function listing(array $types): string
     {
-        $packages = ['Http', 'Router', 'Tusk', 'Mvc', 'Validation', 'Console', 'Cache', 'Database', 'Orm', 'Queue', 'RateLimit', 'Telemetry', 'Auth', 'Testing'];
+        $packages = ['Http', 'Router', 'Tusk', 'Mvc', 'Validation', 'Console', 'Cache', 'Database', 'Orm', 'Queue', 'RateLimit', 'Telemetry', 'Auth', 'Testing', 'Schedule'];
         $groups = [];
 
         foreach ($types as $class => $type) {

@@ -37,7 +37,8 @@
             "Trunk\\Auth\\": "packages/auth/src/",
             "Trunk\\Validation\\": "packages/validation/src/",
             "Trunk\\RateLimit\\": "packages/ratelimit/src/",
-            "Trunk\\Testing\\": "packages/testing/src/"
+            "Trunk\\Testing\\": "packages/testing/src/",
+            "Trunk\\Schedule\\": "packages/schedule/src/"
         }
     },
     "autoload-dev": {
