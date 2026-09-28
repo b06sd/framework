@@ -11,9 +11,10 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `APP_NAME`, `APP_PORT` | Name shown in logs; `trunk serve` port (default 8006). |
 | `DB_CONNECTION` `DB_HOST` `DB_PORT` `DB_DATABASE` `DB_USERNAME` `DB_PASSWORD` | Database (`sqlite`, `mysql`, `pgsql`). |
 | `QUEUE_CONNECTION` | Which `database.connections` entry holds the queue tables. |
-| `CACHE_DRIVER` `CACHE_PATH` `CACHE_PREFIX` | Cache (`file`, `array`, `null`). |
+| `CACHE_DRIVER` `CACHE_PATH` `CACHE_PREFIX` `CACHE_REDIS_HOST` `CACHE_REDIS_PORT` `CACHE_REDIS_PASSWORD` `CACHE_REDIS_DATABASE` | Cache (`file`, `array`, `null`, `redis`). Only `redis` stays correct once an application runs on more than one server; it needs `composer require predis/predis`. |
 | `LOG_LEVEL` `LOG_CHANNEL` | Logging (`debug`..`emergency`; `stderr`, `file`, `null`). |
 | `METRICS_TOKEN` | Enables `/metrics` (health capability). |
+| `RATE_LIMIT_MAX` `RATE_LIMIT_WINDOW` | The limit `RateLimitMiddleware` enforces (default 60 per 60 seconds). |
 
 ## `config/http.php`
 
@@ -25,6 +26,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `max_uri_bytes` | 8192 | Longer request target gets 414 |
 | `trusted_proxies` | `[]` | IPs/CIDRs whose `X-Forwarded-*` headers are believed |
 | `security_headers` | enabled in new projects | `enabled`, `content_type_options`, `frame_options` (`DENY`/`SAMEORIGIN`), `referrer_policy`, `cross_origin_opener_policy`, `cross_origin_resource_policy`, `permissions_policy`, `content_security_policy` (each a string or `false`), `hsts` (seconds or `false`), `hsts_include_subdomains`, `hsts_preload` |
+| `cors` | `enabled: false` | `enabled`, `allowed_origins` (`["*"]` or exact origins), `allowed_methods`, `allowed_headers`, `exposed_headers`, `allow_credentials` (needs an exact origin list), `max_age` |
 
 ## `config/auth.php`
 
@@ -56,10 +58,11 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `orm.php` | `mode`, `maps` (discovered from `app/Orm/*Map.php`; the entities they name live in `app/Entities`), `build` |
 | `queue.php` | `mode`, `jobs` (discovered from `app/Jobs`), `connection`, `table`, `failed_table`, `max_payload` (64 KB), `visibility_timeout` (600), `store_failure_messages`, `worker.*` (`memory_limit` 256M, `growth_warn` 64M, `max_jobs` 1000, `max_runtime` 3600, `gc_interval` 100, `sleep` 3) |
 | `validation.php` | `mode`, `requests` (discovered from `app/Requests/*.php`), `build` |
-| `cache.php` | `driver`, `path`, `prefix` |
+| `cache.php` | `driver`, `path`, `prefix`, `redis.host`/`port`/`password`/`database` (read only when `driver` is `redis`) |
 | `logging.php` | `level`, `channel`, `format` (`json`/`line`), `path`, `service`, `redact` (extra keys to mask) |
 | `errors.php` | `format` (`auto`, `json`, `html`, `text`) |
 | `observability.php` | `metrics` (true), `tracing` (false) |
 | `health.php` | `metrics_token` (from `secret('METRICS_TOKEN')`), `debug` |
+| `ratelimit.php` | `table`, `max`, `window` |
 
 Secrets in log context (`password`, `token`, `authorization`, `cookie`, `api_key`, ... at any depth, plus `Bearer …` and `password=…` inside text) are always redacted; control characters and line breaks are escaped so log lines cannot be forged.

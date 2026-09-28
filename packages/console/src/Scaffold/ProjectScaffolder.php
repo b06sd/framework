@@ -58,7 +58,10 @@ final readonly class ProjectScaffolder
 
         foreach ($files as $path => $contents) {
             $destination = $target . '/' . $path;
-            is_dir(\dirname($destination)) || mkdir(\dirname($destination), 0o755, true);
+            // storage/ holds logs, sessions and the cache; the file logger already creates it at
+            // 0750 the first time it writes, so scaffolding starts it there too.
+            $mode = str_starts_with($path, 'storage/') ? 0o750 : 0o755;
+            is_dir(\dirname($destination)) || mkdir(\dirname($destination), $mode, true);
             $this->files->write($destination, $contents, $path === '.env' ? 0o640 : null);
         }
 

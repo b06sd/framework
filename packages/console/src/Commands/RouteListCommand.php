@@ -9,6 +9,7 @@ use Trunk\Contracts\Console\CommandDefinition;
 use Trunk\Contracts\Console\CommandInput;
 use Trunk\Contracts\Console\CommandOutput;
 use Trunk\Contracts\Console\Exception\CommandFailedException;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Project\Project;
 use Trunk\Router\Compiler\RouteCompiler;
 use Trunk\Router\Definition\RouteProvider;
@@ -27,9 +28,7 @@ final readonly class RouteListCommand implements Command
     {
         $providers = [];
 
-        foreach ($this->project->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($this->project->modules) as $module) {
             if ($module instanceof RouteProvider) {
                 $providers[] = $module;
             }

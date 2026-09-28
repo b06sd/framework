@@ -10,6 +10,7 @@ use Trunk\Compiler\Exception\CompilationException;
 use Trunk\Contracts\BuildContributor;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Manifest\ModuleGraph;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Foundation\Runtime;
 use Trunk\Support\Directory;
@@ -42,9 +43,7 @@ final readonly class BuildRunner
         $writers = [];
         $contributors = [];
 
-        foreach ($manifest->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($manifest->modules) as $module) {
             if (!$module instanceof BuildContributor) {
                 continue;
             }
@@ -57,7 +56,7 @@ final readonly class BuildRunner
                 continue;
             }
 
-            $contributors[] = $class;
+            $contributors[] = $module::class;
             $roots = [...$roots, ...$contribution->containerRoots];
             $writers = [...$writers, ...$contribution->writers];
         }

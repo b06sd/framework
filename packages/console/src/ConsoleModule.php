@@ -12,6 +12,7 @@ use Trunk\Contracts\BuildContributor;
 use Trunk\Contracts\Console\CommandCollector;
 use Trunk\Contracts\Console\CommandProvider;
 use Trunk\Contracts\Module;
+use Trunk\Foundation\Manifest\ModuleInstances;
 
 /**
  * Enables application console commands: the commands other modules contribute become roots of the
@@ -29,9 +30,7 @@ final class ConsoleModule implements Module, BuildContributor
     {
         $collector = new CommandCollector();
 
-        foreach ($context->manifest->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($context->manifest->modules) as $module) {
             if ($module instanceof CommandProvider) {
                 $module->commands($collector);
             }

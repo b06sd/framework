@@ -48,7 +48,6 @@ In a single (unrepeated) run on PHP 8.4.25 the ORM and queue micro-benchmarks ca
 
 ## What could not be verified
 
-* GitHub Actions: the workflow was validated structurally and each job's commands were run locally on PHP 8.4 and 8.5, but it has **never run on GitHub**.
 * Browsers other than Chrome 153 (Firefox, Safari); other PHP patch levels.
 * Behaviour under a production web server (php-fpm with nginx, FrankenPHP, RoadRunner) rather than PHP's built-in server; the HEAD fix in particular matters most where the SAPI does not strip the body itself.
 * Absolute performance on other hardware, and realistic large applications; no comparison with other frameworks was made.

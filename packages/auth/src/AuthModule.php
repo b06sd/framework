@@ -42,6 +42,7 @@ use Trunk\Database\DatabaseModule;
 use Trunk\Database\Schema\Schema;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Diagnostics\DiagnosticsModule;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Http\HttpModule;
 use Trunk\Support\SystemClock;
 
@@ -116,10 +117,8 @@ final class AuthModule implements Module, BuildContributor, ModuleDependencies
     {
         $builder = new ContainerBuilder();
 
-        foreach ($context->manifest->modules as $class) {
-            if (class_exists($class)) {
-                new $class()->register($builder);
-            }
+        foreach (ModuleInstances::from($context->manifest->modules) as $module) {
+            $module->register($builder);
         }
 
         $errors = [];

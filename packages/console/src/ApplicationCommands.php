@@ -10,6 +10,7 @@ use Trunk\Contracts\Console\Command;
 use Trunk\Contracts\Console\CommandCollector;
 use Trunk\Contracts\Console\CommandProvider;
 use Trunk\Contracts\Console\Exception\CommandFailedException;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Project\ApplicationFactory;
 use Trunk\Foundation\Project\Project;
 use Trunk\Foundation\Runtime;
@@ -30,9 +31,7 @@ final readonly class ApplicationCommands
     {
         $collector = new CommandCollector();
 
-        foreach ($this->project->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($this->project->modules) as $module) {
             if ($module instanceof CommandProvider) {
                 $module->commands($collector);
             }

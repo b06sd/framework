@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Trunk\Router\Compiler;
 
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Router\Definition\RouteProvider;
 use Trunk\Router\Exception\RouteCompilationException;
@@ -29,9 +30,7 @@ final readonly class RouteArtifactWriter
     {
         $providers = [];
 
-        foreach ($manifest->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($manifest->modules) as $module) {
             if ($module instanceof RouteProvider) {
                 $providers[] = $module;
             }

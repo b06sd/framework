@@ -14,6 +14,7 @@ use Trunk\Container\Scopable;
 use Trunk\Contracts\Module;
 use Trunk\Error\ExceptionHandler;
 use Trunk\Foundation\Configuration;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Foundation\Runtime;
 use Trunk\Http\Emitter\ResponseEmitter;
@@ -56,8 +57,7 @@ final readonly class HttpKernelFactory
         $routeProviders = [];
         $middleware = new MiddlewareCollector();
 
-        foreach ($manifest->modules as $class) {
-            $module = new $class();
+        foreach (ModuleInstances::from($manifest->modules) as $module) {
             $this->collect($module, $routeProviders, $middleware);
         }
 

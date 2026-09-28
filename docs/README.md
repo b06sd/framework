@@ -21,13 +21,16 @@ Every example in these guides was run in a real project created with `trunk new`
 * [Database: connections, query builder, schema, migrations](database.md)
 * [ORM: entities, maps, repositories, the unit of work (and "where is the model?")](orm.md)
 * [Queue: jobs and workers](queue.md)
+* [Scheduling: fluent recurring jobs and commands, one crontab line](scheduling.md)
 * [Validation: request classes, rules, 422 errors, forms](validation.md)
 * [Auth: passwords, sessions, CSRF, tokens, throttling, policies](auth.md)
+* [Rate limiting: a database-backed counter and a ready-made middleware](rate-limiting.md)
 * [Deployment](deployment.md)
 * [Troubleshooting](troubleshooting.md)
 
 ## Reference and background
 
+* [Roadmap](ROADMAP.md) (where Trunk is, what's next)
 * [Public API and compatibility policy](API.md) (the list of supported types)
 * [Hardening report](HARDENING_REPORT.md) (what was attacked, found and fixed in http, mvc and orm, with measurements)
 * [Architecture review](ARCHITECTURE_REVIEW.md) and [second pass](ARCHITECTURE_REVIEW_2.md)

@@ -59,7 +59,9 @@ final readonly class CapabilityPublisher
             $path = $project->path($directory);
 
             if (!is_dir($path)) {
-                mkdir($path, 0o755, true);
+                // storage/ holds logs, sessions and the cache; the file logger already creates it
+                // at 0750 the first time it writes, so a capability's own directory starts there too.
+                mkdir($path, str_starts_with($directory, 'storage/') ? 0o750 : 0o755, true);
                 $this->files->write($path . '/.gitkeep', '');
                 $changes[] = \sprintf('Created %s/.', $directory);
             }

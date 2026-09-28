@@ -9,6 +9,7 @@ use Trunk\Container\ContainerBuilder;
 use Trunk\Container\Scopable;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Manifest\ManifestCompiler;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Foundation\Runtime;
 use Trunk\Logging\RequestContext;
@@ -43,8 +44,7 @@ final readonly class ArtifactWriter
     {
         $builder = new ContainerBuilder();
 
-        foreach ($manifest->modules as $class) {
-            $module = new $class();
+        foreach (ModuleInstances::from($manifest->modules) as $module) {
             $module->register($builder);
         }
 

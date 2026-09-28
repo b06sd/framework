@@ -6,6 +6,7 @@ namespace Trunk\Http\Build;
 
 use Trunk\Compiler\ArtifactWriter;
 use Trunk\Compiler\Exception\CompilationException;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Http\Pipeline\MiddlewareCollector;
 use Trunk\Http\Pipeline\MiddlewareProvider;
@@ -105,9 +106,7 @@ final readonly class HttpArtifactBuilder
     {
         $collector = new MiddlewareCollector();
 
-        foreach ($manifest->modules as $class) {
-            $module = new $class();
-
+        foreach (ModuleInstances::from($manifest->modules) as $module) {
             if ($module instanceof MiddlewareProvider) {
                 $module->middleware($collector);
             }

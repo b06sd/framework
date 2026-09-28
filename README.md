@@ -9,7 +9,7 @@
 - **MVC.** MVC remains the application development model.
 - **Explicit dependencies.** No facades, no service locator, no global framework state.
 
-> Status: a working framework: core, compiler (lifetimes, automatic wiring), HTTP, router, Tusk, MVC, cache, the capability/package system and the `trunk` CLI. TrunkDB (database layer and ORM), the queue, auth and request validation are built.
+> Status: a working framework: core, compiler (lifetimes, automatic wiring), HTTP, router, Tusk, MVC, cache (file, array, null, Redis), the capability/package system and the `trunk` CLI. TrunkDB (database layer and ORM), the queue, auth, request validation, rate limiting, CORS and a real test client are built.
 
 ## Install
 
@@ -41,7 +41,7 @@ packages/<name>/          split packages, each with its own composer.json and sr
   router/src/             Definition/ Pattern/ Compiler/ Matcher/ Url/ Exception/
   tusk/src/               Syntax/ Compiler/ Runtime/ Loader/ Exception/   (templates: *.tusk.php)
   mvc/src/                Responder, MvcModule
-  cache/src/              PSR-16 Cache, Store/ (array, file, null), Clock/
+  cache/src/              PSR-16 Cache, Store/ (array, file, null, redis), Clock/
   database/src/           Connection/ Driver/ Query/ Schema/ Migration/ Console/ Exception/
   orm/src/                Mapping/ Compiler/ Repository/ UnitOfWork/ Relation/ Diagnostics/ Console/
   queue/src/              Job/ Compiler/ Driver/ Worker/ Console/ Exception/
@@ -135,6 +135,8 @@ $this->orm->relatedMany($customer, 'orders');              // throws RelationNot
 
 Security defaults: values are always bound; untrusted request input goes through `filter()`/`sortBy()`/`Repository::input()`, which only reach properties the map marks `filterable()`/`sortable()`/allowlisted (no mass assignment); `hidden()` columns are never selected (unless `withHidden()`), never serialise and never dump; global scopes and soft deletes are ANDed around every query, related rows included; optimistic locking via `version()`; corrupt database values raise errors that never contain the value. Speed defaults: generated hydrators, identity map with snapshot dirty checking (unchanged entities cost no SQL), one query per eager-loaded relation, `readOnly()` and keyset `cursor()` for big reads, and `EntityManager::nPlusOneFindings()` in development.
 
+`trunk make:factory Customer` (needs `composer require --dev fakerphp/faker`) writes `app/Factories/CustomerFactory.php` for realistic test data; `trunk db:seed` runs `database/seeders/DatabaseSeeder.php`. See [Factories and seeding](docs/orm.md#factories-and-seeding).
+
 ## Errors, logging and memory
 
 **Principle:** the normal path stays cheap; validation and resolution move to build time; diagnostics, safety and error handling are never removed for speed.
@@ -196,6 +198,8 @@ $queue->dispatchMany($jobs);                                            // one m
 `trunk queue:work [--queue=a,b] [--once] [--stop-when-empty] [--max-jobs=N] [--max-time=S] [--memory=MB]` runs jobs; `queue:failed`, `queue:retry {id|all}`, `queue:flush`, `make:job Name` manage them. Jobs are found in `app/Jobs`; `trunk build` validates them (unsafe constructors, container-injecting `handle()`, timeouts that do not fit the visibility window) and generates codecs into `build/queue.php`.
 
 Safety: payloads are JSON only (no `unserialize`), the stored job name is just a key into the compiled allowlist (an unknown name never touches the autoloader), decoding is strict and errors never echo values, failure messages are stored only in development, an attempt is counted when a job is claimed (a job that kills its worker still runs out of tries), claiming is an atomic conditional `UPDATE` (no `SKIP LOCKED`; verified with 4 concurrent worker processes on SQLite, MySQL and PostgreSQL), and a job dispatched inside a database transaction commits or rolls back with your data. Timeouts and graceful shutdown need `ext-pcntl`. Long-running workers share singletons across jobs, so recycle them (`--max-jobs`, `--max-time`, `--memory`) under a process supervisor.
+
+`trunk package:install schedule` (needs `queue`) turns N crontab entries into one: define recurring jobs and commands in `app/Schedule.php` (`$schedule->job(new CleanUp())->daily('03:00'); $schedule->command('auth:prune')->hourly();`, no cron-string parsing), run them all with `* * * * * php vendor/bin/trunk schedule:run`, and see what's scheduled with `trunk schedule:list`. See [Scheduling](docs/scheduling.md).
 
 ## Validation (TrunkValidation)
 

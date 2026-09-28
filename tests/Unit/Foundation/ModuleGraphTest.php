@@ -22,6 +22,7 @@ use Trunk\Tests\Fixtures\Modules\Graph\CycleBModule;
 use Trunk\Tests\Fixtures\Modules\Graph\CycleCModule;
 use Trunk\Tests\Fixtures\Modules\Graph\NeedsBaseModule;
 use Trunk\Tests\Fixtures\Modules\Graph\NeedsBothModule;
+use Trunk\Tests\Fixtures\Modules\ThrowingConstructorModule;
 
 final class ModuleGraphTest extends TestCase
 {
@@ -57,6 +58,17 @@ final class ModuleGraphTest extends TestCase
         self::assertCount(1, $errors);
         self::assertStringContainsString('requires ' . BaseModule::class . ', which is not in trunk.php', $errors[0]);
         self::assertStringContainsString('Fix: add \\' . BaseModule::class . '::class above \\' . NeedsBaseModule::class . '::class', $errors[0]);
+    }
+
+    public function test_a_module_whose_constructor_throws_is_reported_not_fatal(): void
+    {
+        // Act
+        $errors = new ModuleGraph()->errors([BaseModule::class, ThrowingConstructorModule::class]);
+
+        // Assert
+        self::assertCount(1, $errors, 'the good module is unaffected, and checking keeps going past the bad one');
+        self::assertStringContainsString(ThrowingConstructorModule::class . ' could not be constructed', $errors[0]);
+        self::assertStringContainsString('the module is unhappy', $errors[0]);
     }
 
     public function test_the_wrong_order_is_reported_not_silently_fixed(): void

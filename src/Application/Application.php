@@ -12,6 +12,7 @@ use Trunk\Contracts\Module;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Exception\ConfigurationException;
 use Trunk\Foundation\Manifest\ModuleGraph;
+use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Foundation\Runtime;
 
@@ -112,13 +113,7 @@ final class Application
      */
     private function instantiateModules(): array
     {
-        $modules = [];
-
-        foreach ($this->manifest->modules as $class) {
-            $modules[] = new $class();
-        }
-
-        return $modules;
+        return ModuleInstances::from($this->manifest->modules);
     }
 
     private function expect(Phase $required, string $action): void

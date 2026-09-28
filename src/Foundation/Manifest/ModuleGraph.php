@@ -6,6 +6,7 @@ namespace Trunk\Foundation\Manifest;
 
 use Trunk\Contracts\Module;
 use Trunk\Contracts\ModuleDependencies;
+use Trunk\Foundation\Exception\ConfigurationException;
 
 /**
  * Checks a module list against the dependencies the modules declare: missing modules, wrong order
@@ -31,7 +32,22 @@ final class ModuleGraph
                 continue;
             }
 
-            $module = new $class();
+            if (!is_subclass_of($class, Module::class)) {
+                $errors[] = \sprintf('%s is listed in trunk.php but does not implement %s.', $class, Module::class);
+
+                continue;
+            }
+
+            // The checks above already cover "does not exist" and "wrong type" with a more
+            // actionable message than ModuleInstances::one() would give either; this only catches
+            // a constructor that throws.
+            try {
+                $module = ModuleInstances::one($class);
+            } catch (ConfigurationException $e) {
+                $errors[] = $e->getMessage();
+
+                continue;
+            }
 
             if (!$module instanceof ModuleDependencies) {
                 continue;

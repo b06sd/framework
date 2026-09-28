@@ -8,7 +8,7 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 | --- | --- |
 | `new <name> [--type=api\|web\|self-contained\|cli\|worker] [--repository=<path>] [--force]` | Create a project |
 | `serve [--host=127.0.0.1] [--port=8006]` | PHP development server with `APP_ENV=local` (port also from `APP_PORT`) |
-| `doctor` | Health check: PHP, extensions, Composer packages each capability needs, config, `.env`, build freshness, log directory, module order, permissions, third-party capabilities |
+| `doctor` | Health check: PHP, extensions, Composer packages each capability needs, config, `.env`, build freshness, log directory, module order, permissions, third-party capabilities, and (by booting the real application) whether a capability's own tables actually exist |
 | `build` | Validate and compile for production into `build/` |
 | `route:list` | Every route, handler, how arguments bind, and middleware |
 | `test [-- phpunit args]` | Run the project's PHPUnit tests |
@@ -26,19 +26,25 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 
 ## Generators (never overwrite)
 
-`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:migration` (database), `make:job` (queue), `make:request` (validation). Each prints where to register or use the result.
+`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:factory` (orm, needs `fakerphp/faker`), `make:migration` (database), `make:job` (queue), `make:request` (validation). Each prints where to register or use the result.
 
 ## Database, ORM, cache
 
-`migrate`, `migrate:status`, `migrate:rollback [--step=N]`, `migrate:fresh` (never in production), `orm:validate`, `cache:clear`.
+`migrate`, `migrate:status`, `migrate:rollback [--step=N]`, `migrate:fresh` (never in production), `orm:validate`, `db:seed [--force]` (runs `database/seeders/DatabaseSeeder.php`; never in production without `--force`), `cache:clear`.
 
 ## Queue
 
 `queue:table`, `queue:work [--queue=a,b] [--once] [--stop-when-empty] [--max-jobs=N] [--max-time=S] [--memory=MB]`, `queue:failed`, `queue:retry <id|all>`, `queue:flush`.
 
+## Schedule
+
+`schedule:run` (run every task due this minute; one crontab line), `schedule:list` (every task, its frequency, its next run).
+
 ## Auth
 
 `auth:table [--users]`, `auth:token <user-id> <name> [--abilities=a,b] [--ttl=seconds]`, `auth:prune`.
+
+`rate-limit:table`, `rate-limit:prune`.
 
 ## Your own commands
 

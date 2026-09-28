@@ -170,6 +170,8 @@ final readonly class CapabilityManager
     private function positionFor(string $module, array $claimed): int
     {
         foreach ($claimed as $index => $listed) {
+            // Deliberately not ModuleInstances::one(): checking is_subclass_of() first avoids
+            // constructing every other module just to find the few that implement this interface.
             if (!class_exists($listed) || !is_subclass_of($listed, ModuleDependencies::class)) {
                 continue;
             }
