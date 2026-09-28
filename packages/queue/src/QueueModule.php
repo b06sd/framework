@@ -21,6 +21,7 @@ use Trunk\Contracts\ModuleDependencies;
 use Trunk\Database\Connection\ConnectionManager;
 use Trunk\Database\Connection\TransactionGuard;
 use Trunk\Database\DatabaseModule;
+use Trunk\Database\Schema\Schema;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Diagnostics\DiagnosticsModule;
 use Trunk\Lifecycle\LifecycleManager;
@@ -29,6 +30,7 @@ use Trunk\Logging\ContextHolder;
 use Trunk\Observability\Metrics;
 use Trunk\Observability\Tracer;
 use Trunk\Queue\Compiler\JobCodeGenerator;
+use Trunk\Queue\Doctor\QueueTablesCheck;
 use Trunk\Queue\Driver\DatabaseDriverFactory;
 use Trunk\Queue\Driver\QueueDriver;
 use Trunk\Queue\Exception\JobMappingException;
@@ -100,6 +102,8 @@ final class QueueModule implements Module, BuildContributor, ModuleDependencies
             new Reference(Metrics::class),
             new Reference(Tracer::class),
         ]);
+        $builder->service(QueueTablesCheck::class, QueueTablesCheck::class, [new Reference(Schema::class), new ConfigValue('queue.table', 'string')]);
+        $builder->tag('trunk.doctor_check', QueueTablesCheck::class);
     }
 
     public function boot(ContainerInterface $container): void {}

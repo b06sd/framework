@@ -65,7 +65,7 @@ final readonly class ConsoleKernelFactory
         $needsProject = fn(Closure $make): Closure => $this->bound($make, $project, $problem);
 
         $builtIn['build'] = $needsProject(static fn(Project $p): Command => new BuildCommand($p, $variables));
-        $builtIn['doctor'] = $needsProject(static fn(Project $p): Command => new DoctorCommand($p, $variables, $hasEnvFile));
+        $builtIn['doctor'] = $needsProject(fn(Project $p): Command => new DoctorCommand($p, $variables, $hasEnvFile, applications: $this->applications));
         $builtIn['route:list'] = $needsProject(static fn(Project $p): Command => new RouteListCommand($p));
         $builtIn['serve'] = $needsProject(fn(Project $p): Command => new ServeCommand($p, $this->processes, $variables));
         $builtIn['package:list'] = $needsProject(static fn(Project $p): Command => new PackageListCommand($p));

@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Trunk\Compiler\Build\BuildContext;
 use Trunk\Compiler\Exception\CompilationException;
 use Trunk\Container\ContainerBuilder;
+use Trunk\Doctor\DoctorChecks;
 use Trunk\Error\ExceptionHandler;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Diagnostics\DiagnosticsModule;
@@ -41,7 +42,7 @@ final class DiagnosticsModuleTest extends TestCase
         // Assert
         self::assertTrue($builder->has(LoggerInterface::class));
         self::assertTrue($builder->has(ContextHolder::class));
-        foreach ([ExceptionHandler::class, LifecycleManager::class, HealthChecker::class, Metrics::class, Tracer::class, MetricsExporter::class] as $id) {
+        foreach ([ExceptionHandler::class, LifecycleManager::class, HealthChecker::class, DoctorChecks::class, Metrics::class, Tracer::class, MetricsExporter::class] as $id) {
             self::assertFalse(\array_key_exists($id, $builder->definitions()), $id . ' belongs to the diagnostics module');
         }
     }
@@ -57,7 +58,7 @@ final class DiagnosticsModuleTest extends TestCase
         $ids = array_keys($builder->definitions());
 
         // Assert
-        foreach ([ExceptionHandler::class, LifecycleManager::class, HealthChecker::class, Metrics::class, Tracer::class, MetricsExporter::class] as $id) {
+        foreach ([ExceptionHandler::class, LifecycleManager::class, HealthChecker::class, DoctorChecks::class, Metrics::class, Tracer::class, MetricsExporter::class] as $id) {
             self::assertContains($id, $ids);
         }
     }

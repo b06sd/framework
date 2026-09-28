@@ -28,7 +28,7 @@
                 ],
                 "requires": [
                     "database",
-                    "logging"
+                    "diagnostics"
                 ],
                 "config": {
                     "queue": "resources/config/queue.php"

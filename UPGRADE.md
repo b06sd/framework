@@ -4,6 +4,8 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New public types `Trunk\Doctor\DoctorCheck` (interface) and `Trunk\Doctor\DoctorFinding` (class), and a new container tag `trunk.doctor_check`. `trunk doctor` boots the real application and runs every tagged check, alongside its existing file/config checks. Additive; nothing to change in an existing project.
+
 ## 0.1.2
 
 * `trunk make:entity Name` now writes `app/Entities/Name.php` (namespace `App\Entities`) and `app/Orm/NameMap.php` instead of both into `app/Orm`. Nothing to do for existing projects: maps are still discovered as `app/Orm/*Map.php` and a map names its entity by class, so entities that stay in `app/Orm` keep working. Move them if you want the new layout: change the entity's namespace and add `use App\Entities\Name;` to the map.

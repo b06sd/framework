@@ -10,6 +10,7 @@ use Trunk\Auth\Authorization\Ability;
 use Trunk\Auth\Authorization\Gate;
 use Trunk\Auth\Authorization\Policy;
 use Trunk\Auth\Csrf\Csrf;
+use Trunk\Auth\Doctor\AuthTablesCheck;
 use Trunk\Auth\Password\NativePasswordHasher;
 use Trunk\Auth\Password\PasswordHasher;
 use Trunk\Auth\Session\ConfiguredSessionStore;
@@ -38,6 +39,7 @@ use Trunk\Contracts\Clock;
 use Trunk\Contracts\Module;
 use Trunk\Contracts\ModuleDependencies;
 use Trunk\Database\DatabaseModule;
+use Trunk\Database\Schema\Schema;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Diagnostics\DiagnosticsModule;
 use Trunk\Http\HttpModule;
@@ -81,6 +83,8 @@ final class AuthModule implements Module, BuildContributor, ModuleDependencies
         $builder->bindDefault(TokenStore::class, DatabaseTokenStore::class);
         $builder->bindDefault(PasswordHasher::class, NativePasswordHasher::class);
         $builder->bindDefault(UserProvider::class, DatabaseUserProvider::class);
+        $builder->service(AuthTablesCheck::class, AuthTablesCheck::class, [new Reference(Schema::class), new Reference(SessionSettings::class)]);
+        $builder->tag('trunk.doctor_check', AuthTablesCheck::class);
     }
 
     public function boot(ContainerInterface $container): void {}

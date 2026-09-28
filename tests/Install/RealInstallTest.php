@@ -51,6 +51,13 @@ final class RealInstallTest extends TestCase
         // Arrange
         $project = $this->project = new ScaffoldedProject('fresh-' . $type, $type, realInstall: true);
 
+        if ($type === 'worker') {
+            // The worker profile enables queue by default; doctor now checks that its table exists,
+            // exactly the migration step a real deploy must not skip.
+            $project->trunk(['queue:table']);
+            $project->trunk(['migrate']);
+        }
+
         // Act
         [$doctorCode, $doctorOut] = $project->trunk(['doctor']);
         [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);

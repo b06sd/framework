@@ -15,6 +15,7 @@ use Trunk\Container\Definition\TaggedReference;
 use Trunk\Contracts\BuildContributor;
 use Trunk\Contracts\Module;
 use Trunk\Contracts\ModuleDependencies;
+use Trunk\Doctor\DoctorChecks;
 use Trunk\Error\ExceptionHandler;
 use Trunk\Foundation\Logging\LoggingModule;
 use Trunk\Health\HealthChecker;
@@ -29,8 +30,9 @@ use Trunk\Observability\Tracer;
 /**
  * The runtime services every long-lived or user-facing process needs on top of a logger: the error
  * pipeline (`ExceptionHandler`, tag `trunk.error_reporter`), the per-request/per-job reset
- * (`LifecycleManager`, tag `trunk.lifecycle`), the health checker (tag `trunk.health_check`) and
- * no-op `Metrics`, `Tracer` and `MetricsExporter` defaults that the observability package replaces.
+ * (`LifecycleManager`, tag `trunk.lifecycle`), the health checker (tag `trunk.health_check`), the
+ * `trunk doctor` runtime checks (tag `trunk.doctor_check`) and no-op `Metrics`, `Tracer` and
+ * `MetricsExporter` defaults that the observability package replaces.
  * It needs the logging module and is configured by config/errors.php; `trunk build` validates that.
  *
  * @api
@@ -51,6 +53,7 @@ final class DiagnosticsModule implements Module, BuildContributor, ModuleDepende
     {
         $builder->service(ExceptionHandler::class, ExceptionHandler::class, [new Reference(LoggerInterface::class), new TaggedReference('trunk.error_reporter')]);
         $builder->service(HealthChecker::class, HealthChecker::class, [new TaggedReference('trunk.health_check'), new Reference(LoggerInterface::class)]);
+        $builder->service(DoctorChecks::class, DoctorChecks::class, [new TaggedReference('trunk.doctor_check'), new Reference(LoggerInterface::class)]);
         $builder->service(LifecycleManager::class, LifecycleManager::class, [new TaggedReference('trunk.lifecycle'), new Reference(LoggerInterface::class)]);
         $builder->bindDefault(Tracer::class, NullTracer::class);
         $builder->bindDefault(Metrics::class, NullMetrics::class);

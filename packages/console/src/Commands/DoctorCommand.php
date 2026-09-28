@@ -6,14 +6,17 @@ namespace Trunk\Console\Commands;
 
 use Closure;
 use Throwable;
+use Trunk\Container\Scopable;
 use Trunk\Contracts\Console\Command;
 use Trunk\Contracts\Console\CommandDefinition;
 use Trunk\Contracts\Console\CommandInput;
 use Trunk\Contracts\Console\CommandOutput;
+use Trunk\Doctor\DoctorChecks;
 use Trunk\Foundation\Capability\CapabilityCatalog;
 use Trunk\Foundation\Capability\ComposerRequirements;
 use Trunk\Foundation\Environment;
 use Trunk\Foundation\Manifest\ModuleGraph;
+use Trunk\Foundation\Project\ApplicationFactory;
 use Trunk\Foundation\Project\ConfigurationLoader;
 use Trunk\Foundation\Project\Project;
 use Trunk\Foundation\Runtime;
@@ -29,6 +32,7 @@ final readonly class DoctorCommand implements Command
         private bool $hasEnvFile = false,
         private ConfigurationLoader $configuration = new ConfigurationLoader(),
         private ?Closure $pcntlAvailable = null,
+        private ApplicationFactory $applications = new ApplicationFactory(),
     ) {}
 
     public function definition(): CommandDefinition
@@ -71,6 +75,7 @@ final readonly class DoctorCommand implements Command
 
         $problems += $this->capabilities($output);
         $problems += $this->diagnostics($output, $env);
+        $problems += $this->runtimeChecks($output);
 
         $output->line();
         $problems === 0 ? $output->success('Project is healthy.') : $output->failure(\sprintf('%d problem(s) found.', $problems));
@@ -174,6 +179,49 @@ final readonly class DoctorCommand implements Command
 
         if (\in_array('queue', $enabled, true) && !($this->pcntlAvailable !== null ? ($this->pcntlAvailable)() : \function_exists('pcntl_alarm'))) {
             $output->warning('ext-pcntl is not installed: queue workers cannot enforce job timeouts or stop gracefully on SIGTERM.');
+        }
+
+        return $problems;
+    }
+
+    /**
+     * Checks that only a real, booted application can answer (does a table a capability needs
+     * actually exist?). Best-effort: an application that will not boot is already reported by
+     * build()/the configuration check above, so this section is silently skipped rather than
+     * reported a second time; an application with nothing registered for it (the `diagnostics`
+     * capability is not enabled) has nothing to check.
+     */
+    private function runtimeChecks(CommandOutput $output): int
+    {
+        try {
+            $container = $this->applications->create($this->project, $this->applications->runtime($this->project, $this->variables))->container();
+
+            if (!$container instanceof Scopable) {
+                return 0;
+            }
+
+            $checks = $container->beginScope()->get(DoctorChecks::class);
+
+            if (!$checks instanceof DoctorChecks) {
+                return 0;
+            }
+
+            $findings = $checks->run();
+        } catch (Throwable) {
+            return 0;
+        }
+
+        $problems = 0;
+
+        foreach ($findings as $name => $finding) {
+            if ($finding->ok) {
+                $output->success($name);
+
+                continue;
+            }
+
+            $output->failure($name . ': ' . $finding->message . ($finding->fix === null ? '' : ' Fix: ' . $finding->fix));
+            ++$problems;
         }
 
         return $problems;
