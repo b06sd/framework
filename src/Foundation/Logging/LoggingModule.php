@@ -17,12 +17,14 @@ use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Runtime;
 use Trunk\Logging\ContextHolder;
 use Trunk\Logging\LoggerFactory;
+use Trunk\Logging\Logs;
 
 /**
  * Binds LoggerInterface (PSR-3) to a structured logger configured by config/logging.php: JSON lines
  * with request/trace ids, redaction of secrets and control-character sanitising. Inject
- * LoggerInterface anywhere; there is nothing Trunk-specific to learn. `trunk build` validates the
- * logging configuration. Bind your own logger in a later module if you prefer another library.
+ * LoggerInterface anywhere; there is nothing Trunk-specific to learn. Inject Logs instead for a logger
+ * per category with its own level (`levels` in config/logging.php). `trunk build` validates the
+ * logging configuration.
  * The error pipeline, lifecycle and health services live in DiagnosticsModule, which builds on this.
  *
  * @api
@@ -39,6 +41,7 @@ final class LoggingModule implements Module, BuildContributor
             new Reference(Runtime::class),
             new Reference(ContextHolder::class),
         ]);
+        $builder->factory(Logs::class, [LoggerFactory::class, 'logs'], [new Reference(LoggerInterface::class), new Reference(Configuration::class)]);
     }
 
     public function boot(ContainerInterface $container): void {}

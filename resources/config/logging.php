@@ -13,6 +13,9 @@ return static function (Runtime $runtime): array {
     return [
         // debug, info, notice, warning, error, critical, alert, emergency
         'level' => $runtime->variable('LOG_LEVEL', $local ? 'debug' : 'info'),
+        // A different level for some categories (loggers from Logs::for()); the most specific prefix
+        // wins, e.g. ['App\Billing' => 'debug', 'payments.stripe' => 'warning'].
+        'levels' => [],
         // stderr (containers, workers), file (storage/logs/trunk-YYYY-MM-DD.log), null
         'channel' => $runtime->variable('LOG_CHANNEL', $local ? 'file' : 'stderr'),
         // json (one object per line, for log platforms) or line (human readable)

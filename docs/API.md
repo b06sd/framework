@@ -99,6 +99,7 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Lifecycle\LifecycleAware` (interface)
 - `Trunk\Lifecycle\UnitOfWorkDiscarded` (class)
 - `Trunk\Logging\ContextHolder` (class)
+- `Trunk\Logging\Logs` (class)
 - `Trunk\Logging\RequestContext` (class)
 - `Trunk\Observability\Metrics` (interface)
 - `Trunk\Observability\MetricsExporter` (interface)

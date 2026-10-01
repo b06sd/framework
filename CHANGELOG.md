@@ -11,6 +11,7 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 * Fixed: an `ob_gzhandler` output buffer never compressed a response, because the emitter flushed after every 8 KB chunk.
 * Changed: a response whose size is known gets a `Content-Length` (unless it sets its own, uses `Transfer-Encoding`, answers `HEAD`, or PHP compresses the output), and is no longer flushed chunk by chunk; a body of unknown size (a non-seekable stream) is still flushed as it is produced.
 * Changed: a request no route answers (`ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED`) is logged as one short line naming the method and path (never the query string) instead of a full stack trace, so scanner traffic cannot flood the log. Every other error, `4xx` included, still logs its trace.
+* Added: levels per category for logging. Inject `Trunk\Logging\Logs` and take `$logs->for(self::class)`; set `levels` in `config/logging.php` (`['App\Payments' => 'debug']`, most specific prefix wins) to make one part of an application more verbose or quieter than `level`. Every record from such a logger carries `category`, also shown in the local line format. `trunk build` validates the map. Injecting `LoggerInterface` is unchanged. New guide: `docs/logging.md`.
 * Performance: building a request from PHP's globals costs about a quarter less (headers are validated and collected in one pass instead of one copy per header), with the same validation.
 
 ## 0.1.3

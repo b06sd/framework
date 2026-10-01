@@ -22,7 +22,7 @@ final class StructuredLogger extends AbstractLogger
 {
     private const array LEVELS = [LogLevel::DEBUG => 0, LogLevel::INFO => 1, LogLevel::NOTICE => 2, LogLevel::WARNING => 3, LogLevel::ERROR => 4, LogLevel::CRITICAL => 5, LogLevel::ALERT => 6, LogLevel::EMERGENCY => 7];
 
-    private const array RESERVED = ['timestamp', 'level', 'message', 'service', 'environment'];
+    private const array RESERVED = ['timestamp', 'level', 'message', 'service', 'environment', 'category'];
 
     private readonly int $threshold;
 
@@ -38,8 +38,20 @@ final class StructuredLogger extends AbstractLogger
         private readonly string $environment = 'production',
         private readonly ContextNormalizer $normalizer = new ContextNormalizer(),
         private readonly ?Closure $clock = null,
+        private readonly ?string $category = null,
     ) {
         $this->threshold = self::LEVELS[$level] ?? throw new InvalidArgumentException(\sprintf('"%s" is not a PSR-3 log level.', $level));
+    }
+
+    /**
+     * The same logger (same output, context and redaction) for one category: its own minimum level,
+     * and `category` on every record.
+     *
+     * @internal built by Logs::for()
+     */
+    public function forCategory(string $category, string $level): self
+    {
+        return new self($this->formatter, $this->handler, $level, $this->context, $this->service, $this->environment, $this->normalizer, $this->clock, $category);
     }
 
     public function isEnabled(string $level): bool
@@ -75,6 +87,10 @@ final class StructuredLogger extends AbstractLogger
         $message = $this->normalizer->text($this->interpolate($message, $context));
         $normalized = $this->normalizer->normalize($context);
         $extra = ['service' => $this->service, 'environment' => $this->environment];
+
+        if ($this->category !== null) {
+            $extra['category'] = $this->category;
+        }
         $current = $this->context?->get();
 
         if ($current !== null) {

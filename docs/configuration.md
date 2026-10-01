@@ -59,7 +59,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `queue.php` | `mode`, `jobs` (discovered from `app/Jobs`), `connection`, `table`, `failed_table`, `max_payload` (64 KB), `visibility_timeout` (600), `store_failure_messages`, `worker.*` (`memory_limit` 256M, `growth_warn` 64M, `max_jobs` 1000, `max_runtime` 3600, `gc_interval` 100, `sleep` 3) |
 | `validation.php` | `mode`, `requests` (discovered from `app/Requests/*.php`), `build` |
 | `cache.php` | `driver`, `path`, `prefix`, `redis.host`/`port`/`password`/`database` (read only when `driver` is `redis`) |
-| `logging.php` | `level`, `channel`, `format` (`json`/`line`), `path`, `service`, `redact` (extra keys to mask) |
+| `logging.php` | `level`, `levels` (a level per category, see [Logging](logging.md)), `channel`, `format` (`json`/`line`), `path`, `service`, `redact` (extra keys to mask) |
 | `errors.php` | `format` (`auto`, `json`, `html`, `text`) |
 | `observability.php` | `metrics` (true), `tracing` (false) |
 | `health.php` | `metrics_token` (from `secret('METRICS_TOKEN')`), `debug` |

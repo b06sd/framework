@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Trunk\Logging;
 
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Exception\ConfigurationException;
@@ -54,6 +55,22 @@ final readonly class LoggerFactory
             }
         }
 
+        if ($configuration->has('logging.levels')) {
+            $levels = $configuration->get('logging.levels');
+
+            foreach (\is_array($levels) ? $levels : [0 => null] as $category => $minimum) {
+                if (!\is_string($category) || preg_match(Logs::CATEGORY_PATTERN, $category) !== 1) {
+                    $problems[] = 'logging.levels maps a category (a class or namespace such as App\\Billing, or a dotted name such as payments.stripe) to a level, e.g. [\'App\\Billing\' => \'debug\'].';
+
+                    break;
+                }
+
+                if (!\is_string($minimum) || !\in_array($minimum, self::LEVELS, true)) {
+                    $problems[] = \sprintf('logging.levels: "%s" must be one of: %s.', $category, implode(', ', self::LEVELS));
+                }
+            }
+        }
+
         if ($configuration->has('logging.redact')) {
             foreach ($configuration->array('logging.redact') as $key) {
                 if (!\is_string($key) || $key === '' || \strlen($key) > 64) {
@@ -92,6 +109,32 @@ final readonly class LoggerFactory
             $runtime->environment->value,
             new ContextNormalizer(new Redactor($extra)),
         );
+    }
+
+    /**
+     * Loggers by category, sharing the application logger's output, context and redaction.
+     */
+    public function logs(LoggerInterface $root, Configuration $configuration): Logs
+    {
+        if (!$root instanceof StructuredLogger) {
+            throw new ConfigurationException('Logs builds on the logger of the logging capability; LoggerInterface is bound to something else.');
+        }
+
+        $problems = self::problems($configuration);
+
+        if ($problems !== []) {
+            throw new ConfigurationException($problems[0]);
+        }
+
+        $levels = [];
+
+        foreach ($configuration->has('logging.levels') ? $configuration->array('logging.levels') : [] as $category => $minimum) {
+            if (\is_string($category) && \is_string($minimum)) {
+                $levels[$category] = $minimum;
+            }
+        }
+
+        return new Logs($root, self::string($configuration, 'level', 'info'), $levels);
     }
 
     private static function string(Configuration $configuration, string $key, string $default): string
