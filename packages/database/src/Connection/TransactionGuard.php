@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Trunk\Database\Connection;
 
-use LogicException;
 use Trunk\Lifecycle\LifecycleAware;
+use Trunk\Lifecycle\UnitOfWorkDiscarded;
 
 /**
  * A safety net for workers and other long-running processes: if a unit of work ends with a
@@ -40,7 +40,7 @@ final readonly class TransactionGuard implements LifecycleAware
         $left = $this->rollBackOpen();
 
         if ($left > 0) {
-            throw new LogicException(\sprintf('A unit of work ended with %d open transaction level(s); they were rolled back. Commit or roll back explicitly, or use Connection::transaction().', $left));
+            throw new UnitOfWorkDiscarded(\sprintf('A unit of work ended with %d open transaction level(s); they were rolled back. Commit or roll back explicitly, or use Connection::transaction().', $left));
         }
     }
 }

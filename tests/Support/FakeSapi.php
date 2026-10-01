@@ -11,7 +11,7 @@ final class FakeSapi implements Sapi
     /** @var list<string> */
     public array $calls = [];
 
-    public function __construct(private readonly bool $headersSent = false) {}
+    public function __construct(private readonly bool $headersSent = false, private readonly bool $passesThrough = true) {}
 
     public function headersSent(): bool
     {
@@ -31,5 +31,15 @@ final class FakeSapi implements Sapi
     public function write(string $chunk): void
     {
         $this->calls[] = 'write:' . $chunk;
+    }
+
+    public function flush(): void
+    {
+        $this->calls[] = 'flush';
+    }
+
+    public function bodyPassesThrough(): bool
+    {
+        return $this->passesThrough;
     }
 }

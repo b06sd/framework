@@ -61,7 +61,7 @@ final readonly class ExceptionHandler
     {
         try {
             $this->logger?->log($report->level, $report->public ? 'Request failed with a public error.' : ($context->kind === 'http' ? 'Unhandled exception while handling the request.' : 'Unhandled exception.'), [
-                'exception' => $error,
+                ...$this->describe($error, $report),
                 'errorCode' => $report->internalCode ?? $report->code,
                 'status' => $report->status,
                 'kind' => $context->kind,
@@ -71,6 +71,21 @@ final readonly class ExceptionHandler
         } catch (Throwable) {
             // A failing logger must not turn one error into another.
         }
+    }
+
+    /**
+     * The exception with its stack trace, except for a request no route answers (the codes
+     * ROUTE_NOT_FOUND and METHOD_NOT_ALLOWED, which the router raises). Scanners send those by the thousand, their trace is only framework frames, and
+     * the message already names the method and path; one short line each keeps a flood of them from
+     * flooding the log. Every other error, 4xx included, keeps its trace.
+     *
+     * @return array<string, mixed>
+     */
+    private function describe(Throwable $error, ErrorReport $report): array
+    {
+        $routeMiss = $report->public && \in_array($report->code, [ErrorCode::RouteNotFound->value, ErrorCode::MethodNotAllowed->value], true);
+
+        return $routeMiss ? ['reason' => $error->getMessage()] : ['exception' => $error];
     }
 
     private function notify(Throwable $error, ErrorReport $report): void

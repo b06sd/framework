@@ -39,7 +39,10 @@ final readonly class CorsMiddleware implements MiddlewareInterface
         $origin = $request->getHeaderLine('Origin');
 
         if (!$this->cors->allows($origin)) {
-            return $handler->handle($request);
+            // Still marked: a shared cache must not hand this answer (without CORS headers) to an allowed origin.
+            $response = $handler->handle($request);
+
+            return $this->cors->variesByOrigin() ? $this->withHeaders($response, ['Vary' => 'Origin']) : $response;
         }
 
         if ($request->getMethod() === 'OPTIONS' && $request->getHeaderLine('Access-Control-Request-Method') !== '') {
@@ -57,14 +60,36 @@ final readonly class CorsMiddleware implements MiddlewareInterface
     }
 
     /**
+     * Sets the CORS headers. `Vary` is merged into what the response already varies by (a session's
+     * `Vary: Cookie`, say), never replaced, since dropping a Vary lets a cache serve one client's
+     * response to another.
+     *
      * @param array<string, string> $headers
      */
     private function withHeaders(ResponseInterface $response, array $headers): ResponseInterface
     {
         foreach ($headers as $name => $value) {
-            $response = $response->withHeader($name, $value);
+            $response = $name === 'Vary' ? $this->withVary($response, $value) : $response->withHeader($name, $value);
         }
 
         return $response;
+    }
+
+    private function withVary(ResponseInterface $response, string $fields): ResponseInterface
+    {
+        $merged = [];
+
+        foreach ([...$response->getHeader('Vary'), $fields] as $line) {
+            foreach (explode(',', $line) as $field) {
+                $field = trim($field);
+
+                if ($field !== '') {
+                    $merged[strtolower($field)] ??= $field;
+                }
+            }
+        }
+
+        // `*` already means "varies by everything"; anything added to it is noise.
+        return $response->withHeader('Vary', isset($merged['*']) ? '*' : implode(', ', $merged));
     }
 }

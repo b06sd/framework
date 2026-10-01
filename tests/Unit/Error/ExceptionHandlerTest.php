@@ -150,6 +150,37 @@ final class ExceptionHandlerTest extends TestCase
         self::assertSame('job', $logger->records[1][2]['kind']);
     }
 
+    public function test_a_route_miss_is_one_short_line_while_every_other_error_keeps_its_exception(): void
+    {
+        // Arrange
+        $logger = new class extends AbstractLogger {
+            /** @var list<array<array-key, mixed>> */
+            public array $contexts = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->contexts[] = $context;
+            }
+        };
+        $handler = new ExceptionHandler($logger);
+
+        // Act
+        $handler->handle(HttpException::notFound('The router has no route for GET /wp-login.php.', ErrorCode::RouteNotFound->value));
+        $handler->handle(HttpException::methodNotAllowed(['GET'], 'The router does not allow DELETE /users.'));
+        $handler->handle(HttpException::notFound('Customer 7 is gone.'));
+        $handler->handle(new HttpException(403, 'Policy refused.'));
+        $handler->handle(new LogicException('bug'));
+
+        // Assert
+        self::assertSame(['reason' => 'The router has no route for GET /wp-login.php.'], array_intersect_key($logger->contexts[0], ['reason' => 1, 'exception' => 1]));
+        self::assertSame(['reason' => 'The router does not allow DELETE /users.'], array_intersect_key($logger->contexts[1], ['reason' => 1, 'exception' => 1]));
+
+        foreach ([2, 3, 4] as $index) {
+            self::assertInstanceOf(Throwable::class, $logger->contexts[$index]['exception'] ?? null, 'an application 404, a 403 and a 500 keep the trace');
+            self::assertArrayNotHasKey('reason', $logger->contexts[$index]);
+        }
+    }
+
     public function test_a_failing_logger_or_reporter_never_becomes_a_second_error_and_other_reporters_still_run(): void
     {
         // Arrange

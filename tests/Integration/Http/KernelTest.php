@@ -94,6 +94,7 @@ final class KernelTest extends TestCase
             'status:HTTP/1.1 200 OK',
             'header:Content-Type: text/plain',
             'header:X-Test: 1',
+            'header:Content-Length: 14',
             'write:page 7 via GET',
         ], array_values($calls));
     }

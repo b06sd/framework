@@ -65,9 +65,9 @@ final class HttpException extends RuntimeException implements PublicError
     /**
      * @param non-empty-list<string> $allowed
      */
-    public static function methodNotAllowed(array $allowed): self
+    public static function methodNotAllowed(array $allowed, string $message = 'Method not allowed.'): self
     {
-        return new self(405, 'Method not allowed.', ['Allow' => implode(', ', $allowed)]);
+        return new self(405, $message, ['Allow' => implode(', ', $allowed)]);
     }
 
     public function errorCode(): string

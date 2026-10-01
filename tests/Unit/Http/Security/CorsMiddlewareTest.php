@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Trunk\Tests\Unit\Http\Security;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Trunk\Foundation\Configuration;
 use Trunk\Http\Factory\HttpFactory;
+use Trunk\Http\Message\Response;
 use Trunk\Http\Message\ServerRequest;
 use Trunk\Http\Middleware\CorsMiddleware;
 use Trunk\Http\Response\ResponseBuilder;
@@ -104,6 +108,67 @@ final class CorsMiddlewareTest extends TestCase
         // Assert
         self::assertNotNull($handler->seen);
         self::assertFalse($response->hasHeader('Access-Control-Allow-Origin'));
+    }
+
+    public function test_with_a_list_of_origins_every_response_varies_by_origin_even_one_without_cors_headers(): void
+    {
+        // Arrange: a cache must not hand the plain answer to an allowed origin, or the CORS answer to anyone else
+        $middleware = $this->middleware($this->enabled(['allowed_origins' => ['https://app.example.com']]));
+
+        // Act
+        $none = $middleware->process(new ServerRequest('GET', 'https://api.example.com/x'), $this->handler());
+        $refused = $middleware->process(new ServerRequest('GET', 'https://api.example.com/x', ['Origin' => 'https://evil.example.com']), $this->handler());
+        $allowed = $middleware->process(new ServerRequest('GET', 'https://api.example.com/x', ['Origin' => 'https://app.example.com']), $this->handler());
+
+        // Assert
+        self::assertSame('Origin', $none->getHeaderLine('Vary'));
+        self::assertSame('Origin', $refused->getHeaderLine('Vary'));
+        self::assertSame('Origin', $allowed->getHeaderLine('Vary'));
+    }
+
+    public function test_any_origin_without_credentials_does_not_vary_since_every_origin_gets_the_same_answer(): void
+    {
+        // Arrange
+        $middleware = $this->middleware($this->enabled(['allowed_origins' => ['*']]));
+
+        // Act
+        $response = $middleware->process(new ServerRequest('GET', 'https://api.example.com/x', ['Origin' => 'https://app.example.com']), $this->handler());
+
+        // Assert
+        self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
+        self::assertFalse($response->hasHeader('Vary'), 'a needless Vary splits shared caches per origin');
+    }
+
+    public function test_what_the_response_already_varies_by_is_kept_not_replaced(): void
+    {
+        // Arrange: a session sets Vary: Cookie further in; losing it would let a cache share one visitor's page
+        $middleware = $this->middleware($this->enabled(['allowed_origins' => ['https://app.example.com']]));
+        $handler = new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return new Response(200, ['Vary' => ['Cookie', 'origin']]);
+            }
+        };
+
+        // Act
+        $response = $middleware->process(new ServerRequest('GET', 'https://api.example.com/x', ['Origin' => 'https://app.example.com']), $handler);
+
+        // Assert
+        self::assertSame('Cookie, origin', $response->getHeaderLine('Vary'), 'merged once, case-insensitively');
+    }
+
+    public function test_a_preflight_that_echoes_the_requested_headers_varies_by_them(): void
+    {
+        // Arrange
+        $middleware = $this->middleware($this->enabled(['allowed_origins' => ['https://app.example.com'], 'allowed_headers' => ['*']]));
+        $request = new ServerRequest('OPTIONS', 'https://api.example.com/x', ['Origin' => 'https://app.example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'X-Custom']);
+
+        // Act
+        $response = $middleware->process($request, $this->handler());
+
+        // Assert
+        self::assertSame('X-Custom', $response->getHeaderLine('Access-Control-Allow-Headers'));
+        self::assertSame('Origin, Access-Control-Request-Headers', $response->getHeaderLine('Vary'));
     }
 
     /**

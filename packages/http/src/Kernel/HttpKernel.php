@@ -19,6 +19,7 @@ use Trunk\Http\Middleware\ErrorHandlingMiddleware;
 use Trunk\Http\Security\SecurityHeaders;
 use Trunk\Http\Server\ServerRequestCreator;
 use Trunk\Lifecycle\LifecycleManager;
+use Trunk\Lifecycle\UnitOfWorkDiscarded;
 use Trunk\Logging\ContextHolder;
 use Trunk\Logging\RequestContext;
 use Trunk\Logging\RequestId;
@@ -70,12 +71,16 @@ final readonly class HttpKernel implements Kernel
             $response = $this->errors->respond($e, $request);
         }
 
-        // The span and metrics are finished while the request context is still current, so the span
-        // record carries the request id; cleanup then clears the context for the next request.
+        $response = $this->settle($response, $request);
+
+        // The span and metrics see the final status. The resets above cleared the context holder too,
+        // so this request's context is made current again while they are recorded (the span record
+        // carries the request id), then cleared for the next request.
+        $this->contexts?->set($context);
+
         try {
             $this->finish($request->getMethod(), $response->getStatusCode(), $state->route, $started, $span);
         } finally {
-            $this->lifecycle?->cleanup();
             $this->contexts?->reset();
         }
 
@@ -109,6 +114,23 @@ final readonly class HttpKernel implements Kernel
         }
 
         $this->send($request);
+    }
+
+    /**
+     * Runs the lifecycle resets before the response is final. A reset that had to discard the
+     * request's work (a transaction left open, now rolled back) turns a success or redirect into a
+     * 500: the client must never be told that writes were saved when they were not. A 4xx or 5xx
+     * already says nothing was done, so it is kept. Neither resets nor the error path ever throw.
+     */
+    private function settle(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+    {
+        foreach ($this->lifecycle?->cleanup() ?? [] as $failure) {
+            if ($failure instanceof UnitOfWorkDiscarded && $response->getStatusCode() < 400) {
+                return $this->errors->respond($failure, $request);
+            }
+        }
+
+        return $response;
     }
 
     private function finish(string $method, int $status, ?string $route, int|float $started, ?\Trunk\Observability\Span $span): void

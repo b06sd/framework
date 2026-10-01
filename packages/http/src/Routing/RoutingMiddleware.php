@@ -28,11 +28,18 @@ final readonly class RoutingMiddleware implements MiddlewareInterface
     {
         $result = $this->matcher->matchRequest($request);
 
+        // The messages are for the log only (clients see the reason phrase). They name the path but
+        // never the query string, which often carries tokens.
         return match ($result->status) {
             MatchStatus::Found => $handler->handle($this->remember($request, $result)),
-            MatchStatus::MethodNotAllowed => throw HttpException::methodNotAllowed($result->allowedMethods ?: ['GET']),
-            MatchStatus::NotFound => throw HttpException::notFound('', ErrorCode::RouteNotFound->value),
+            MatchStatus::MethodNotAllowed => throw HttpException::methodNotAllowed($result->allowedMethods ?: ['GET'], $this->describe('does not allow', $request)),
+            MatchStatus::NotFound => throw HttpException::notFound($this->describe('has no route for', $request), ErrorCode::RouteNotFound->value),
         };
+    }
+
+    private function describe(string $what, ServerRequestInterface $request): string
+    {
+        return \sprintf('The router %s %s %s.', $what, $request->getMethod(), $request->getUri()->getPath() ?: '/');
     }
 
     private function remember(ServerRequestInterface $request, \Trunk\Router\Matcher\MatchResult $result): ServerRequestInterface

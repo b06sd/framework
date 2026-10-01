@@ -104,18 +104,36 @@ final readonly class Cors
     }
 
     /**
+     * Whether responses differ by the request's Origin, so caches must store one copy per origin
+     * (`Vary: Origin`). Not for `*` without credentials: every origin then gets the same `*`, and a
+     * needless Vary would split shared caches per origin (some CDNs stop caching altogether).
+     */
+    public function variesByOrigin(): bool
+    {
+        return $this->allowCredentials || !\in_array('*', $this->allowedOrigins, true);
+    }
+
+    /**
      * The headers a preflight response needs: the full policy, plus the one origin that asked.
      *
      * @return array<string, string>
      */
     public function preflightHeaders(string $origin, ?string $requestedHeaders): array
     {
-        return [
+        $echoed = \in_array('*', $this->allowedHeaders, true) && $requestedHeaders !== null;
+        $headers = [
             ...$this->originHeaders($origin),
             'Access-Control-Allow-Methods' => implode(', ', $this->allowedMethods),
-            'Access-Control-Allow-Headers' => \in_array('*', $this->allowedHeaders, true) && $requestedHeaders !== null ? $requestedHeaders : implode(', ', $this->allowedHeaders),
+            'Access-Control-Allow-Headers' => $echoed ? $requestedHeaders : implode(', ', $this->allowedHeaders),
             'Access-Control-Max-Age' => (string) $this->maxAge,
         ];
+
+        if ($echoed) {
+            // The answer repeats what the browser asked for, so a cached preflight is only valid for that ask.
+            $headers['Vary'] = isset($headers['Vary']) ? $headers['Vary'] . ', Access-Control-Request-Headers' : 'Access-Control-Request-Headers';
+        }
+
+        return $headers;
     }
 
     /**
@@ -138,8 +156,8 @@ final readonly class Cors
     private function originHeaders(string $origin): array
     {
         return [
-            'Access-Control-Allow-Origin' => \in_array('*', $this->allowedOrigins, true) && !$this->allowCredentials ? '*' : $origin,
-            'Vary' => 'Origin',
+            'Access-Control-Allow-Origin' => $this->variesByOrigin() ? $origin : '*',
+            ...($this->variesByOrigin() ? ['Vary' => 'Origin'] : []),
             ...($this->allowCredentials ? ['Access-Control-Allow-Credentials' => 'true'] : []),
         ];
     }

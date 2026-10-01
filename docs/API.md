@@ -97,6 +97,7 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Health\HealthCheck` (interface)
 - `Trunk\Health\HealthResult` (class)
 - `Trunk\Lifecycle\LifecycleAware` (interface)
+- `Trunk\Lifecycle\UnitOfWorkDiscarded` (class)
 - `Trunk\Logging\ContextHolder` (class)
 - `Trunk\Logging\RequestContext` (class)
 - `Trunk\Observability\Metrics` (interface)

@@ -228,6 +228,13 @@ final class HttpHardeningTest extends TestCase
                 $this->largest = max($this->largest, \strlen($chunk));
                 $this->total += \strlen($chunk);
             }
+
+            public function flush(): void {}
+
+            public function bodyPassesThrough(): bool
+            {
+                return true;
+            }
         };
         $file = tempnam(sys_get_temp_dir(), 'trunk-big');
         self::assertNotFalse($file);

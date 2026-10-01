@@ -27,13 +27,18 @@ final readonly class Headers
      */
     public static function fromArray(array $headers): self
     {
-        $result = new self();
+        // One pass into one array (not one new instance per header); every name and value still
+        // goes through normalize(), and repeated names merge like withAdded().
+        $entries = [];
 
         foreach ($headers as $name => $value) {
-            $result = $result->withAdded((string) $name, $value);
+            $name = (string) $name;
+            $values = self::normalize($name, $value);
+            $key = strtolower($name);
+            $entries[$key] = isset($entries[$key]) ? [$entries[$key][0], [...$entries[$key][1], ...$values]] : [$name, $values];
         }
 
-        return $result;
+        return new self($entries);
     }
 
     public static function assertName(string $name): void
@@ -147,6 +152,14 @@ final readonly class Headers
     private static function normalize(string $name, mixed $value): array
     {
         self::assertName($name);
+
+        if (\is_string($value)) {
+            // The common case (one string value), with the same checks as the loop below.
+            $value = trim($value, " \t");
+
+            return self::isValidValue($value) ? [$value] : throw new InvalidArgumentException('Header value contains forbidden characters.');
+        }
+
         $values = \is_array($value) ? array_values($value) : [$value];
 
         if ($values === []) {

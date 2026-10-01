@@ -23,23 +23,24 @@ final class LifecycleManager
     public function __construct(private readonly iterable $registered = [], private readonly ?LoggerInterface $logger = null) {}
 
     /**
-     * @return int how many resets failed
+     * @return list<Throwable> the resets that failed (each already logged), for a caller that must
+     *                         act on one, such as a UnitOfWorkDiscarded
      */
-    public function cleanup(): int
+    public function cleanup(): array
     {
         $this->services ??= array_values([...$this->registered]);
-        $failed = 0;
+        $failures = [];
 
         foreach (array_reverse($this->services) as $service) {
             try {
                 $service->reset();
             } catch (Throwable $e) {
-                ++$failed;
+                $failures[] = $e;
                 $this->report($service, $e);
             }
         }
 
-        return $failed;
+        return $failures;
     }
 
     private function report(LifecycleAware $service, Throwable $error): void

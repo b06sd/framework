@@ -24,6 +24,26 @@ final class PhpSapi implements Sapi
     public function write(string $chunk): void
     {
         echo $chunk;
+    }
+
+    public function flush(): void
+    {
         flush();
+    }
+
+    public function bodyPassesThrough(): bool
+    {
+        if (filter_var(\ini_get('zlib.output_compression'), \FILTER_VALIDATE_BOOLEAN) || (int) \ini_get('zlib.output_compression') > 0) {
+            return false;
+        }
+
+        // Any buffer other than PHP's own pass-through one may rewrite what is written.
+        foreach (ob_list_handlers() as $handler) {
+            if ($handler !== 'default output handler') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

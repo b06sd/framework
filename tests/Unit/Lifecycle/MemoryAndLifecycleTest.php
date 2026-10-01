@@ -140,7 +140,8 @@ final class MemoryAndLifecycleTest extends TestCase
 
         // Assert
         self::assertSame(['third', 'second', 'first', 'third', 'second', 'first'], $order->getArrayCopy());
-        self::assertSame([1, 1], [$failed, $second]);
+        self::assertSame([1, 1], [\count($failed), \count($second)]);
+        self::assertSame('reset failed', $failed[0]->getMessage());
         self::assertSame('warning', $logger->records[0][0]);
     }
 
@@ -156,8 +157,8 @@ final class MemoryAndLifecycleTest extends TestCase
         }], new RecordingLogger(throws: true));
 
         // Act & Assert
-        self::assertSame(0, $empty->cleanup());
-        self::assertSame(1, $broken->cleanup());
+        self::assertSame([], $empty->cleanup());
+        self::assertCount(1, $broken->cleanup());
     }
 
     /**
