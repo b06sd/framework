@@ -57,7 +57,7 @@ final class CustomerMap implements EntityMap
 }
 ```
 
-Types: `string int float bool dateTime json enum`. Modifiers: `nullable() hidden() filterable() sortable()`. Relations: `hasMany hasOne belongsTo belongsToMany`. `scope('name')` applies a global scope (a service tagged `orm.scope`, e.g. a tenant filter); a scope that is named but not registered **fails closed**. `trunk orm:validate` checks every map without building.
+Types: `string int float decimal bool dateTime json enum` (`decimal` is for money and quantities, see below). Modifiers: `nullable() hidden() filterable() sortable()`. Relations: `hasMany hasOne belongsTo belongsToMany`. `scope('name')` applies a global scope (a service tagged `orm.scope`, e.g. a tenant filter); a scope that is named but not registered **fails closed**. `trunk orm:validate` checks every map without building.
 
 ## Reading
 
@@ -94,6 +94,49 @@ $manager->flush();                       // one transaction: inserts (batched), 
 ```
 
 `flush()` is all-or-nothing. After a failed flush call `clear()` and start again (the manager is not meant to be reused half-applied). `StaleEntity` is thrown when the optimistic-lock version changed under you. In a long-running process call `clear()` between units of work; a worker that does keeps flat memory, one that does not grows with the rows.
+
+## Money, quantities and concurrent changes
+
+**Exact numbers.** Never map a price, a cost or a quantity as `float`: `0.1 + 0.2` is not `0.3` in floating point, and the difference ends up in your totals. Map it as `decimal` and type the property as PHP's own exact number, `BcMath\Number` (needs the `bcmath` extension, which `trunk build` checks):
+
+```php
+use BcMath\Number;
+
+final class StockItem
+{
+    public function __construct(
+        public private(set) ?int $id = null,
+        public string $sku = '',
+        public Number $price = new Number('0'),    // $table->decimal('price', 12, 2)
+        public Number $onHand = new Number('0'),   // $table->decimal('on_hand', 14, 3)
+    ) {}
+}
+
+$map->decimal('price', 2);      // the scale: digits after the point, as in the column
+$map->decimal('onHand', 3);
+```
+
+`Number` is immutable and exact, with ordinary operators: `$item->price * 3`, `$item->onHand -= new Number('2.5')`, `$a > $b`. Compare two amounts with `$a == $b` or `$a->compare($b) === 0`, never `===` (that asks whether they are the same object). Saving a value with more digits than the column holds (`19.999` into a scale of 2) is refused with the fix in the message rather than silently rounded: round it yourself, e.g. `$price->round(2)`. Query values may be more precise than the column (`where('price', '>', '9.995')`), and request input through `input()`/`filter()` must fit it (a 400 otherwise). Trailing zeros are not a change: `19.990` and `19.99` are the same amount and save nothing.
+
+On SQLite, `NUMERIC` columns are stored as floating point, so exactness holds only up to about 15 significant digits there; MySQL and PostgreSQL store decimals exactly. Use SQLite for development and tests, not for a ledger.
+
+**Two requests, one last item.** Read the row with a lock, decide, write, all in one transaction. Another transaction that wants the same row waits until yours ends, so stock can never be sold twice:
+
+```php
+$manager->connection()->transaction(function () use ($manager, $sku, $quantity): void {
+    $item = $manager->repository(StockItem::class)->query()->where('sku', $sku)->lockForUpdate()->first()
+        ?? throw new HttpException(404);
+
+    if ($item->onHand < $quantity) {
+        throw new HttpException(409, 'Not enough stock.');
+    }
+
+    $item->onHand -= $quantity;
+    $manager->flush();
+});
+```
+
+`lockForUpdate()` needs an open transaction (it refuses to run without one, since the lock would end with the SELECT) and works with `get()`/`first()`, not `count()`. Lock before anything else reads the row in that unit of work: an entity already loaded is returned only if its row is unchanged, otherwise `StaleEntity` is thrown instead of handing you stale numbers. Relations loaded with `with()` are not locked. For a single counter you do not need to read first: an atomic update with a guard does it in one statement (see [Database: locking rows](database.md#locking-rows)).
 
 ## Factories and seeding
 

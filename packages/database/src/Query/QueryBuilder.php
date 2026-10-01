@@ -45,6 +45,8 @@ final class QueryBuilder
 
     private bool $unrestricted = false;
 
+    private bool $lockForUpdate = false;
+
     public function __construct(private readonly Connection $connection, private readonly string $table)
     {
         Identifier::assert($table);
@@ -221,10 +223,36 @@ final class QueryBuilder
     }
 
     /**
+     * Locks the rows this query returns until the surrounding transaction ends (`SELECT ... FOR UPDATE`):
+     * another transaction that wants to change or lock them waits. Read, decide and write inside one
+     * `$connection->transaction()`, so two requests can never both take the last item in stock. Joined
+     * tables' rows are locked too. Only for queries that return rows (`get()`, `first()`, `find()`,
+     * `value()`, `pluck()`), and only inside a transaction: outside one the lock would be released the
+     * moment the SELECT finished.
+     */
+    public function lockForUpdate(): self
+    {
+        $clone = clone $this;
+        $clone->lockForUpdate = true;
+
+        return $clone;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function get(): array
     {
+        if ($this->lockForUpdate) {
+            if ($this->distinct || $this->groups !== [] || $this->havings !== []) {
+                throw new InvalidQueryException('lockForUpdate() locks the rows a query returns; a DISTINCT or grouped query returns no rows that could be locked.');
+            }
+
+            if ($this->connection->transactionDepth() === 0) {
+                throw new InvalidQueryException('lockForUpdate() needs an open transaction, or the lock ends as soon as the SELECT does. Run the read and the write inside $connection->transaction(function () { ... }).');
+            }
+        }
+
         $query = $this->connection->grammar()->compileSelect($this->state());
 
         return $this->connection->select($query->sql, $query->bindings);
@@ -277,6 +305,7 @@ final class QueryBuilder
 
     public function exists(): bool
     {
+        $this->assertUnlocked('exists()');
         $query = $this->connection->grammar()->compileExists($this->state());
 
         return (bool) $this->connection->scalar($query->sql, $query->bindings);
@@ -460,7 +489,7 @@ final class QueryBuilder
 
     private function state(): QueryState
     {
-        return new QueryState($this->table, $this->columns, $this->distinct, $this->wheres, $this->joins, $this->groups, $this->havings, $this->orders, $this->limit, $this->offset);
+        return new QueryState($this->table, $this->columns, $this->distinct, $this->wheres, $this->joins, $this->groups, $this->havings, $this->orders, $this->limit, $this->offset, null, $this->lockForUpdate);
     }
 
     private function condition(string $boolean, string|Closure $column, mixed $operator, mixed $value, int $arguments): self
@@ -563,6 +592,8 @@ final class QueryBuilder
 
     private function aggregate(string $function, string $column): mixed
     {
+        $this->assertUnlocked(strtolower($function) . '()');
+
         if ($column !== '*') {
             $this->column($column);
         }
@@ -592,6 +623,13 @@ final class QueryBuilder
         $parts = explode('.', $column);
 
         return end($parts);
+    }
+
+    private function assertUnlocked(string $method): void
+    {
+        if ($this->lockForUpdate) {
+            throw new InvalidQueryException(\sprintf('lockForUpdate() locks the rows a query returns, and %s returns none. Lock with get() or first() and count the rows you got.', $method));
+        }
     }
 
     private function assertRestricted(string $action): void

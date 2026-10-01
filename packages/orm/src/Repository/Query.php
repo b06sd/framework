@@ -12,6 +12,7 @@ use Trunk\Database\Query\QueryBuilder;
 use Trunk\Orm\Exception\HydrationException;
 use Trunk\Orm\Exception\InvalidFilter;
 use Trunk\Orm\Exception\OrmException;
+use Trunk\Orm\Exception\StaleEntity;
 use Trunk\Orm\Exception\UnknownProperty;
 use Trunk\Orm\Mapping\ColumnMetadata;
 use Trunk\Orm\Mapping\Convert;
@@ -57,6 +58,8 @@ final class Query
     private bool $readOnly = false;
 
     private bool $withHidden = false;
+
+    private bool $lockForUpdate = false;
 
     private string $trashed = 'without';
 
@@ -241,6 +244,28 @@ final class Query
     {
         $clone = clone $this;
         $clone->readOnly = true;
+
+        return $clone;
+    }
+
+    /**
+     * Locks the matched rows until the transaction ends (`SELECT ... FOR UPDATE`), so no other
+     * transaction can change them between your read and your write:
+     *
+     *   $manager->connection()->transaction(function () use ($stock, $quantity): void {
+     *       $item = $stock->query()->where('sku', $sku)->lockForUpdate()->first();
+     *       // ... check $item->onHand, change it, flush
+     *   });
+     *
+     * Needs an open transaction, and only works with get(), first() and friends (not count()).
+     * Eager-loaded relations are read without a lock. An entity this unit of work had already
+     * loaded is returned as the same object only if its row is unchanged; otherwise StaleEntity is
+     * thrown rather than handing back stale values, so lock before anything else reads the row.
+     */
+    public function lockForUpdate(): static
+    {
+        $clone = clone $this;
+        $clone->lockForUpdate = true;
 
         return $clone;
     }
@@ -452,7 +477,8 @@ final class Query
             }
         }
 
-        return $builder;
+        // Also on count()/exists() builders, which then refuse: they return no rows to lock.
+        return $this->lockForUpdate ? $builder->lockForUpdate() : $builder;
     }
 
     /**
@@ -477,7 +503,13 @@ final class Query
                     throw new OrmException(\sprintf('%s row has no usable primary key.', $class));
                 }
 
-                $entity = $unit->find($class, $id) ?? $unit->manage($fresh = $this->mapper->hydrate($row), $this->metadata, $id, $this->mapper->extract($fresh));
+                $entity = $unit->find($class, $id);
+
+                if ($entity === null) {
+                    $entity = $unit->manage($fresh = $this->mapper->hydrate($row), $this->metadata, $id, $this->mapper->extract($fresh));
+                } elseif ($this->lockForUpdate) {
+                    $this->assertUnchanged($entity, $row);
+                }
             }
 
             if ($entity instanceof $class) {
@@ -486,6 +518,25 @@ final class Query
         }
 
         return $entities;
+    }
+
+    /**
+     * A locked row for an entity already in the identity map must still match what was loaded:
+     * otherwise the caller would hold the lock but decide on stale values. Only the selected columns
+     * are compared (a hidden column the row lacks is not a change).
+     *
+     * @param array<string, mixed> $row
+     */
+    private function assertUnchanged(object $entity, array $row): void
+    {
+        $snapshot = $this->manager->unitOfWork()->snapshot($entity) ?? [];
+        $current = $this->mapper->extract($this->mapper->hydrate($row));
+
+        foreach (array_keys($row) as $column) {
+            if (\array_key_exists($column, $snapshot) && ($current[$column] ?? null) !== $snapshot[$column]) {
+                throw StaleEntity::lockedTooLate($this->class);
+            }
+        }
     }
 
     /**

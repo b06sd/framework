@@ -119,7 +119,7 @@ final readonly class Repository
                     $value === null => $column->nullable ? null : throw new InvalidFilter(\sprintf('"%s" cannot be null.', $property)),
                     $column->type === Type::Json => \is_array($value) ? $value : throw new InvalidFilter(\sprintf('"%s" must be an object or list.', $property)),
                     $column->type === Type::Enum && $column->enum !== null => $column->enum::tryFrom(\is_string($value) || \is_int($value) ? $value : '') ?? throw new InvalidFilter(\sprintf('"%s" is not an accepted value.', $property)),
-                    default => Convert::toPhp($column->type, $value, $column->enum, $this->class, $column->column, false),
+                    default => Convert::toPhp($column->type, $value, $column->enum, $this->class, $column->column, false, $column->scale),
                 };
             } catch (\Trunk\Orm\Exception\HydrationException) {
                 throw new InvalidFilter(\sprintf('"%s" is not a valid %s.', $property, $column->type->value));

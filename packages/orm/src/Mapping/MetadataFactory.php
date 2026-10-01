@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Trunk\Orm\Mapping;
 
 use BackedEnum;
+use BcMath\Number;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -161,6 +162,14 @@ final class MetadataFactory
             $properties[$spec->property] = true;
             $columns[$spec->column] = true;
 
+            if ($spec->type === Type::Decimal && ($spec->scale === null || $spec->scale < 0 || $spec->scale > 30)) {
+                $errors[] = $where(\sprintf('decimal "%s" needs a scale from 0 to 30 (digits after the point, as in the column).', $spec->property));
+            }
+
+            if ($spec->type === Type::Decimal && !\extension_loaded('bcmath')) {
+                $errors[] = $where(\sprintf('decimal "%s" needs PHP\'s bcmath extension: enable it in php.ini (or install php-bcmath / docker-php-ext-install bcmath).', $spec->property));
+            }
+
             if ($spec->type === Type::Enum && ($spec->enum === null || !enum_exists($spec->enum) || !is_subclass_of($spec->enum, BackedEnum::class))) {
                 $errors[] = $where(\sprintf('"%s" must be a backed enum.', $spec->property));
             }
@@ -253,6 +262,10 @@ final class MetadataFactory
                 $errors[] = $where(\sprintf('hidden "%s" is not selected, so its constructor parameter needs a default value (e.g. `public string $%s = \'\'`).', $spec->property, $spec->property));
             }
 
+            if ($spec->type === Type::Decimal && (!$property->getType() instanceof ReflectionNamedType || $property->getType()->getName() !== Number::class)) {
+                $errors[] = $where(\sprintf('decimal "%s" must be typed %s (exact; a float would lose cents), e.g. `public Number $%s`.', $spec->property, Number::class, $spec->property));
+            }
+
             if ($spec->nullable && $property->getType()?->allowsNull() !== true) {
                 $errors[] = $where(\sprintf('"%s" is mapped nullable() but its property type does not allow null.', $spec->property));
             }
@@ -290,7 +303,7 @@ final class MetadataFactory
         $columns = [];
 
         foreach ([$id, ...$builder->columns] as $spec) {
-            $columns[$spec->property] = new ColumnMetadata($spec->property, $spec->column, $spec->type, $spec->nullable, $spec->hidden, $spec->filterable, $spec->sortable, $spec->enum);
+            $columns[$spec->property] = new ColumnMetadata($spec->property, $spec->column, $spec->type, $spec->nullable, $spec->hidden, $spec->filterable, $spec->sortable, $spec->enum, $spec->scale);
         }
 
         $relations = [];

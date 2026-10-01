@@ -16,6 +16,16 @@ final class SqliteGrammar extends Grammar
         return '"' . $segment . '"';
     }
 
+    /**
+     * SQLite has no row locks: one writer holds the whole database for its transaction, and a second
+     * transaction that tries to write after reading fails with "database is locked" rather than acting
+     * on stale data. So there is nothing to add.
+     */
+    protected function compileLockForUpdate(): string
+    {
+        return '';
+    }
+
     protected function compileLimitOffset(?int $limit, ?int $offset): string
     {
         if ($limit === null && $offset === null) {

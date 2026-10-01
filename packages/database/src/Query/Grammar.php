@@ -75,6 +75,10 @@ abstract class Grammar
             }
 
             $sql .= $this->compileLimitOffset($query->limit, $query->offset);
+
+            if ($query->lockForUpdate) {
+                $sql .= $this->compileLockForUpdate();
+            }
         }
 
         return new CompiledQuery($sql, $bindings);
@@ -166,6 +170,14 @@ abstract class Grammar
         }
 
         return new CompiledQuery($sql, $bindings);
+    }
+
+    /**
+     * The clause that locks the selected rows until the transaction ends.
+     */
+    protected function compileLockForUpdate(): string
+    {
+        return ' FOR UPDATE';
     }
     abstract protected function quoteSegment(string $segment): string;
 

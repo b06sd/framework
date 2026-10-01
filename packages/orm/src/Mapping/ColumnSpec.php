@@ -23,12 +23,14 @@ final class ColumnSpec
 
     /**
      * @param class-string<BackedEnum>|null $enum
+     * @param int|null                      $scale digits after the decimal point (decimal columns only)
      */
     public function __construct(
         public readonly string $property,
         public readonly string $column,
         public readonly Type $type,
         public readonly ?string $enum = null,
+        public readonly ?int $scale = null,
     ) {}
 
     /** NULL is a legal value (the constructor parameter must accept null). */

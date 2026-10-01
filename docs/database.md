@@ -39,7 +39,27 @@ $db->transaction(function (Connection $db): void {
 });     // any Throwable rolls back and is rethrown; nested calls use savepoints
 ```
 
-A queue job or web request that leaves a transaction open is detected and rolled back.
+A queue job or web request that leaves a transaction open is detected and rolled back; the request is then answered with a `500`, never the success its handler returned, since nothing it wrote was kept.
+
+### Locking rows
+
+When a decision depends on what you read (is there stock left?), lock the rows you read so no other transaction can change them before you write:
+
+```php
+$db->transaction(function (Connection $db) use ($sku): void {
+    $row = $db->table('stock')->where('sku', $sku)->lockForUpdate()->first();   // SELECT ... FOR UPDATE
+
+    if ($row === null || $row['on_hand'] < 1) {
+        throw new HttpException(409, 'Sold out.');
+    }
+
+    $db->table('stock')->where('sku', $sku)->update(['on_hand' => $row['on_hand'] - 1]);
+});
+```
+
+A second transaction locking the same row waits until the first commits, then sees the new value. `lockForUpdate()` refuses to run outside a transaction, and on `count()`, `exists()`, aggregates and `DISTINCT`/grouped queries (they return no rows to lock); rows of joined tables are locked too. Keep the transaction short: everything waiting on the row waits for it. On SQLite, which has no row locks, nothing is added to the query: a second transaction that writes after reading fails with "database is locked" instead, so data is never wrong, but the attempt must be retried.
+
+When the whole change is one counter, an atomic update with a guard needs no lock and no read: `$db->table('stock')->where('sku', $sku)->where('on_hand', '>=', 1)->update(['on_hand' => new Raw('on_hand - 1')])` returns `0` when there was nothing left.
 
 ## Schema and migrations
 

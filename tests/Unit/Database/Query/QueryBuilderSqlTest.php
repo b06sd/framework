@@ -198,6 +198,49 @@ final class QueryBuilderSqlTest extends TestCase
         self::assertSame(2, $rejected);
     }
 
+    #[DataProvider('drivers')]
+    public function test_lock_for_update_ends_the_select_where_the_dialect_has_row_locks(string $driver): void
+    {
+        // Arrange
+        $query = $this->builder($driver)->where('sku', 'A-1')->orderBy('id')->limit(1)->lockForUpdate();
+
+        // Act
+        $sql = $query->toSql();
+
+        // Assert: SQLite has no row locks (one writer holds the whole database), so nothing is added
+        $lock = $driver === 'sqlite' ? '' : ' FOR UPDATE';
+        self::assertSame($this->q($driver, 'SELECT * FROM `users` WHERE `sku` = ? ORDER BY `id` ASC LIMIT 1' . $lock), $sql);
+    }
+
+    public function test_lock_for_update_is_refused_outside_a_transaction_and_where_no_rows_come_back(): void
+    {
+        // Arrange
+        $harness = new DatabaseHarness();
+        $connection = $harness->seededUsers($harness->sqlite());
+        $locked = $connection->table('users')->where('id', 1)->lockForUpdate();
+        $refusals = [
+            'outside a transaction' => static fn(): mixed => $locked->first(),
+            'count()' => static fn(): mixed => $connection->transaction(static fn(): int => $locked->count()),
+            'exists()' => static fn(): mixed => $connection->transaction(static fn(): bool => $locked->exists()),
+            'sum()' => static fn(): mixed => $connection->transaction(static fn(): int|float|null => $locked->sum('id')),
+            'distinct' => static fn(): mixed => $connection->transaction(static fn(): array => $locked->distinct()->get()),
+            'grouped' => static fn(): mixed => $connection->transaction(static fn(): array => $connection->table('users')->groupBy('id')->lockForUpdate()->get()),
+        ];
+
+        foreach ($refusals as $case => $attempt) {
+            // Act & Assert
+            try {
+                $attempt();
+                self::fail($case . ' should be refused');
+            } catch (InvalidQueryException $e) {
+                self::assertStringContainsString('lockForUpdate()', $e->getMessage(), $case);
+            }
+        }
+
+        self::assertNotNull($connection->transaction(static fn(): ?array => $locked->first()), 'inside a transaction it reads normally');
+        self::assertSame(0, $connection->transactionDepth(), 'every refused attempt rolled its transaction back');
+    }
+
     private function builder(string $driver, string $table = 'users'): QueryBuilder
     {
         return new DatabaseHarness()->grammarOnly($driver)->table($table);

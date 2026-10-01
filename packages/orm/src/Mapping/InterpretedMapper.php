@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Trunk\Orm\Mapping;
 
+use BcMath\Number;
 use Trunk\Orm\Exception\OrmException;
 
 /**
@@ -23,7 +24,7 @@ final readonly class InterpretedMapper implements Mapper
                 continue;
             }
 
-            $arguments[$property] = Convert::toPhp($column->type, $row[$column->column] ?? null, $column->enum, $this->metadata->class, $column->column, $column->nullable);
+            $arguments[$property] = Convert::toPhp($column->type, $row[$column->column] ?? null, $column->enum, $this->metadata->class, $column->column, $column->nullable, $column->scale);
         }
 
         return new ($this->metadata->class)(...$arguments);
@@ -39,7 +40,10 @@ final readonly class InterpretedMapper implements Mapper
         $row = [];
 
         foreach ($this->metadata->columns as $property => $column) {
-            $row[$column->column] = Convert::toDb($column->type, $values[$property] ?? null);
+            $value = $values[$property] ?? null;
+            $row[$column->column] = $column->type === Type::Decimal && $column->scale !== null
+                ? Convert::decimalToDb($value instanceof Number || $value === null ? $value : throw new OrmException(\sprintf('%s::$%s must be a %s.', $this->metadata->class, $property, Number::class)), $column->scale, $this->metadata->class, $property)
+                : Convert::toDb($column->type, $value);
         }
 
         return $row;

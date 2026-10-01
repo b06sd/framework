@@ -13,6 +13,7 @@ enum Type: string
     case String = 'string';
     case Bool = 'bool';
     case Float = 'float';
+    case Decimal = 'decimal';
     case DateTime = 'datetime';
     case Enum = 'enum';
     case Json = 'json';

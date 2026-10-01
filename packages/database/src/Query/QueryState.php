@@ -30,5 +30,6 @@ final readonly class QueryState
         public ?int $limit = null,
         public ?int $offset = null,
         public ?array $aggregate = null,
+        public bool $lockForUpdate = false,
     ) {}
 }

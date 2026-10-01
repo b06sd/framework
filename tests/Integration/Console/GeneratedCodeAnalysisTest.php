@@ -83,6 +83,71 @@ final class GeneratedCodeAnalysisTest extends TestCase
         self::assertSame(0, $code, $out . $err);
     }
 
+    public function test_a_generated_factory_for_decimal_columns_passes_phpstan_at_the_maximum_level(): void
+    {
+        // Arrange: an entity with exact decimals (money and a quantity)
+        $this->project = $project = new ScaffoldedProject('analysed', 'api');
+        $project->trunk(['package:install', 'orm']);
+        $project->trunk(['package:install', 'console']);
+        file_put_contents($project->directory . '/app/Entities/Product.php', <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace App\Entities;
+
+            use BcMath\Number;
+
+            final class Product
+            {
+                public function __construct(
+                    public private(set) ?int $id = null,
+                    public string $name = '',
+                    public Number $price = new Number('0'),
+                    public ?Number $weight = null,
+                ) {}
+            }
+            PHP);
+        file_put_contents($project->directory . '/app/Orm/ProductMap.php', <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace App\Orm;
+
+            use App\Entities\Product;
+            use Trunk\Orm\Mapping\EntityMap;
+            use Trunk\Orm\Mapping\MapBuilder;
+
+            final class ProductMap implements EntityMap
+            {
+                public function entity(): string
+                {
+                    return Product::class;
+                }
+
+                public function define(MapBuilder $map): void
+                {
+                    $map->table('products');
+                    $map->id();
+                    $map->string('name');
+                    $map->decimal('price', 2);
+                    $map->decimal('weight', 3)->nullable();
+                }
+            }
+            PHP);
+        [$makeCode, $makeOut, $makeErr] = $project->trunk(['make:factory', 'Product']);
+        file_put_contents($project->directory . '/phpstan.neon', "parameters:\n    level: max\n    paths:\n        - app\n");
+
+        // Act
+        [$code, $out, $err] = new Cli()->run([\PHP_BINARY, \dirname(__DIR__, 3) . '/vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=1G', '--error-format=raw'], $project->directory);
+
+        // Assert
+        self::assertSame(0, $makeCode, $makeOut . $makeErr);
+        self::assertStringContainsString('BcMath\Number', (string) file_get_contents($project->directory . '/app/Factories/ProductFactory.php'));
+        self::assertSame(0, $code, $out . $err);
+    }
+
     public function test_a_generated_pipeline_and_its_runner_job_pass_phpstan_at_the_maximum_level(): void
     {
         // Arrange

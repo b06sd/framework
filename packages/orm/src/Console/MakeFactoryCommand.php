@@ -143,6 +143,7 @@ final readonly class MakeFactoryCommand implements Command
         $fake = match ($column->type) {
             Type::Int => '$this->faker->numberBetween(1, 1000)',
             Type::Float => '$this->faker->randomFloat(2, 0, 1000)',
+            Type::Decimal => 'new \\BcMath\\Number(number_format($this->faker->randomFloat(' . ($column->scale ?? 0) . ', 0, 1000), ' . ($column->scale ?? 0) . ", '.', ''))",
             Type::Bool => '$this->faker->boolean()',
             Type::DateTime => '\DateTimeImmutable::createFromMutable($this->faker->dateTime())',
             Type::Json => '[]',
@@ -153,6 +154,7 @@ final readonly class MakeFactoryCommand implements Command
         return match ($column->type) {
             Type::Int => "\\is_int({$var}) ? {$var} : {$fake}",
             Type::Float => "\\is_float({$var}) ? {$var} : {$fake}",
+            Type::Decimal => "{$var} instanceof \\BcMath\\Number ? {$var} : {$fake}",
             Type::Bool => "\\is_bool({$var}) ? {$var} : {$fake}",
             Type::String => "\\is_string({$var}) ? {$var} : {$fake}",
             Type::Json => "\\is_array({$var}) ? {$var} : {$fake}",

@@ -13,6 +13,7 @@ final readonly class ColumnMetadata
 {
     /**
      * @param class-string<BackedEnum>|null $enum
+     * @param int|null                      $scale digits after the decimal point (decimal columns only)
      */
     public function __construct(
         public string $property,
@@ -23,5 +24,6 @@ final readonly class ColumnMetadata
         public bool $filterable,
         public bool $sortable,
         public ?string $enum,
+        public ?int $scale = null,
     ) {}
 }

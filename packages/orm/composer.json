@@ -13,6 +13,7 @@
         }
     },
     "suggest": {
+        "ext-bcmath": "Needed for decimal() columns (exact money and quantities as BcMath\\Number)",
         "trunkphp/console": "Enables make:entity and orm:validate",
         "fakerphp/faker": "Enables make:factory's generated factories and db:seed"
     },

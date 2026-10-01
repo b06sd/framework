@@ -74,6 +74,18 @@ final class MapBuilder
         return $this->add($property, $column, Type::Float);
     }
 
+    /**
+     * An exact number (money, prices, quantities) as PHP's own `BcMath\Number`, which is exact and
+     * immutable and supports `+ - * /` and comparisons. `$scale` is the number of digits after the
+     * point, as in the column (`$table->decimal('price', 12, 2)` -> `decimal('price', 2)`). A value with
+     * more digits than that is refused when saved rather than rounded: round it yourself with
+     * `$value->round(2)`. Needs the bcmath extension.
+     */
+    public function decimal(string $property, int $scale, ?string $column = null): ColumnSpec
+    {
+        return $this->register(new ColumnSpec($property, $column ?? self::snake($property), Type::Decimal, scale: $scale));
+    }
+
     public function bool(string $property, ?string $column = null): ColumnSpec
     {
         return $this->add($property, $column, Type::Bool);

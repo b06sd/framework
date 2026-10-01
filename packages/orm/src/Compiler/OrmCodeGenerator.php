@@ -53,7 +53,7 @@ final class OrmCodeGenerator
                 $arguments[] = $property . ': ' . $this->hydrateExpression($entity, $column);
             }
 
-            $row[] = self::literal($column->column) . ' => ' . $this->extractExpression($column);
+            $row[] = self::literal($column->column) . ' => ' . $this->extractExpression($entity, $column);
         }
 
         $id = CodeNames::property($entity->idProperty);
@@ -77,6 +77,7 @@ final class OrmCodeGenerator
             Type::Int => "{$c}::int(\$v, {$names})",
             Type::String => "{$c}::string(\$v, {$names})",
             Type::Float => "{$c}::float(\$v, {$names})",
+            Type::Decimal => "{$c}::decimal(\$v, " . self::scale($column) . ", {$names})",
             Type::Bool => "{$c}::bool(\$v, {$names})",
             Type::DateTime => "{$c}::dateTime(\$v, {$names})",
             Type::Json => "{$c}::json(\$v, {$names})",
@@ -95,7 +96,7 @@ final class OrmCodeGenerator
         return "(\\{$fast}(\$v = {$key}) ? \$v : {$convert})";
     }
 
-    private function extractExpression(ColumnMetadata $column): string
+    private function extractExpression(EntityMetadata $entity, ColumnMetadata $column): string
     {
         $property = '$e->' . CodeNames::property($column->property);
         $c = self::CONVERT;
@@ -103,6 +104,7 @@ final class OrmCodeGenerator
         return match ($column->type) {
             Type::DateTime => "{$c}::dateTimeToDb({$property})",
             Type::Json => "{$c}::jsonToDb({$property})",
+            Type::Decimal => "{$c}::decimalToDb({$property}, " . self::scale($column) . ', ' . self::literal($entity->class) . ', ' . self::literal($column->property) . ')',
             Type::Enum => $column->nullable ? "{$property}?->value" : "{$property}->value",
             default => $property,
         };
@@ -122,6 +124,7 @@ final class OrmCodeGenerator
                 var_export($column->filterable, true),
                 var_export($column->sortable, true),
                 $column->enum === null ? 'null' : self::literal(self::enumClass($column)),
+                $column->scale === null ? 'null' : (string) self::scale($column),
             ]) . ')';
         }
 
@@ -153,6 +156,18 @@ final class OrmCodeGenerator
     private static function literal(string $value): string
     {
         return var_export($value, true);
+    }
+
+    /**
+     * The validated scale of a decimal column, as an int for a code position.
+     */
+    private static function scale(ColumnMetadata $column): int
+    {
+        if ($column->scale === null || $column->scale < 0 || $column->scale > 30) {
+            throw new MappingException([\sprintf('decimal "%s" needs a scale from 0 to 30.', $column->property)]);
+        }
+
+        return $column->scale;
     }
 
     /**
