@@ -28,6 +28,7 @@ A **capability** is metadata: a named set of modules plus the config files, `.en
 | `orm` | Entities, maps, repositories, unit of work | database |
 | `queue` | Jobs and workers | database, diagnostics |
 | `schedule` | Fluent recurring jobs and commands, one crontab line | queue |
+| `pipeline` | Move data from one place to another: chunked, resumable, queue-backed | queue |
 | `rate-limit` | A database-backed rate limiter and a ready-made middleware | http, database |
 | `observability` | In-process metrics, log-based tracing | logging |
 | `auth` | Passwords, sessions, CSRF, tokens, throttling, policies | http, database, diagnostics |

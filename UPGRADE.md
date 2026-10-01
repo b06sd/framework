@@ -4,6 +4,9 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New capability **`pipeline`** (`packages/pipeline`, `Trunk\Pipeline`): see `docs/API.md` for its public types (`Pipeline`, `PipelineBuilder`, `Source`, `Stage`, `Sink`, and the built-in `Source\{CsvSource,ArraySource,ApiSource}`/`Sink\{ArraySink,DatabaseSink,ApiSink}`). Enable it with `trunk package:install pipeline`; it needs the `queue` capability. Nothing changes for an existing project until it does.
+* New `trunk new --type=pipeline` project profile for an application that's just pipelines. Additive; existing project types are unaffected.
+
 ## 0.1.3
 
 * New public types `Trunk\Doctor\DoctorCheck` (interface) and `Trunk\Doctor\DoctorFinding` (class), and a new container tag `trunk.doctor_check`. `trunk doctor` boots the real application and runs every tagged check, alongside its existing file/config checks. Additive; nothing to change in an existing project.

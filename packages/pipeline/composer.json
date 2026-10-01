@@ -1,0 +1,52 @@
+{
+    "name": "trunkphp/pipeline",
+    "description": "TrunkPipeline: move data from one place to another, durably — chunked, resumable, queue-backed.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "trunkphp/queue": "^0.1",
+        "trunkphp/database": "^0.1",
+        "psr/http-client": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Pipeline\\": "src/"
+        }
+    },
+    "suggest": {
+        "trunkphp/console": "Enables make:pipeline, pipeline:table, pipeline:run, pipeline:status and pipeline:resume",
+        "guzzlehttp/guzzle": "A PSR-18 client for ApiSource/ApiSink"
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "pipeline",
+                "name": "Pipeline",
+                "description": "Move data from one place to another: chunked, resumable, queue-backed",
+                "modules": [
+                    "Trunk\\Pipeline\\PipelineModule"
+                ],
+                "requires": [
+                    "queue"
+                ],
+                "config": {
+                    "pipeline": "resources/config/pipeline.php"
+                },
+                "directories": [
+                    "app/Pipelines"
+                ],
+                "integrations": {
+                    "console": [
+                        "Trunk\\Pipeline\\Console\\PipelineConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -87,6 +87,7 @@ final class ScaffolderTest extends TestCase
         $cli = $scaffolder->create('c', Profile::Cli, $this->base . '/c');
         $worker = $scaffolder->create('k', Profile::Worker, $this->base . '/k');
         $mono = $scaffolder->create('m', Profile::SelfContained, $this->base . '/m');
+        $pipeline = $scaffolder->create('p', Profile::Pipeline, $this->base . '/p');
 
         // Assert
         self::assertContains('routes/api.php', $api);
@@ -100,6 +101,10 @@ final class ScaffolderTest extends TestCase
         self::assertNotContains('app/Commands/WorkCommand.php', $worker);
         self::assertContains('routes/web.php', $mono);
         self::assertContains('routes/api.php', $mono);
+        self::assertNotContains('public/index.php', $pipeline);
+        self::assertContains('app/Pipelines/ExampleImport.php', $pipeline);
+        self::assertContains('app/Jobs/RunPipelineChunk.php', $pipeline);
+        self::assertContains('config/pipeline.php', $pipeline);
     }
 
     public function test_each_profile_requires_exactly_the_packages_its_capabilities_need(): void
@@ -110,6 +115,7 @@ final class ScaffolderTest extends TestCase
             'api' => ['psr/http-factory', 'psr/http-message', 'psr/http-server-handler', 'psr/http-server-middleware'],
             'cli' => [],
             'worker' => ['ext-pdo'],
+            'pipeline' => ['ext-pdo'],
         ];
 
         foreach ($expected as $type => $packages) {

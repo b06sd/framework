@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Pipelines;
+
+use Psr\Log\LoggerInterface;
+use Trunk\Pipeline\Pipeline;
+use Trunk\Pipeline\PipelineBuilder;
+use Trunk\Pipeline\Sink\ArraySink;
+use Trunk\Pipeline\Source\ArraySource;
+use Trunk\Pipeline\Stage;
+
+/**
+ * A pipeline moves data from a Source through Stages to a Sink, a chunk at a time, dispatched as
+ * queue jobs (so a run survives a crash and a failed chunk just retries). This one is a
+ * self-contained demo: swap ArraySource/ArraySink for CsvSource, DatabaseSink, or ApiSource/ApiSink
+ * once you have a real source and destination.
+ */
+final readonly class ExampleImport implements Pipeline
+{
+    public function __construct(private LoggerInterface $logger) {}
+
+    public function define(PipelineBuilder $pipeline): void
+    {
+        $logger = $this->logger;
+
+        $pipeline->from(new ArraySource([
+            ['name' => 'Ada Lovelace'],
+            ['name' => 'Alan Turing'],
+        ]))
+            ->through(new class ($logger) implements Stage {
+                public function __construct(private LoggerInterface $logger) {}
+
+                public function process(mixed $record): mixed
+                {
+                    $this->logger->info('Pipeline record: {record}', ['record' => json_encode($record)]);
+
+                    return $record;
+                }
+            })
+            ->into(new ArraySink())
+            ->chunk(500);
+    }
+}

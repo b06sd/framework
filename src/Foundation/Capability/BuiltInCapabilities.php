@@ -107,6 +107,16 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Schedule\\Console\\ScheduleConsoleModule']],
             ),
             new Capability(
+                'pipeline',
+                'Pipeline',
+                'Move data from one place to another: chunked, resumable, queue-backed',
+                ['Trunk\\Pipeline\\PipelineModule'],
+                requires: ['queue'],
+                config: ['pipeline' => $root . '/packages/pipeline/resources/config/pipeline.php'],
+                directories: ['app/Pipelines'],
+                integrations: ['console' => ['Trunk\\Pipeline\\Console\\PipelineConsoleModule']],
+            ),
+            new Capability(
                 'rate-limit',
                 'Rate limit',
                 'A database-backed rate limiter and a ready-made middleware for any route',

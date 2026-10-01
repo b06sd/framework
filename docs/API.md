@@ -290,4 +290,20 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Schedule\ScheduledTask` (class)
 - `Trunk\Schedule\Scheduler` (class)
 
+### Pipeline
+
+- `Trunk\Pipeline\Exception\PipelineException` (class)
+- `Trunk\Pipeline\Pipeline` (interface)
+- `Trunk\Pipeline\PipelineBuilder` (class)
+- `Trunk\Pipeline\PipelineModule` (class)
+- `Trunk\Pipeline\Sink` (interface)
+- `Trunk\Pipeline\Sink\ApiSink` (class)
+- `Trunk\Pipeline\Sink\ArraySink` (class)
+- `Trunk\Pipeline\Sink\DatabaseSink` (class)
+- `Trunk\Pipeline\Source` (interface)
+- `Trunk\Pipeline\Source\ApiSource` (class)
+- `Trunk\Pipeline\Source\ArraySource` (class)
+- `Trunk\Pipeline\Source\CsvSource` (class)
+- `Trunk\Pipeline\Stage` (interface)
+
 <!-- api-list:end -->

@@ -115,7 +115,7 @@ final readonly class ProjectScaffolder
             '%%modules_md%%' => implode("\n", array_map(static fn(string $m): string => '- `' . $m . '`', $modules)),
             '%%start%%' => $profile->hasHttp() ? 'trunk serve   # http://127.0.0.1:8006' : ($profile->hasConsole() ? 'trunk list    # your commands are listed here' : ''),
             '%%layout%%' => $this->layoutDoc($profile),
-            '%%extra%%' => $profile === Profile::SelfContained ? "\n## Growing this application\n\nThe cache capability is already enabled (inject `Psr\\SimpleCache\\CacheInterface`). Database,\nauthentication and jobs are separate capabilities that will be added with `trunk package:install`\nand listed in `trunk.php` when their packages exist. Run `trunk package:list` to see what is available.\n" : ($profile === Profile::Worker ? "\n## The worker\n\nCreate the queue tables once: `trunk queue:table && trunk migrate`. Then `trunk welcome:enqueue` queues two example jobs (`app/Jobs/SendWelcome.php`) and `trunk queue:work --stop-when-empty` runs them, each in its own container scope. Run `trunk queue:work` under a process supervisor in production and let it restart (`queue.worker.*` in config/queue.php sets its limits).\n" : ''),
+            '%%extra%%' => $this->extra($profile),
             '%%routes%%' => $this->routeLoading($profile),
             '%%port_line%%' => $profile->hasHttp() ? 'APP_PORT=8006' : '',
         ];
@@ -158,7 +158,11 @@ final readonly class ProjectScaffolder
         }
 
         if ($profile->hasConsole()) {
-            $files['app/AppModule.php'] = $this->stub($profile === Profile::Worker ? 'worker/AppModule.php.stub' : 'cli/AppModule.php.stub', $vars);
+            $files['app/AppModule.php'] = $this->stub(match ($profile) {
+                Profile::Worker => 'worker/AppModule.php.stub',
+                Profile::Pipeline => 'pipeline/AppModule.php.stub',
+                default => 'cli/AppModule.php.stub',
+            }, $vars);
             $files['app/Commands/ImportCustomersCommand.php'] = $this->stub('cli/ImportCustomersCommand.php.stub', $vars);
             $files['app/Services/CustomerImporter.php'] = $this->stub('cli/CustomerImporter.php.stub', $vars);
         }
@@ -166,6 +170,11 @@ final readonly class ProjectScaffolder
         if ($profile === Profile::Worker) {
             $files['app/Commands/EnqueueWelcomeCommand.php'] = $this->stub('worker/EnqueueWelcomeCommand.php.stub', $vars);
             $files['app/Jobs/SendWelcome.php'] = $this->stub('worker/SendWelcome.php.stub', $vars);
+        }
+
+        if ($profile === Profile::Pipeline) {
+            $files['app/Pipelines/ExampleImport.php'] = $this->stub('pipeline/ExampleImport.php.stub', $vars);
+            $files['app/Jobs/RunPipelineChunk.php'] = $this->stub('pipeline/RunPipelineChunk.php.stub', $vars);
         }
 
         return $files;
@@ -176,6 +185,16 @@ final readonly class ProjectScaffolder
         $modules = implode("\n", array_map(static fn(string $m): string => '        \\' . $m . '::class,', $profile->modules()));
 
         return "<?php\n\ndeclare(strict_types=1);\n\n// The module list is this application's capability list.\nreturn [\n    'name' => '" . $name . "',\n    'type' => '" . $profile->value . "',\n    'modules' => [\n" . $modules . "\n    ],\n];\n";
+    }
+
+    private function extra(Profile $profile): string
+    {
+        return match ($profile) {
+            Profile::SelfContained => "\n## Growing this application\n\nThe cache capability is already enabled (inject `Psr\\SimpleCache\\CacheInterface`). Database,\nauthentication and jobs are separate capabilities that will be added with `trunk package:install`\nand listed in `trunk.php` when their packages exist. Run `trunk package:list` to see what is available.\n",
+            Profile::Worker => "\n## The worker\n\nCreate the queue tables once: `trunk queue:table && trunk migrate`. Then `trunk welcome:enqueue` queues two example jobs (`app/Jobs/SendWelcome.php`) and `trunk queue:work --stop-when-empty` runs them, each in its own container scope. Run `trunk queue:work` under a process supervisor in production and let it restart (`queue.worker.*` in config/queue.php sets its limits).\n",
+            Profile::Pipeline => "\n## Your first pipeline\n\nCreate the pipeline and queue tables once: `trunk pipeline:table && trunk queue:table && trunk migrate`. Then\n`trunk pipeline:run ExampleImport` starts a run and `trunk queue:work --queue=pipelines --stop-when-empty`\nprocesses its chunks (pipelines run on their own `pipelines` queue — `trunk queue:work` alone only listens\non `default`). `trunk pipeline:status` lists every run; `trunk make:pipeline Name` adds another.\n",
+            default => '',
+        };
     }
 
     private function layoutDoc(Profile $profile): string

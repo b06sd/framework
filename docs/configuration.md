@@ -64,5 +64,6 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `observability.php` | `metrics` (true), `tracing` (false) |
 | `health.php` | `metrics_token` (from `secret('METRICS_TOKEN')`), `debug` |
 | `ratelimit.php` | `table`, `max`, `window` |
+| `pipeline.php` | `pipelines` (discovered from `app/Pipelines/*.php`), `table`, `job` |
 
 Secrets in log context (`password`, `token`, `authorization`, `cookie`, `api_key`, ... at any depth, plus `Bearer …` and `password=…` inside text) are always redacted; control characters and line breaks are escaped so log lines cannot be forged.

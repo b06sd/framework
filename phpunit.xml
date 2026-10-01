@@ -50,6 +50,7 @@
             <directory>packages/ratelimit/src</directory>
             <directory>packages/testing/src</directory>
             <directory>packages/schedule/src</directory>
+            <directory>packages/pipeline/src</directory>
         </include>
     </source>
 </phpunit>

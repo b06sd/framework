@@ -58,7 +58,7 @@ Rule of thumb: one concept per folder, exceptions in `Exception/`, and tests liv
 ## The `trunk` CLI
 
 ```bash
-trunk new customer-api --type=api      # api | web | self-contained | cli | worker
+trunk new customer-api --type=api      # api | web | self-contained | cli | worker | pipeline
 cd customer-api && composer install
 trunk serve                            # PHP dev server on http://127.0.0.1:8006 (APP_ENV=local)
 trunk make:controller CustomerController
@@ -200,6 +200,8 @@ $queue->dispatchMany($jobs);                                            // one m
 Safety: payloads are JSON only (no `unserialize`), the stored job name is just a key into the compiled allowlist (an unknown name never touches the autoloader), decoding is strict and errors never echo values, failure messages are stored only in development, an attempt is counted when a job is claimed (a job that kills its worker still runs out of tries), claiming is an atomic conditional `UPDATE` (no `SKIP LOCKED`; verified with 4 concurrent worker processes on SQLite, MySQL and PostgreSQL), and a job dispatched inside a database transaction commits or rolls back with your data. Timeouts and graceful shutdown need `ext-pcntl`. Long-running workers share singletons across jobs, so recycle them (`--max-jobs`, `--max-time`, `--memory`) under a process supervisor.
 
 `trunk package:install schedule` (needs `queue`) turns N crontab entries into one: define recurring jobs and commands in `app/Schedule.php` (`$schedule->job(new CleanUp())->daily('03:00'); $schedule->command('auth:prune')->hourly();`, no cron-string parsing), run them all with `* * * * * php vendor/bin/trunk schedule:run`, and see what's scheduled with `trunk schedule:list`. See [Scheduling](docs/scheduling.md).
+
+`trunk package:install pipeline` (needs `queue`) moves data from one place to another in a chain of small stages, a chunk at a time, each chunk a queue job so a run survives a crash: `$pipeline->from(new CsvSource($file))->through(new TrimFields())->into(new DatabaseSink($db, 'customers'))->chunk(500);`, started with `trunk pipeline:run Name` and watched with `trunk pipeline:status`. See [Pipelines](docs/pipelines.md).
 
 ## Validation (TrunkValidation)
 

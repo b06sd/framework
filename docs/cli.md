@@ -6,7 +6,7 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 
 | Command | Does |
 | --- | --- |
-| `new <name> [--type=api\|web\|self-contained\|cli\|worker] [--repository=<path>] [--force]` | Create a project |
+| `new <name> [--type=api\|web\|self-contained\|cli\|worker\|pipeline] [--repository=<path>] [--force]` | Create a project |
 | `serve [--host=127.0.0.1] [--port=8006]` | PHP development server with `APP_ENV=local` (port also from `APP_PORT`) |
 | `doctor` | Health check: PHP, extensions, Composer packages each capability needs, config, `.env`, build freshness, log directory, module order, permissions, third-party capabilities, and (by booting the real application) whether a capability's own tables actually exist |
 | `build` | Validate and compile for production into `build/` |
@@ -26,7 +26,7 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 
 ## Generators (never overwrite)
 
-`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:factory` (orm, needs `fakerphp/faker`), `make:migration` (database), `make:job` (queue), `make:request` (validation). Each prints where to register or use the result.
+`make:controller`, `make:middleware`, `make:service`, `make:command`, `make:module`, `make:test`, `make:entity` (orm), `make:factory` (orm, needs `fakerphp/faker`), `make:migration` (database), `make:job` (queue), `make:pipeline` (pipeline), `make:request` (validation). Each prints where to register or use the result.
 
 ## Database, ORM, cache
 
@@ -39,6 +39,10 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 ## Schedule
 
 `schedule:run` (run every task due this minute; one crontab line), `schedule:list` (every task, its frequency, its next run).
+
+## Pipeline
+
+`make:pipeline`, `pipeline:table`, `pipeline:run <Name>`, `pipeline:status [run-id]`, `pipeline:resume <run-id>`.
 
 ## Auth
 

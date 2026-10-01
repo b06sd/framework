@@ -18,11 +18,13 @@ final class ProfileCapabilitiesTest extends TestCase
         $web = array_map(static fn(Capability $c): string => $c->id, Profile::Web->plan());
         $mono = array_map(static fn(Capability $c): string => $c->id, Profile::SelfContained->plan());
         $cli = array_map(static fn(Capability $c): string => $c->id, Profile::Cli->plan());
+        $pipeline = array_map(static fn(Capability $c): string => $c->id, Profile::Pipeline->plan());
 
         // Assert
         self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc'], $web);
         self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'cache'], $mono);
         self::assertSame(['logging', 'diagnostics', 'console'], $cli);
+        self::assertSame(['logging', 'diagnostics', 'console', 'database', 'queue', 'pipeline'], $pipeline);
     }
 
     public function test_modules_come_from_the_capabilities_with_the_application_module_last(): void

@@ -4,6 +4,9 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+* Added: the `pipeline` capability (`trunkphp/pipeline`, `Trunk\Pipeline`): move data from one place to another in a chain of small, explicit stages (a `Source`, zero or more `Stage`s, a `Sink`), streamed a chunk at a time and dispatched as queue jobs so a run survives a crash and a failed chunk retries like any other job. `trunk make:pipeline Name`, `trunk pipeline:table`, `trunk pipeline:run Name`, `trunk pipeline:status`, `trunk pipeline:resume <run-id>`. Ships `CsvSource`, `DatabaseSink`, `ApiSource`/`ApiSink` and `ArraySource`/`ArraySink`. `trunk package:install pipeline` (needs `queue`). See `docs/pipelines.md`.
+* Added: `trunk new --type=pipeline` scaffolds a pipeline-only project (`diagnostics`, `console`, `queue` and `pipeline` enabled, no HTTP), with a demo `app/Pipelines/ExampleImport.php` and its generated `app/Jobs/RunPipelineChunk.php` already in place.
+
 ## 0.1.3
 
 * Fixed: `make:request` printed its usage hint with stray backslashes (`\$requests`).

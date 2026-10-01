@@ -27,7 +27,7 @@ final class GeneratedCodeAnalysisTest extends TestCase
      */
     public static function profiles(): iterable
     {
-        foreach (['api', 'web', 'self-contained', 'cli', 'worker'] as $type) {
+        foreach (['api', 'web', 'self-contained', 'cli', 'worker', 'pipeline'] as $type) {
             yield $type => [$type];
         }
     }
@@ -80,6 +80,25 @@ final class GeneratedCodeAnalysisTest extends TestCase
 
         // Assert
         self::assertFileExists($project->directory . '/app/Factories/CustomerFactory.php');
+        self::assertSame(0, $code, $out . $err);
+    }
+
+    public function test_a_generated_pipeline_and_its_runner_job_pass_phpstan_at_the_maximum_level(): void
+    {
+        // Arrange
+        $this->project = $project = new ScaffoldedProject('analysed', 'api');
+        $project->trunk(['package:install', 'queue']);
+        $project->trunk(['package:install', 'pipeline']);
+        $project->trunk(['package:install', 'console']);
+        $project->trunk(['make:pipeline', 'ImportCustomers']);
+        file_put_contents($project->directory . '/phpstan.neon', "parameters:\n    level: max\n    paths:\n        - app\n");
+
+        // Act
+        [$code, $out, $err] = new Cli()->run([\PHP_BINARY, \dirname(__DIR__, 3) . '/vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=1G', '--error-format=raw'], $project->directory);
+
+        // Assert
+        self::assertFileExists($project->directory . '/app/Pipelines/ImportCustomers.php');
+        self::assertFileExists($project->directory . '/app/Jobs/RunPipelineChunk.php');
         self::assertSame(0, $code, $out . $err);
     }
 

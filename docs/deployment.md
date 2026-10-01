@@ -42,6 +42,8 @@ Restart=always
 User=www-data
 ```
 
+If `pipeline` is installed, its chunks run on their own `pipelines` queue, isolated from everything else — give it a worker the same way (`--queue=pipelines`), or add it to the same one (`--queue=default,pipelines`) if you would rather not run a second process. See [Pipelines](pipelines.md).
+
 Cron: `trunk auth:prune` (dead sessions, tokens, throttle counters); `trunk rate-limit:prune` if `rate-limit` is installed. More than a task or two, or want them visible in the codebase instead of the crontab? `trunk package:install schedule`, define them in `app/Schedule.php`, and replace those lines with one: `* * * * * cd /app && php vendor/bin/trunk schedule:run >> /dev/null 2>&1`. See [Scheduling](scheduling.md). Run `trunk migrate` as a deploy step.
 
 ## Observability

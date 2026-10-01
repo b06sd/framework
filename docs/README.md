@@ -22,6 +22,7 @@ Every example in these guides was run in a real project created with `trunk new`
 * [ORM: entities, maps, repositories, the unit of work (and "where is the model?")](orm.md)
 * [Queue: jobs and workers](queue.md)
 * [Scheduling: fluent recurring jobs and commands, one crontab line](scheduling.md)
+* [Pipelines: move data from one place to another, chunked and resumable](pipelines.md)
 * [Validation: request classes, rules, 422 errors, forms](validation.md)
 * [Auth: passwords, sessions, CSRF, tokens, throttling, policies](auth.md)
 * [Rate limiting: a database-backed counter and a ready-made middleware](rate-limiting.md)

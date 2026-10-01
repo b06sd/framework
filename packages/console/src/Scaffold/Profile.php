@@ -19,6 +19,7 @@ enum Profile: string
     case SelfContained = 'self-contained';
     case Cli = 'cli';
     case Worker = 'worker';
+    case Pipeline = 'pipeline';
 
     /**
      * The capabilities this profile starts with (the project can add or remove any later).
@@ -33,6 +34,7 @@ enum Profile: string
             self::SelfContained => ['http', 'diagnostics', 'tusk', 'mvc', 'cache'],
             self::Cli => ['diagnostics', 'console'],
             self::Worker => ['diagnostics', 'console', 'queue'],
+            self::Pipeline => ['diagnostics', 'console', 'queue', 'pipeline'],
         };
     }
 
@@ -85,7 +87,7 @@ enum Profile: string
 
     public function hasConsole(): bool
     {
-        return $this === self::Cli || $this === self::Worker;
+        return \in_array($this, [self::Cli, self::Worker, self::Pipeline], true);
     }
 
     public function description(): string
@@ -96,6 +98,7 @@ enum Profile: string
             self::SelfContained => 'One deployable application: Tusk web UI and a JSON API together.',
             self::Cli => 'Command-line application: commands with the same DI, config and modules.',
             self::Worker => 'Queue worker: typed jobs, a database queue and `trunk queue:work`, no HTTP.',
+            self::Pipeline => 'Data pipeline: move data from one place to another in chunks, as queue jobs. No HTTP.',
         };
     }
 
