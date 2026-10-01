@@ -4,6 +4,8 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+## 0.1.4
+
 * New capability **`pipeline`** (`packages/pipeline`, `Trunk\Pipeline`): see `docs/API.md` for its public types (`Pipeline`, `PipelineBuilder`, `Source`, `Stage`, `Sink`, and the built-in `Source\{CsvSource,ArraySource,ApiSource}`/`Sink\{ArraySink,DatabaseSink,ApiSink}`). Enable it with `trunk package:install pipeline`; it needs the `queue` capability. Nothing changes for an existing project until it does.
 * New `trunk new --type=pipeline` project profile for an application that's just pipelines. Additive; existing project types are unaffected.
 * New public type `Trunk\Lifecycle\UnitOfWorkDiscarded` (extends `LogicException`), thrown by a `LifecycleAware::reset()` that had to throw away the work a request or job did. The database's `TransactionGuard` now throws it instead of a plain `LogicException` (code catching `LogicException` is unaffected), and the HTTP kernel turns a `2xx`/`3xx` into a `500` when it happens.
