@@ -112,6 +112,36 @@ final class RealInstallTest extends TestCase
         self::assertSame(0, $pruneCode, $pruneOut);
     }
 
+    public function test_mail_installs_symfony_mailer_and_sends_over_real_smtp_from_the_production_build(): void
+    {
+        // Arrange
+        $project = $this->project = new ScaffoldedProject('mailed', 'api', realInstall: true);
+        $transcript = $project->base . '/smtp.log';
+
+        // Act: a real `composer require symfony/mailer`, then a development send and a production send
+        $project->trunk(['package:install', 'console']);
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'mail']);
+        [$localCode, $localOut, $localErr] = $project->trunk(['mail:test', 'ada@example.com'], environment: ['APP_ENV' => 'local']);
+        [$doctorCode, $doctorOut] = $project->trunk(['doctor']);
+        [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+        $sink = proc_open([\PHP_BINARY, \dirname(__DIR__) . '/Support/smtp_sink.php', $transcript, 'accept'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        self::assertIsResource($sink);
+        $port = (int) fgets($pipes[1]);
+        [$sendCode, $sendOut, $sendErr] = $project->trunk(['mail:test', 'ada@example.com'], environment: ['APP_ENV' => 'production', 'MAIL_DSN' => 'smtp://shop:pw@127.0.0.1:' . $port]);
+        proc_close($sink);
+
+        // Assert
+        self::assertSame(0, $installCode, $installOut . $installErr);
+        self::assertDirectoryExists($project->directory . '/vendor/symfony/mailer', 'package:install ran a real composer require');
+        self::assertSame(0, $localCode, $localOut . $localErr);
+        self::assertCount(1, glob($project->directory . '/storage/mail/*.eml') ?: []);
+        self::assertSame(0, $doctorCode, $doctorOut);
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertSame(0, $sendCode, $sendOut . $sendErr);
+        self::assertStringContainsString('RCPT TO:<ada@example.com>', (string) file_get_contents($transcript));
+        self::assertStringContainsString('Subject: Trunk mail test', (string) file_get_contents($transcript));
+    }
+
     public function test_a_fresh_web_project_serves_its_page_and_its_static_files_over_a_real_http_server(): void
     {
         // Arrange

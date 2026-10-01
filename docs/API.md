@@ -308,4 +308,10 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Pipeline\Source\CsvSource` (class)
 - `Trunk\Pipeline\Stage` (interface)
 
+### Mail
+
+- `Trunk\Mail\Exception\MailException` (class)
+- `Trunk\Mail\MailModule` (class)
+- `Trunk\Mail\Mailer` (class)
+
 <!-- api-list:end -->

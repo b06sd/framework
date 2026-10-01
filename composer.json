@@ -20,7 +20,8 @@
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
-        "psr/simple-cache": "^3.0"
+        "psr/simple-cache": "^3.0",
+        "symfony/mailer": "^7.4 || ^8.0"
     },
     "autoload": {
         "psr-4": {
@@ -40,7 +41,8 @@
             "Trunk\\RateLimit\\": "packages/ratelimit/src/",
             "Trunk\\Testing\\": "packages/testing/src/",
             "Trunk\\Schedule\\": "packages/schedule/src/",
-            "Trunk\\Pipeline\\": "packages/pipeline/src/"
+            "Trunk\\Pipeline\\": "packages/pipeline/src/",
+            "Trunk\\Mail\\": "packages/mail/src/"
         }
     },
     "autoload-dev": {

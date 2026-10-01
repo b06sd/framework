@@ -1,0 +1,52 @@
+{
+    "name": "trunkphp/mail",
+    "description": "Email for Trunk over Symfony Mailer: SMTP and providers (SES, Mailgun, Postmark, SendGrid) by DSN, a file transport for development.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "psr/log": "^3.0",
+        "symfony/mailer": "^7.4 || ^8.0",
+        "symfony/mime": "^7.4 || ^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Mail\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "mail",
+                "name": "Mail",
+                "description": "Email over SMTP or a provider (Symfony Mailer)",
+                "modules": [
+                    "Trunk\\Mail\\MailModule"
+                ],
+                "requires": [
+                    "logging"
+                ],
+                "config": {
+                    "mail": "resources/config/mail.php"
+                },
+                "env": {
+                    "MAIL_DSN": "file://default",
+                    "MAIL_FROM_ADDRESS": "hello@example.com"
+                },
+                "integrations": {
+                    "console": [
+                        "Trunk\\Mail\\Console\\MailConsoleModule"
+                    ]
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "suggest": {
+        "trunkphp/console": "Enables the mail:test command when the console capability is enabled"
+    }
+}

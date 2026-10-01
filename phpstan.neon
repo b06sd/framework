@@ -18,6 +18,7 @@ parameters:
         - packages/testing/src
         - packages/schedule/src
         - packages/pipeline/src
+        - packages/mail/src
         - tests
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: true

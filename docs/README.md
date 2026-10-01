@@ -26,6 +26,7 @@ Every example in these guides was run in a real project created with `trunk new`
 * [Validation: request classes, rules, 422 errors, forms](validation.md)
 * [Auth: passwords, sessions, CSRF, tokens, throttling, policies](auth.md)
 * [Rate limiting: a database-backed counter and a ready-made middleware](rate-limiting.md)
+* [Mail: SMTP and providers over Symfony Mailer, a file transport for development](mail.md)
 * [Logging: structured records, request ids, levels per category, redaction](logging.md)
 * [Deployment](deployment.md)
 * [Troubleshooting](troubleshooting.md)

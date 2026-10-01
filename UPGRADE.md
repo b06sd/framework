@@ -4,6 +4,7 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New capability **`mail`** (`packages/mail`, `Trunk\Mail`): public types `Mailer`, `MailModule` and `Exception\MailException`; messages are Symfony's own `Symfony\Component\Mime\Email`. Enable it with `trunk package:install mail`. Nothing changes for an existing project until it does.
 * `Trunk\Orm\Mapping\Type` has a new case, `Decimal`. Code that `match`es over every case of `Type` needs an arm for it (a `match` without one now throws `UnhandledMatchError` for decimal columns). New: `MapBuilder::decimal()`, `ColumnSpec::$scale` (optional constructor argument), `StaleEntity::lockedTooLate()`, `QueryBuilder::lockForUpdate()` and `Query::lockForUpdate()`. Additive otherwise. A build made by an earlier version (`build/orm.php`) keeps loading; run `trunk build` again to use decimals.
 * `Trunk\Database\Query\QueryState` (internal) gained `$lockForUpdate`, and `Grammar` (internal) a `compileLockForUpdate()` hook.
 ## 0.1.4

@@ -101,7 +101,7 @@ final class MetadataSecurityTest extends TestCase
         $catalog = new CapabilityCatalog($this->workspace->base);
 
         // Assert
-        self::assertCount(17, $catalog->all());
+        self::assertCount(18, $catalog->all());
         self::assertStringContainsString('not valid JSON', $catalog->problems()[0]);
     }
 }

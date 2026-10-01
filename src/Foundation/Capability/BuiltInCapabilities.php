@@ -117,6 +117,17 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Pipeline\\Console\\PipelineConsoleModule']],
             ),
             new Capability(
+                'mail',
+                'Mail',
+                'Email over SMTP or a provider (Symfony Mailer)',
+                ['Trunk\\Mail\\MailModule'],
+                requires: ['logging'],
+                config: ['mail' => $root . '/packages/mail/resources/config/mail.php'],
+                env: ['MAIL_DSN' => 'file://default', 'MAIL_FROM_ADDRESS' => 'hello@example.com'],
+                composer: ['symfony/mailer' => '^7.4||^8.0'],
+                integrations: ['console' => ['Trunk\\Mail\\Console\\MailConsoleModule']],
+            ),
+            new Capability(
                 'rate-limit',
                 'Rate limit',
                 'A database-backed rate limiter and a ready-made middleware for any route',

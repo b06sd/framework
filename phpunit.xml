@@ -51,6 +51,7 @@
             <directory>packages/testing/src</directory>
             <directory>packages/schedule/src</directory>
             <directory>packages/pipeline/src</directory>
+            <directory>packages/mail/src</directory>
         </include>
     </source>
 </phpunit>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Trunk\Tests\Unit\Foundation\Capability;
 
 use PHPUnit\Framework\TestCase;
+use Trunk\Console\Process\ProcessRunner;
 use Trunk\Foundation\Capability\CapabilityCatalog;
 use Trunk\Foundation\Capability\CapabilityResolver;
 use Trunk\Foundation\Exception\CapabilityException;
@@ -33,7 +34,7 @@ final class CatalogTest extends TestCase
         $ids = array_map(static fn($c): string => $c->id, $catalog->all());
 
         // Assert
-        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'rate-limit', 'observability', 'auth', 'health'], $ids);
+        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'mail', 'rate-limit', 'observability', 'auth', 'health'], $ids);
         self::assertSame(['http', 'tusk'], $catalog->find('mvc')?->requires);
         self::assertTrue($catalog->find('cache')?->isBuiltIn());
         self::assertFileExists($catalog->find('cache')->config['cache'] ?? '');
@@ -178,8 +179,31 @@ final class CatalogTest extends TestCase
         self::assertSame([], $catalog->integrationModules([$cache]));
         self::assertSame([], $catalog->integrationModules([$console]));
         self::assertSame(['Trunk\\Cache\\Console\\CacheConsoleModule'], $catalog->integrationModules([$cache, $console]));
-        self::assertSame(['Trunk\\Validation\\Console\\ValidationConsoleModule', 'Trunk\\Cache\\Console\\CacheConsoleModule', 'Trunk\\Database\\Console\\DatabaseConsoleModule', 'Trunk\\Orm\\Console\\OrmConsoleModule', 'Trunk\\Queue\\Console\\QueueConsoleModule', 'Trunk\\Schedule\\Console\\ScheduleConsoleModule', 'Trunk\\Pipeline\\Console\\PipelineConsoleModule', 'Trunk\\RateLimit\\Console\\RateLimitConsoleModule', 'Trunk\\Auth\\Console\\AuthConsoleModule'], $catalog->allIntegrationModules());
+        self::assertSame(['Trunk\\Validation\\Console\\ValidationConsoleModule', 'Trunk\\Cache\\Console\\CacheConsoleModule', 'Trunk\\Database\\Console\\DatabaseConsoleModule', 'Trunk\\Orm\\Console\\OrmConsoleModule', 'Trunk\\Queue\\Console\\QueueConsoleModule', 'Trunk\\Schedule\\Console\\ScheduleConsoleModule', 'Trunk\\Pipeline\\Console\\PipelineConsoleModule', 'Trunk\\Mail\\Console\\MailConsoleModule', 'Trunk\\RateLimit\\Console\\RateLimitConsoleModule', 'Trunk\\Auth\\Console\\AuthConsoleModule'], $catalog->allIntegrationModules());
         self::assertSame(['App\\AppModule'], $catalog->unclaimedModules([$cache, 'Trunk\\Cache\\Console\\CacheConsoleModule', 'App\\AppModule']));
+    }
+
+    public function test_every_built_in_composer_requirement_is_accepted_by_package_install(): void
+    {
+        // Arrange: package:install hands each requirement to `composer require` as name:constraint,
+        // through the same check as user input (no spaces, nothing that could read as an option)
+        $runner = new ProcessRunner();
+        $specs = [];
+
+        foreach ($this->catalog()->all() as $capability) {
+            foreach ($capability->composer as $package => $constraint) {
+                if (!str_starts_with($package, 'ext-')) {
+                    $specs[] = $package . ':' . $constraint;
+                }
+            }
+        }
+
+        // Act & Assert
+        self::assertContains('symfony/mailer:^7.4||^8.0', $specs);
+
+        foreach ($specs as $spec) {
+            self::assertTrue($runner->isPackageSpec($spec), $spec . ' would be refused by package:install');
+        }
     }
 
     private function catalog(): CapabilityCatalog

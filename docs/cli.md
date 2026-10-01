@@ -50,6 +50,10 @@ Outside a project run `trunk new ...` (after `composer global require trunkphp/f
 
 `rate-limit:table`, `rate-limit:prune`.
 
+## Mail
+
+`mail:test <address>`: send one short email through `MAIL_DSN` to check the setup (see [Mail](mail.md)).
+
 ## Your own commands
 
 ```php
