@@ -227,6 +227,10 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Orm\Repository\Query` (class)
 - `Trunk\Orm\Repository\Repository` (class)
 - `Trunk\Orm\Repository\Scope` (interface)
+- `Trunk\Orm\UnitOfWork\Change` (class)
+- `Trunk\Orm\UnitOfWork\ChangeKind` (enum)
+- `Trunk\Orm\UnitOfWork\ChangeListener` (interface)
+- `Trunk\Orm\UnitOfWork\Changes` (class)
 - `Trunk\Orm\UnitOfWork\EntityManager` (class)
 
 ### Queue

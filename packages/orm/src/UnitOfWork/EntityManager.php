@@ -36,8 +36,9 @@ final class EntityManager
     private array $scopes = [];
 
     /**
-     * @param iterable<Scope>                     $scopes global scopes, matched to maps by class
-     * @param (Closure(): DateTimeImmutable)|null $clock  used for soft-delete timestamps
+     * @param iterable<Scope>                     $scopes    global scopes, matched to maps by class
+     * @param iterable<ChangeListener>            $listeners told what each flush wrote (services tagged `orm.change_listener`)
+     * @param (Closure(): DateTimeImmutable)|null $clock     used for soft-delete timestamps
      *
      * @internal wired by the container, not part of the API
      */
@@ -45,13 +46,14 @@ final class EntityManager
         private readonly Connection $connection,
         private readonly MappingRegistry $registry,
         iterable $scopes = [],
+        iterable $listeners = [],
         ?Closure $clock = null,
     ) {
         foreach ($scopes as $scope) {
             $this->scopes[$scope::class] = $scope;
         }
 
-        $this->unit = new UnitOfWork($connection, $registry, $clock ?? static fn(): DateTimeImmutable => new DateTimeImmutable());
+        $this->unit = new UnitOfWork($connection, $registry, $clock ?? static fn(): DateTimeImmutable => new DateTimeImmutable(), array_values([...$listeners]));
     }
 
     /**

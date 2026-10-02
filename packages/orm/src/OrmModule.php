@@ -31,7 +31,8 @@ use Trunk\Support\FileWriter;
  * it. `trunk build` validates every entity map and writes generated metadata and hydrators to
  * build/orm.php; production runs only that generated code.
  *
- * Global scopes are services tagged `orm.scope`.
+ * Global scopes are services tagged `orm.scope`; change listeners (told what each flush wrote) are
+ * services tagged `orm.change_listener`.
  *
  * @api
  */
@@ -54,6 +55,7 @@ final class OrmModule implements Module, BuildContributor, ModuleDependencies
             new Reference(Connection::class),
             new Reference(MappingRegistry::class),
             new TaggedReference('orm.scope'),
+            new TaggedReference('orm.change_listener'),
         ], Lifetime::Scoped);
     }
 

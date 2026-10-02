@@ -41,13 +41,17 @@ final class UnitOfWork
     /** @var WeakMap<object, array<string, mixed>> */
     private WeakMap $relations;
 
+    private bool $notifying = false;
+
     /**
      * @param Closure(): DateTimeImmutable $clock
+     * @param list<ChangeListener>         $listeners told what each flush wrote, inside its transaction
      */
     public function __construct(
         private readonly Connection $connection,
         private readonly MappingRegistry $registry,
         private readonly Closure $clock,
+        private readonly array $listeners = [],
     ) {
         $this->managed = new SplObjectStorage();
         $this->new = new SplObjectStorage();
@@ -151,6 +155,10 @@ final class UnitOfWork
      */
     public function flush(): void
     {
+        if ($this->notifying) {
+            throw new OrmException('flush() was called from a ChangeListener. A listener runs inside the flush; write with the database connection instead.');
+        }
+
         $inserts = iterator_to_array($this->new, false);
         $updates = $this->dirty();
         $deletes = iterator_to_array($this->removed, false);
@@ -171,6 +179,10 @@ final class UnitOfWork
 
             foreach ($deletes as $entity) {
                 $this->delete($entity);
+            }
+
+            if ($this->listeners !== []) {
+                $this->notify($inserted, $updates, $deletes);
             }
         });
 
@@ -398,6 +410,76 @@ final class UnitOfWork
         if ($affected === 0 && $versionColumn !== null) {
             throw StaleEntity::for($metadata->class);
         }
+    }
+
+    /**
+     * Tells every listener what was written, still inside the transaction.
+     *
+     * @param list<array{object, array<string, string|int|float|bool|null>}> $inserted entity and stored row
+     * @param list<array{object, array<string, string|int|float|bool|null>}> $updates  entity and changed columns
+     * @param list<object>                                                   $deletes
+     */
+    private function notify(array $inserted, array $updates, array $deletes): void
+    {
+        $changes = [];
+
+        foreach ($inserted as [$entity, $row]) {
+            $changes[] = $this->change(ChangeKind::Insert, $entity, $row, [], $row);
+        }
+
+        foreach ($updates as [$entity, $columns]) {
+            $snapshot = $this->managed[$entity]['snapshot'];
+            $changes[] = $this->change(ChangeKind::Update, $entity, $snapshot, array_intersect_key($snapshot, $columns), $columns);
+        }
+
+        foreach ($deletes as $entity) {
+            $snapshot = $this->managed[$entity]['snapshot'];
+            $changes[] = $this->change(ChangeKind::Delete, $entity, $snapshot, $snapshot, [], $this->registry->metadata($entity::class)->softDeleteColumn() !== null);
+        }
+
+        $this->notifying = true;
+
+        try {
+            foreach ($this->listeners as $listener) {
+                $listener->changed(new Changes($changes));
+            }
+        } finally {
+            $this->notifying = false;
+        }
+    }
+
+    /**
+     * @param array<string, string|int|float|bool|null> $row    the stored row (for the id)
+     * @param array<string, string|int|float|bool|null> $before by column
+     * @param array<string, string|int|float|bool|null> $after  by column
+     */
+    private function change(ChangeKind $kind, object $entity, array $row, array $before, array $after, bool $soft = false): Change
+    {
+        $metadata = $this->registry->metadata($entity::class);
+        $id = $row[$metadata->idColumn()->column] ?? null;
+
+        return new Change($kind, $entity, $metadata->class, \is_int($id) || \is_string($id) ? $id : '', $this->byProperty($metadata, $before), $this->byProperty($metadata, $after), $soft);
+    }
+
+    /**
+     * Column values re-keyed by property, the version column left out and hidden values masked.
+     *
+     * @param array<string, string|int|float|bool|null> $values
+     *
+     * @return array<string, string|int|float|bool|null>
+     */
+    private function byProperty(EntityMetadata $metadata, array $values): array
+    {
+        $version = $metadata->versionColumn()?->column;
+        $properties = [];
+
+        foreach ($metadata->columns as $property => $column) {
+            if ($column->column !== $version && \array_key_exists($column->column, $values)) {
+                $properties[$property] = $column->hidden ? Change::HIDDEN : $values[$column->column];
+            }
+        }
+
+        return $properties;
     }
 
     private function forget(object $entity): void

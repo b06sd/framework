@@ -138,6 +138,46 @@ $manager->connection()->transaction(function () use ($manager, $sku, $quantity):
 
 `lockForUpdate()` needs an open transaction (it refuses to run without one, since the lock would end with the SELECT) and works with `get()`/`first()`, not `count()`. Lock before anything else reads the row in that unit of work: an entity already loaded is returned only if its row is unchanged, otherwise `StaleEntity` is thrown instead of handing you stale numbers. Relations loaded with `with()` are not locked. For a single counter you do not need to read first: an atomic update with a guard does it in one statement (see [Database: locking rows](database.md#locking-rows)).
 
+## Reacting to changes: audit trails, search indexes, events
+
+A `ChangeListener` is told what every `flush()` wrote. Tag the service `orm.change_listener`:
+
+```php
+use Trunk\Auth\Auth;
+use Trunk\Database\Connection\Connection;
+use Trunk\Orm\UnitOfWork\{ChangeListener, Changes};
+
+final readonly class AuditTrail implements ChangeListener
+{
+    public function __construct(private Connection $db, private Auth $auth) {}
+
+    public function changed(Changes $changes): void
+    {
+        foreach ($changes as $change) {               // inserts, then updates, then deletes
+            $this->db->table('audit_log')->insert([
+                'entity' => $change->class,
+                'entity_id' => (string) $change->id,
+                'action' => $change->kind->value,         // insert, update, delete
+                'user_id' => $this->auth->user()?->authId(),
+                'before' => json_encode($change->before),
+                'after' => json_encode($change->after),
+            ]);
+        }
+    }
+}
+
+// in your module
+$builder->scoped(AuditTrail::class);
+$builder->tag('orm.change_listener', AuditTrail::class);
+```
+
+* Values are keyed by **property** and given in their **stored form** (a date as `2026-10-02 09:30:00`, a decimal as `"19.99"`, an enum as its value), ready to store or send. An update carries only the properties that changed; an insert only `after`; a delete only `before` (and `$change->soft` for a soft delete). The optimistic-lock version is left out.
+* A `hidden()` property (a password hash) is listed when it changes, with the value `Change::HIDDEN`, never the real one.
+* The listener runs **inside the flush's transaction**, after the writes and before the commit: what it writes through the connection commits or rolls back with the changes, so the audit trail can never miss a change or record one that did not happen. If it throws, the whole flush is rolled back. Write with the connection; calling `$manager->flush()` from a listener is refused.
+* `$changes->of(StockItem::class)` keeps the changes to one class; `$change->entity` is the object itself.
+
+Writes made with the query builder directly (bulk updates, `Raw` expressions) bypass the ORM and are not reported.
+
 ## Factories and seeding
 
 `trunk make:factory Customer` reads Customer's map and writes `app/Factories/CustomerFactory.php`: one [fakerphp/faker](https://fakerphp.org) call per mapped column, keyed off its type. It needs Faker installed (`composer require --dev fakerphp/faker`; it is a dev dependency, not bundled) and the entity already mapped (`trunk make:entity` first).

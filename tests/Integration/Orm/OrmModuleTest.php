@@ -7,7 +7,10 @@ namespace Trunk\Tests\Integration\Orm;
 use PHPUnit\Framework\TestCase;
 use Trunk\Compiler\Build\BuildContext;
 use Trunk\Container\ContainerBuilder;
+use Trunk\Database\Connection\Connection;
 use Trunk\Database\DatabaseModule;
+use Trunk\Database\Schema\Blueprint;
+use Trunk\Database\Schema\Schema;
 use Trunk\Foundation\Configuration;
 use Trunk\Foundation\Environment;
 use Trunk\Foundation\Manifest\ModuleManifest;
@@ -19,8 +22,10 @@ use Trunk\Tests\Fixtures\Orm\Customer;
 use Trunk\Tests\Fixtures\Orm\CustomerMap;
 use Trunk\Tests\Fixtures\Orm\OrderMap;
 use Trunk\Tests\Fixtures\Orm\ProfileMap;
+use Trunk\Tests\Fixtures\Orm\Tag;
 use Trunk\Tests\Fixtures\Orm\TagMap;
 use Trunk\Tests\Support\ContainerModes;
+use Trunk\Tests\Support\RecordingChangeListener;
 
 final class OrmModuleTest extends TestCase
 {
@@ -35,6 +40,42 @@ final class OrmModuleTest extends TestCase
     protected function tearDown(): void
     {
         new Directory()->remove($this->directory);
+    }
+
+    public function test_services_tagged_as_change_listeners_hear_every_flush_in_both_container_modes(): void
+    {
+        // Arrange
+        $containers = new ContainerModes()->both(
+            static function (ContainerBuilder $b): void {
+                new DatabaseModule()->register($b);
+                new OrmModule()->register($b);
+                $b->service(RecordingChangeListener::class, RecordingChangeListener::class);
+                $b->tag('orm.change_listener', RecordingChangeListener::class);
+            },
+            ['database' => ['default' => 'main', 'log_queries' => false, 'migrations' => $this->directory, 'connections' => ['main' => ['driver' => 'sqlite', 'database' => ':memory:']]], 'orm' => ['mode' => 'development', 'maps' => $this->maps(), 'build' => $this->directory]],
+        );
+
+        foreach ($containers as $mode => $root) {
+            $scope = $root->beginScope();
+            $connection = $scope->get(Connection::class);
+            self::assertInstanceOf(Connection::class, $connection);
+            new Schema($connection)->create('tags', static function (Blueprint $t): void {
+                $t->id();
+                $t->string('label');
+            });
+            $manager = $scope->get(EntityManager::class);
+            self::assertInstanceOf(EntityManager::class, $manager);
+
+            // Act
+            $manager->persist(new Tag(label: 'urgent'));
+            $manager->flush();
+
+            // Assert
+            $listener = $scope->get(RecordingChangeListener::class);
+            self::assertInstanceOf(RecordingChangeListener::class, $listener);
+            self::assertCount(1, $listener->batches, $mode);
+            self::assertSame(['id' => 1, 'label' => 'urgent'], $listener->batches[0]->all()[0]->after, $mode);
+        }
     }
 
     public function test_the_build_writes_generated_code_and_production_and_development_behave_the_same(): void
