@@ -135,7 +135,7 @@ final class BuiltInCapabilities
                 config: ['storage' => $root . '/packages/storage/resources/config/storage.php'],
                 directories: ['storage/app'],
                 env: ['STORAGE_DISK' => 'local'],
-                composer: ['league/flysystem' => '^3.0'],
+                composer: ['league/flysystem' => '^3.29', 'league/flysystem-local' => '^3.29', 'league/mime-type-detection' => '^1.16'],
             ),
             new Capability(
                 'pdf',
