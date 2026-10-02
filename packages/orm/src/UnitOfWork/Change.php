@@ -18,6 +18,7 @@ final readonly class Change
 
     /**
      * @param class-string                               $class
+     * @param int|string|array<string, int|string>       $id     the id, or for a composite key its values by property
      * @param array<string, string|int|float|bool|null> $before
      * @param array<string, string|int|float|bool|null> $after
      * @param bool                                       $soft   a delete that only set the soft-delete column
@@ -26,7 +27,7 @@ final readonly class Change
         public ChangeKind $kind,
         public object $entity,
         public string $class,
-        public int|string $id,
+        public int|string|array $id,
         public array $before = [],
         public array $after = [],
         public bool $soft = false,

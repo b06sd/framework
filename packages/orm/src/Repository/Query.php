@@ -373,15 +373,21 @@ final class Query
             throw new InvalidFilter('The cursor chunk size must be between 1 and 5000.');
         }
 
-        $idColumn = $this->metadata->idColumn()->column;
+        $keys = array_map(static fn(ColumnMetadata $c): string => $c->column, $this->metadata->keyColumns());
         $base = $this->readOnly();
         $last = null;
 
         while (true) {
-            $builder = $base->builder()->orderBy($idColumn)->limit($chunk);
+            $builder = $base->builder();
+
+            foreach ($keys as $key) {
+                $builder = $builder->orderBy($key);
+            }
+
+            $builder = $builder->limit($chunk);
 
             if ($last !== null) {
-                $builder = $builder->where($idColumn, '>', $last);
+                $builder = $builder->where(static fn(QueryBuilder $after): QueryBuilder => self::after($after, $keys, $last));
             }
 
             $rows = $this->guarded(static fn(): array => $builder->get());
@@ -398,14 +404,45 @@ final class Query
 
             yield from $entities;
 
-            $lastId = $rows[\count($rows) - 1][$idColumn] ?? null;
+            $lastRow = $rows[\count($rows) - 1];
+            $last = [];
 
-            if (\count($rows) < $chunk || !(\is_int($lastId) || \is_string($lastId))) {
-                return;
+            foreach ($keys as $key) {
+                $value = $lastRow[$key] ?? null;
+
+                if (!\is_int($value) && !\is_string($value)) {
+                    return;
+                }
+
+                $last[] = $value;
             }
 
-            $last = $lastId;
+            if (\count($rows) < $chunk) {
+                return;
+            }
         }
+    }
+
+    /**
+     * Rows after `$last` in key order: (k1 > v1) OR (k1 = v1 AND k2 > v2) OR ..., which for a key of
+     * one column is simply k1 > v1.
+     *
+     * @param non-empty-list<string> $keys
+     * @param list<int|string>       $last
+     */
+    private static function after(QueryBuilder $query, array $keys, array $last): QueryBuilder
+    {
+        foreach ($keys as $i => $key) {
+            $query = $query->orWhere(static function (QueryBuilder $branch) use ($keys, $last, $i, $key): QueryBuilder {
+                for ($j = 0; $j < $i; ++$j) {
+                    $branch = $branch->where($keys[$j], $last[$j]);
+                }
+
+                return $branch->where($key, '>', $last[$i]);
+            });
+        }
+
+        return $query;
     }
 
     // ---- internals ----
@@ -490,23 +527,17 @@ final class Query
     {
         $class = $this->class;
         $unit = $this->manager->unitOfWork();
-        $idColumn = $this->metadata->idColumn()->column;
         $entities = [];
 
         foreach ($rows as $row) {
             if ($this->readOnly) {
                 $entity = $this->mapper->hydrate($row);
             } else {
-                $id = $row[$idColumn] ?? null;
-
-                if (!\is_int($id) && !\is_string($id)) {
-                    throw new OrmException(\sprintf('%s row has no usable primary key.', $class));
-                }
-
-                $entity = $unit->find($class, $id);
+                $identity = $this->metadata->identity($row) ?? throw new OrmException(\sprintf('%s row has no usable primary key.', $class));
+                $entity = $unit->find($class, $identity);
 
                 if ($entity === null) {
-                    $entity = $unit->manage($fresh = $this->mapper->hydrate($row), $this->metadata, $id, $this->mapper->extract($fresh));
+                    $entity = $unit->manage($fresh = $this->mapper->hydrate($row), $this->metadata, $identity, $this->mapper->extract($fresh));
                 } elseif ($this->lockForUpdate) {
                     $this->assertUnchanged($entity, $row);
                 }

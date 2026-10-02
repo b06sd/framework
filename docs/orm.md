@@ -59,6 +59,20 @@ final class CustomerMap implements EntityMap
 
 Types: `string int float decimal bool dateTime json enum` (`decimal` is for money and quantities, see below). Modifiers: `nullable() hidden() filterable() sortable()`. Relations: `hasMany hasOne belongsTo belongsToMany`. `scope('name')` applies a global scope (a service tagged `orm.scope`, e.g. a tenant filter); a scope that is named but not registered **fails closed**. `trunk orm:validate` checks every map without building.
 
+**Composite keys.** A row identified by more than one column (an order line by its order and line number) maps the columns, then names them with `key()` instead of `id()`:
+
+```php
+$map->table('order_lines');
+$map->int('orderId');
+$map->int('lineNo');
+$map->key('orderId', 'lineNo');            // PRIMARY KEY (order_id, line_no)
+$map->belongsTo('order', Order::class, foreignKey: 'orderId');
+
+$line = $lines->find(['orderId' => 7, 'lineNo' => 2]);
+```
+
+A composite key is never generated, so set its values before `persist()`; like any key, it cannot change afterwards. Updates and deletes match the whole key, `cursor()` walks it in order, and a change listener gets it as `['orderId' => 7, 'lineNo' => 2]`. Relations join on one column: from a composite-keyed entity, name it (`localKey` / `ownerKey`); a pivot-table relation (`belongsToMany`) needs single-column keys on both sides. `trunk build` reports anything else.
+
 ## Reading
 
 Inject `EntityManager`.

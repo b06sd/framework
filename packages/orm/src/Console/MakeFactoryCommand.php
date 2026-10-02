@@ -72,7 +72,7 @@ final readonly class MakeFactoryCommand implements Command
             throw new CommandFailedException('app/Factories could not be created.');
         }
 
-        $skip = array_filter([$spec->idProperty, $spec->softDeleteProperty, $spec->versionProperty], static fn(?string $p): bool => $p !== null);
+        $skip = array_filter([$spec->generatedId ? $spec->idProperty : null, $spec->softDeleteProperty, $spec->versionProperty], static fn(?string $p): bool => $p !== null);
         $locals = '';
         $fields = '';
 

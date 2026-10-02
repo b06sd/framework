@@ -6,7 +6,9 @@ namespace Trunk\Orm\Repository;
 
 use Trunk\Orm\Exception\EntityNotFound;
 use Trunk\Orm\Exception\InvalidFilter;
+use Trunk\Orm\Exception\OrmException;
 use Trunk\Orm\Exception\UnknownProperty;
+use Trunk\Orm\Mapping\ColumnMetadata;
 use Trunk\Orm\Mapping\Convert;
 use Trunk\Orm\Mapping\EntityMetadata;
 use Trunk\Orm\Mapping\Mapper;
@@ -44,25 +46,46 @@ final readonly class Repository
     }
 
     /**
+     * By primary key: the id, or for a composite key every key property by name
+     * (`find(['orderId' => 7, 'lineNo' => 2])`).
+     *
+     * @param int|string|array<string, int|string> $id
+     *
      * @return T|null
      */
-    public function find(int|string $id): ?object
+    public function find(int|string|array $id): ?object
     {
-        $known = $this->manager->unitOfWork()->find($this->class, $id);
+        $key = $this->key($id);
+        $row = [];
+
+        foreach ($this->metadata->keyColumns() as $column) {
+            $row[$column->column] = $key[$column->property];
+        }
+
+        $identity = $this->metadata->identity($row);
+        $known = $identity === null ? null : $this->manager->unitOfWork()->find($this->class, $identity);
 
         if ($known instanceof $this->class) {
             return $known;
         }
 
-        return $this->query()->where($this->metadata->idProperty, $id)->first();
+        $query = $this->query();
+
+        foreach ($key as $property => $value) {
+            $query = $query->where($property, $value);
+        }
+
+        return $query->first();
     }
 
     /**
+     * @param int|string|array<string, int|string> $id
+     *
      * @return T
      *
      * @throws EntityNotFound
      */
-    public function findOrFail(int|string $id): object
+    public function findOrFail(int|string|array $id): object
     {
         return $this->find($id) ?? throw EntityNotFound::for($this->class);
     }
@@ -127,5 +150,33 @@ final readonly class Repository
         }
 
         return $values;
+    }
+
+    /**
+     * The key as property => value, checked against the map.
+     *
+     * @param int|string|array<string, int|string> $id
+     *
+     * @return array<string, int|string>
+     */
+    private function key(int|string|array $id): array
+    {
+        $properties = array_map(static fn(ColumnMetadata $c): string => $c->property, $this->metadata->keyColumns());
+
+        if (!\is_array($id)) {
+            return \count($properties) === 1 ? [$properties[0] => $id] : throw new OrmException(\sprintf('%s has a composite key: find() it by %s.', $this->class, "['" . implode("' => ..., '", $properties) . "' => ...]"));
+        }
+
+        if (array_keys($id) !== $properties && (array_diff($properties, array_keys($id)) !== [] || \count($id) !== \count($properties))) {
+            throw new OrmException(\sprintf('%s is found by %s, exactly.', $this->class, implode(', ', $properties)));
+        }
+
+        $key = [];
+
+        foreach ($properties as $property) {
+            $key[$property] = $id[$property];
+        }
+
+        return $key;
     }
 }

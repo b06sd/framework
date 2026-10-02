@@ -8,6 +8,7 @@ use Closure;
 use DateTimeImmutable;
 use SplObjectStorage;
 use Trunk\Database\Connection\Connection;
+use Trunk\Database\Query\QueryBuilder;
 use Trunk\Orm\Exception\OrmException;
 use Trunk\Orm\Exception\StaleEntity;
 use Trunk\Orm\Mapping\Convert;
@@ -68,7 +69,8 @@ final class UnitOfWork
     }
 
     /**
-     * Registers a freshly loaded entity. Returns the entity already managed for that row if there is one.
+     * Registers a freshly loaded entity under its identity (EntityMetadata::identity()). Returns the
+     * entity already managed for that row if there is one.
      *
      * @param array<string, string|int|float|bool|null> $snapshot
      */
@@ -188,10 +190,10 @@ final class UnitOfWork
 
         foreach ($inserted as [$entity, $row]) {
             $metadata = $this->registry->metadata($entity::class);
-            $id = $row[$metadata->idColumn()->column] ?? null;
+            $identity = $metadata->identity($row);
 
-            if (\is_int($id) || \is_string($id)) {
-                $this->manage($entity, $metadata, $id, $row);
+            if ($identity !== null) {
+                $this->manage($entity, $metadata, $identity, $row);
             }
         }
 
@@ -300,7 +302,7 @@ final class UnitOfWork
             $metadata = $this->registry->metadata($entity::class);
             $current = $this->registry->mapper($entity::class)->extract($entity);
             $state = $this->managed[$entity];
-            $idColumn = $metadata->idColumn()->column;
+            $keyColumns = array_map(static fn($c): string => $c->column, $metadata->keyColumns());
             $versionColumn = $metadata->versionColumn()?->column;
             $changes = [];
 
@@ -310,7 +312,7 @@ final class UnitOfWork
                 }
 
                 if (($state['snapshot'][$column] ?? null) !== $value) {
-                    if ($column === $idColumn) {
+                    if (\in_array($column, $keyColumns, true)) {
                         throw new OrmException(\sprintf('The primary key of a managed %s changed. Primary keys are immutable; remove and persist a new entity instead.', $metadata->class));
                     }
 
@@ -354,9 +356,7 @@ final class UnitOfWork
     {
         $metadata = $this->registry->metadata($entity::class);
         $state = $this->managed[$entity];
-        $idColumn = $metadata->idColumn()->column;
         $versionColumn = $metadata->versionColumn()?->column;
-        $id = $state['snapshot'][$idColumn] ?? null;
         $values = $changes;
         $next = $state['version'];
 
@@ -365,7 +365,7 @@ final class UnitOfWork
             $values[$versionColumn] = $next;
         }
 
-        $query = $this->connection->table($metadata->table)->where($idColumn, $id);
+        $query = $this->byKey($metadata, $state['snapshot']);
 
         if ($versionColumn !== null && $state['version'] !== null) {
             $query = $query->where($versionColumn, $state['version']);
@@ -385,9 +385,8 @@ final class UnitOfWork
     {
         $metadata = $this->registry->metadata($entity::class);
         $state = $this->managed[$entity];
-        $idColumn = $metadata->idColumn()->column;
         $versionColumn = $metadata->versionColumn()?->column;
-        $query = $this->connection->table($metadata->table)->where($idColumn, $state['snapshot'][$idColumn] ?? null);
+        $query = $this->byKey($metadata, $state['snapshot']);
 
         if ($versionColumn !== null && $state['version'] !== null) {
             $query = $query->where($versionColumn, $state['version']);
@@ -456,9 +455,43 @@ final class UnitOfWork
     private function change(ChangeKind $kind, object $entity, array $row, array $before, array $after, bool $soft = false): Change
     {
         $metadata = $this->registry->metadata($entity::class);
-        $id = $row[$metadata->idColumn()->column] ?? null;
 
-        return new Change($kind, $entity, $metadata->class, \is_int($id) || \is_string($id) ? $id : '', $this->byProperty($metadata, $before), $this->byProperty($metadata, $after), $soft);
+        return new Change($kind, $entity, $metadata->class, $this->keyOf($metadata, $row), $this->byProperty($metadata, $before), $this->byProperty($metadata, $after), $soft);
+    }
+
+    /**
+     * The id, or for a composite key the key values by property.
+     *
+     * @param array<string, string|int|float|bool|null> $row
+     *
+     * @return int|string|array<string, int|string>
+     */
+    private function keyOf(EntityMetadata $metadata, array $row): int|string|array
+    {
+        $key = [];
+
+        foreach ($metadata->keyColumns() as $column) {
+            $value = $row[$column->column] ?? null;
+            $key[$column->property] = \is_int($value) || \is_string($value) ? $value : '';
+        }
+
+        return $metadata->hasCompositeKey() ? $key : reset($key);
+    }
+
+    /**
+     * The row a snapshot came from: WHERE on every key column.
+     *
+     * @param array<string, string|int|float|bool|null> $snapshot
+     */
+    private function byKey(EntityMetadata $metadata, array $snapshot): QueryBuilder
+    {
+        $query = $this->connection->table($metadata->table);
+
+        foreach ($metadata->keyColumns() as $column) {
+            $query = $query->where($column->column, $snapshot[$column->column] ?? null);
+        }
+
+        return $query;
     }
 
     /**
@@ -485,11 +518,11 @@ final class UnitOfWork
     private function forget(object $entity): void
     {
         $metadata = $this->registry->metadata($entity::class);
-        $id = $this->managed[$entity]['snapshot'][$metadata->idColumn()->column] ?? null;
+        $identity = $metadata->identity($this->managed[$entity]['snapshot']);
         unset($this->managed[$entity]);
 
-        if (\is_int($id) || \is_string($id)) {
-            unset($this->identity[$metadata->class][(string) $id]);
+        if ($identity !== null) {
+            unset($this->identity[$metadata->class][$identity]);
         }
     }
 }

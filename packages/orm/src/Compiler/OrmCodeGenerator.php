@@ -150,6 +150,7 @@ final class OrmCodeGenerator
             $entity->versionProperty === null ? 'null' : self::literal($entity->versionProperty),
             '[' . implode(', ', array_map(self::literal(...), $entity->scopes)) . ']',
             '[' . implode(', ', array_map(self::literal(...), $entity->selectColumns)) . ']',
+            '[' . implode(', ', array_map(static fn(string $property): string => self::literal(CodeNames::property($property)), $entity->keyProperties)) . ']',
         ]) . ')';
     }
 

@@ -6,6 +6,7 @@ namespace Trunk\Orm\Mapping;
 
 use BackedEnum;
 use BcMath\Number;
+use Closure;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -128,17 +129,22 @@ final class MetadataFactory
             $errors[] = $where('table() is missing or is not a plain SQL name (letters, digits, underscores).');
         }
 
-        if ($builder->id === null) {
-            $errors[] = $where('declare the primary key with id().');
+        if ($builder->id === null && $builder->key === []) {
+            $errors[] = $where('declare the primary key with id() (one column) or key() (several).');
 
             return $errors;
         }
 
-        if (!\in_array($builder->id->type, [Type::Int, Type::String], true)) {
+        if ($builder->id !== null && $builder->key !== []) {
+            $errors[] = $where('declare the primary key with id() or with key(), not both.');
+        }
+
+        if ($builder->id !== null && !\in_array($builder->id->type, [Type::Int, Type::String], true)) {
             $errors[] = $where('the id must be an int or a string.');
         }
 
-        $all = [$builder->id, ...$builder->columns];
+        $errors = [...$errors, ...$this->keyProblems($builder, $where)];
+        $all = array_values(array_filter([$builder->id, ...$builder->columns], static fn(?ColumnSpec $spec): bool => $spec !== null));
         $properties = [];
         $columns = [];
 
@@ -199,11 +205,49 @@ final class MetadataFactory
             }
         }
 
-        if ($builder->versionProperty !== null && $builder->id->property === $builder->versionProperty) {
+        if ($builder->versionProperty !== null && $builder->id?->property === $builder->versionProperty) {
             $errors[] = $where('the version cannot be the id.');
         }
 
         return [...$errors, ...$this->reflect($entity, $builder, $all)];
+    }
+
+    /**
+     * A composite key: at least two mapped properties, each an int or a string that is always set.
+     *
+     * @param Closure(string): string $where
+     *
+     * @return list<string>
+     */
+    private function keyProblems(MapBuilder $builder, Closure $where): array
+    {
+        if ($builder->key === []) {
+            return [];
+        }
+
+        if (\count($builder->key) < 2 || \count(array_unique($builder->key)) !== \count($builder->key)) {
+            return [$where('key() takes two or more different properties; use id() for a key of one column.')];
+        }
+
+        $specs = [];
+
+        foreach ($builder->columns as $spec) {
+            $specs[$spec->property] = $spec;
+        }
+
+        $errors = [];
+
+        foreach ($builder->key as $property) {
+            $spec = $specs[$property] ?? null;
+
+            if ($spec === null) {
+                $errors[] = $where(\sprintf('key() names "%s", which is not mapped; map it first (e.g. ->int(\'%s\')).', self::printable($property), self::printable($property)));
+            } elseif (!\in_array($spec->type, [Type::Int, Type::String], true) || $spec->nullable || $spec->hidden || $property === $builder->versionProperty || $property === $builder->softDeleteProperty) {
+                $errors[] = $where(\sprintf('key property "%s" must be an int or string that is never null, hidden, the version or the soft-delete column.', $property));
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -295,14 +339,15 @@ final class MetadataFactory
     {
         $id = $builder->id;
         $table = $builder->table;
+        $idProperty = $id->property ?? $builder->key[0] ?? null;
 
-        if ($id === null || $table === null) {
+        if ($idProperty === null || $table === null) {
             return null;
         }
 
         $columns = [];
 
-        foreach ([$id, ...$builder->columns] as $spec) {
+        foreach (array_filter([$id, ...$builder->columns], static fn(?ColumnSpec $spec): bool => $spec !== null) as $spec) {
             $columns[$spec->property] = new ColumnMetadata($spec->property, $spec->column, $spec->type, $spec->nullable, $spec->hidden, $spec->filterable, $spec->sortable, $spec->enum, $spec->scale);
         }
 
@@ -312,8 +357,14 @@ final class MetadataFactory
         foreach ($builder->relations as $relation) {
             $targetMap = $all[$relation->target] ?? null;
 
-            if ($targetMap === null || $targetMap->id === null) {
+            if ($targetMap === null || ($targetMap->id === null && $targetMap->key === [])) {
                 $errors[] = \sprintf('%s: relation "%s" targets %s, which has no entity map (add its map to orm.maps).', $entity, $relation->name, self::printable($relation->target));
+
+                continue;
+            }
+
+            if ($relation->kind === RelationKind::BelongsToMany && ($id === null || $targetMap->id === null)) {
+                $errors[] = \sprintf('%s: relation "%s" joins through a pivot table, which needs a single-column key on both sides; an entity with a composite key cannot take part.', $entity, $relation->name);
 
                 continue;
             }
@@ -332,7 +383,7 @@ final class MetadataFactory
         return new EntityMetadata(
             $entity,
             $table,
-            $id->property,
+            $idProperty,
             $builder->generatedId,
             $columns,
             $relations,
@@ -340,6 +391,7 @@ final class MetadataFactory
             $builder->versionProperty,
             $builder->scopes,
             array_values(array_map(static fn(ColumnMetadata $c): string => $c->column, array_filter($columns, static fn(ColumnMetadata $c): bool => !$c->hidden))),
+            $builder->key,
         );
     }
 
@@ -359,6 +411,14 @@ final class MetadataFactory
         } else {
             $foreignColumn = $ownColumns[$foreign] ?? null;
             $localColumn = $local === null ? $target->id?->column : ($targetColumns[$local] ?? null);
+        }
+
+        $composite = $local === null && ($foreignOnTarget ? $own->key !== [] : $target->key !== []);
+
+        if ($composite) {
+            $errors[] = \sprintf('%s: relation "%s" would join on a composite key; name the single column to join on (localKey for hasOne/hasMany, ownerKey for belongsTo).', $entity, $relation->name);
+
+            return new RelationMetadata($relation->name, $relation->kind, $relation->target, 'id', 'id');
         }
 
         if ($localColumn === null || $foreignColumn === null) {

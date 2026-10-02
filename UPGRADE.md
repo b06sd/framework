@@ -4,6 +4,7 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New `MapBuilder::key()` for composite primary keys; `Repository::find()` / `findOrFail()` also take an array (the key by property). `Change::$id` is `int|string|array` (an array for a composite key). Additive for existing maps; run `trunk build` again so build/orm.php carries the new key data.
 * New public types `Trunk\Orm\UnitOfWork\ChangeListener`, `Changes`, `Change` and `ChangeKind`, and a new container tag `orm.change_listener`. Additive. `EntityManager::__construct()` (internal) takes the listeners before the clock.
 * New capability **`storage`** (`packages/storage`, `Trunk\Storage`): public types `Storage`, `StorageModule` and `Exception\StorageException`; disks are Flysystem's own `League\Flysystem\FilesystemOperator`. Enable it with `trunk package:install storage`. New method `ResponseBuilder::download()` (additive).
 * **Breaking for custom user providers:** `Trunk\Auth\User\UserProvider` has three new methods: `changePassword(Authenticatable $user, string $hash, string $sessionVersion): void` (store both in one write), `markEmailVerified(Authenticatable $user, string $address, int $at): bool` (only while `$address` is still the user's) and `emailVerified(Authenticatable $user): bool`. The built-in `DatabaseUserProvider` has them; a provider of your own must add them.

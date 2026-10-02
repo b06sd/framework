@@ -21,6 +21,9 @@ final class MapBuilder
 
     public bool $generatedId = true;
 
+    /** @var list<string> the properties of a composite primary key (see key()) */
+    public array $key = [];
+
     /** @var list<ColumnSpec> */
     public array $columns = [];
 
@@ -57,6 +60,28 @@ final class MapBuilder
         $this->generatedId = $generated;
 
         return $this->id = new ColumnSpec($property, $column ?? self::snake($property), $type);
+    }
+
+    /**
+     * A primary key made of several mapped properties, for a row that is identified by more than one
+     * column (an order line by its order and line number). Map the properties first, each an int or a
+     * string; a composite key is never generated, so the values are set before persist(). Use id()
+     * for a key of one column.
+     *
+     *   $map->int('orderId');
+     *   $map->int('lineNo');
+     *   $map->key('orderId', 'lineNo');
+     */
+    public function key(string ...$properties): static
+    {
+        if ($this->key !== []) {
+            $this->errors[] = 'The map declares key() more than once.';
+        }
+
+        $this->key = array_values($properties);
+        $this->generatedId = false;
+
+        return $this;
     }
 
     public function string(string $property, ?string $column = null): ColumnSpec

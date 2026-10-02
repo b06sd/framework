@@ -14,6 +14,8 @@ use Trunk\Database\Schema\Blueprint;
 use Trunk\Database\Schema\Schema;
 use Trunk\Orm\Mapping\DevelopmentRegistry;
 use Trunk\Orm\UnitOfWork\EntityManager;
+use Trunk\Tests\Fixtures\Orm\InvoiceLine;
+use Trunk\Tests\Fixtures\Orm\LiveInvoiceLineMap;
 use Trunk\Tests\Fixtures\Orm\LiveStockItemMap;
 use Trunk\Tests\Fixtures\Orm\StockItem;
 use Trunk\Tests\Fixtures\Orm\Tag;
@@ -113,6 +115,44 @@ final class LiveDriversTest extends TestCase
             self::assertSame(['12345678901234.57', '0.000', '-1.5000'], [$fresh->price->value, $fresh->onHand->value, $fresh->cost?->value]);
         } finally {
             $schema->dropIfExists('trunk_live_stock');
+        }
+    }
+
+    #[DataProvider('drivers')]
+    public function test_composite_keys_find_update_and_page_on_a_real_server(string $driver): void
+    {
+        // Arrange
+        $connection = $this->connection($driver, new QueryLog());
+        $schema = new Schema($connection);
+        $schema->dropIfExists('trunk_live_lines');
+        $schema->create('trunk_live_lines', function (Blueprint $t): void {
+            $t->integer('invoice_id');
+            $t->integer('line_no');
+            $t->string('sku');
+            $t->integer('quantity');
+            $t->primary(['invoice_id', 'line_no']);
+        });
+
+        try {
+            $manager = new EntityManager($connection, new DevelopmentRegistry([LiveInvoiceLineMap::class]));
+
+            foreach ([[1, 1], [1, 2], [1, 3], [2, 1], [2, 2]] as [$invoice, $line]) {
+                $manager->persist(new InvoiceLine($invoice, $line, 'S' . $invoice . $line));
+            }
+
+            $manager->flush();
+
+            // Act
+            $fresh = new EntityManager($connection, new DevelopmentRegistry([LiveInvoiceLineMap::class]));
+            $line = $fresh->repository(InvoiceLine::class)->findOrFail(['invoiceId' => 1, 'lineNo' => 2]);
+            $line->quantity = 7;
+            $fresh->flush();
+            $paged = array_map(static fn(InvoiceLine $l): string => $l->invoiceId . '-' . $l->lineNo . ':' . $l->quantity, iterator_to_array(new EntityManager($connection, new DevelopmentRegistry([LiveInvoiceLineMap::class]))->repository(InvoiceLine::class)->query()->cursor(2), false));
+
+            // Assert
+            self::assertSame(['1-1:1', '1-2:7', '1-3:1', '2-1:1', '2-2:1'], $paged);
+        } finally {
+            $schema->dropIfExists('trunk_live_lines');
         }
     }
 
