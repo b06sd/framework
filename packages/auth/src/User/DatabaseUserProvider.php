@@ -38,6 +38,32 @@ final readonly class DatabaseUserProvider implements UserProvider
         $this->connection->table($this->settings->table)->where($this->settings->id, '=', $user->authId())->update([$this->settings->password => $hash]);
     }
 
+    public function changePassword(Authenticatable $user, string $hash, string $sessionVersion): void
+    {
+        $this->connection->table($this->settings->table)->where($this->settings->id, '=', $user->authId())->update([$this->settings->password => $hash, $this->settings->sessionVersion => $sessionVersion]);
+    }
+
+    public function markEmailVerified(Authenticatable $user, string $address, int $at): bool
+    {
+        if (!self::isPlain($address)) {
+            return false;
+        }
+
+        return $this->connection->table($this->settings->table)
+            ->where($this->settings->id, '=', $user->authId())
+            ->where($this->settings->identifier, '=', $address)
+            ->update([$this->settings->verifiedAt => $at]) === 1;
+    }
+
+    public function emailVerified(Authenticatable $user): bool
+    {
+        if ($user instanceof DatabaseUser && \array_key_exists($this->settings->verifiedAt, $user->attributes)) {
+            return $user->attributes[$this->settings->verifiedAt] !== null;
+        }
+
+        return $this->connection->table($this->settings->table)->where($this->settings->id, '=', $user->authId())->value($this->settings->verifiedAt) !== null;
+    }
+
     /**
      * Control characters never belong in an identifier, and a NUL would be cut off by some database
      * drivers, so "ada@example.com" and "ada@example.com\0" would find the same account (and get

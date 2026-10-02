@@ -22,6 +22,8 @@ final readonly class AuthSettings
         public TokenSettings $tokens = new TokenSettings(),
         public ThrottleSettings $throttle = new ThrottleSettings(),
         public string $loginPath = '/login',
+        public LinkSettings $links = new LinkSettings(),
+        public string $verifyPath = '/verify-email',
     ) {
         $problems = $this->problems();
 
@@ -39,11 +41,13 @@ final readonly class AuthSettings
 
         return new self(
             new PasswordSettings($string('auth.password.algorithm', $d->password->algorithm), $int('auth.password.memory_cost', $d->password->memoryCost), $int('auth.password.time_cost', $d->password->timeCost), $int('auth.password.threads', $d->password->threads), $int('auth.password.min_length', $d->password->minLength), $int('auth.password.max_length', $d->password->maxLength)),
-            new UserSettings($string('auth.users.table', $d->users->table), $string('auth.users.id', $d->users->id), $string('auth.users.identifier', $d->users->identifier), $string('auth.users.password', $d->users->password), $string('auth.users.session_version', $d->users->sessionVersion)),
+            new UserSettings($string('auth.users.table', $d->users->table), $string('auth.users.id', $d->users->id), $string('auth.users.identifier', $d->users->identifier), $string('auth.users.password', $d->users->password), $string('auth.users.session_version', $d->users->sessionVersion), $string('auth.users.verified_at', $d->users->verifiedAt)),
             new SessionSettings($string('auth.session.store', $d->session->store), $string('auth.session.table', $d->session->table), $string('auth.session.path', $d->session->path), $string('auth.session.cookie', $d->session->cookie), $int('auth.session.idle_timeout', $d->session->idleTimeout), $int('auth.session.lifetime', $d->session->lifetime), $string('auth.session.same_site', $d->session->sameSite), $bool('auth.session.secure', $d->session->secure)),
             new TokenSettings($string('auth.tokens.table', $d->tokens->table), $int('auth.tokens.ttl', $d->tokens->ttl), $int('auth.tokens.touch_interval', $d->tokens->touchInterval)),
             new ThrottleSettings($string('auth.throttle.table', $d->throttle->table), $int('auth.throttle.max_attempts', $d->throttle->maxAttempts), $int('auth.throttle.max_attempts_per_ip', $d->throttle->maxAttemptsPerIp), $int('auth.throttle.window', $d->throttle->window), $int('auth.throttle.max_new_sessions_per_ip', $d->throttle->maxNewSessionsPerIp)),
             $string('auth.login_path', $d->loginPath),
+            new LinkSettings($string('auth.links.table', $d->links->table), $int('auth.links.reset_ttl', $d->links->resetTtl), $int('auth.links.verify_ttl', $d->links->verifyTtl), $int('auth.links.resend_after', $d->links->resendAfter)),
+            $string('auth.verify_path', $d->verifyPath),
         );
     }
 
@@ -55,7 +59,7 @@ final readonly class AuthSettings
         $p = [];
         $name = static fn(string $value): bool => preg_match(self::NAME, $value) === 1;
 
-        foreach (['auth.users.table' => $this->users->table, 'auth.users.id' => $this->users->id, 'auth.users.identifier' => $this->users->identifier, 'auth.users.password' => $this->users->password, 'auth.users.session_version' => $this->users->sessionVersion, 'auth.session.table' => $this->session->table, 'auth.tokens.table' => $this->tokens->table, 'auth.throttle.table' => $this->throttle->table] as $key => $value) {
+        foreach (['auth.users.table' => $this->users->table, 'auth.users.id' => $this->users->id, 'auth.users.identifier' => $this->users->identifier, 'auth.users.password' => $this->users->password, 'auth.users.session_version' => $this->users->sessionVersion, 'auth.users.verified_at' => $this->users->verifiedAt, 'auth.links.table' => $this->links->table, 'auth.session.table' => $this->session->table, 'auth.tokens.table' => $this->tokens->table, 'auth.throttle.table' => $this->throttle->table] as $key => $value) {
             if (!$name($value)) {
                 $p[] = $key . ' must be a plain table or column name (letters, digits, underscore).';
             }
@@ -111,6 +115,14 @@ final readonly class AuthSettings
 
         if (preg_match('#^/(?!/)[^\s\\\\]*$#D', $this->loginPath) !== 1) {
             $p[] = 'auth.login_path must be a local path starting with a single "/".';
+        }
+
+        if (preg_match('#^/(?!/)[^\s\\\\]*$#D', $this->verifyPath) !== 1) {
+            $p[] = 'auth.verify_path must be a local path starting with a single "/".';
+        }
+
+        if ($this->links->resetTtl < 60 || $this->links->resetTtl > 86_400 || $this->links->verifyTtl < 60 || $this->links->verifyTtl > 2_592_000 || $this->links->resendAfter < 0 || $this->links->resendAfter > 3600) {
+            $p[] = 'auth.links: reset_ttl must be 60 to 86400 seconds, verify_ttl 60 to 2592000, resend_after 0 to 3600.';
         }
 
         return $p;

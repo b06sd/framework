@@ -41,4 +41,4 @@ Every example in these guides was run in a real project created with `trunk new`
 
 ## Status
 
-Version 0.1 (pre-release). Until 1.0 a minor release may change public API; every change is listed in `UPGRADE.md`. Not built yet: remember-me cookies, password reset and email verification, two-factor, OAuth/OIDC, WebAuthn, session stores other than database, file and array.
+Version 0.1 (pre-release). Until 1.0 a minor release may change public API; every change is listed in `UPGRADE.md`. Not built yet: remember-me cookies, two-factor, OAuth/OIDC, WebAuthn, session stores other than database, file and array.

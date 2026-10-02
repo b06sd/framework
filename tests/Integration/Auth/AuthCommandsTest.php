@@ -9,9 +9,11 @@ use Trunk\Auth\Console\AuthPruneCommand;
 use Trunk\Auth\Console\AuthTableCommand;
 use Trunk\Auth\Console\AuthTables;
 use Trunk\Auth\Console\AuthTokenCommand;
+use Trunk\Auth\Link\OneTimeLinks;
 use Trunk\Auth\Session\ArraySessionStore;
 use Trunk\Auth\Session\SessionRecord;
 use Trunk\Auth\Settings\AuthSettings;
+use Trunk\Auth\Settings\LinkSettings;
 use Trunk\Auth\Settings\SessionSettings;
 use Trunk\Auth\Settings\ThrottleSettings;
 use Trunk\Auth\Settings\TokenSettings;
@@ -137,10 +139,10 @@ final class AuthCommandsTest extends TestCase
         $capture = new OutputCapture();
 
         // Act
-        new AuthPruneCommand($sessions, $sessionSettings, $store, $throttle, $clock)->handle(Input::fromArgv(['trunk', 'auth:prune']), $capture->output);
+        new AuthPruneCommand($sessions, $sessionSettings, $store, $throttle, $clock, new OneTimeLinks($app->connection, new LinkSettings(), $this->provider($app), $clock))->handle(Input::fromArgv(['trunk', 'auth:prune']), $capture->output);
 
         // Assert
-        self::assertStringContainsString('Removed 1 session(s), 1 token(s) and 2 throttle counter(s).', $capture->stdout());
+        self::assertStringContainsString('Removed 1 session(s), 1 token(s), 2 throttle counter(s) and 0 link(s).', $capture->stdout());
         self::assertNull($store->find($old->token->id));
         self::assertNotNull($store->find($forever->token->id), 'a token that never expires is kept');
         self::assertNotNull($sessions->read(hash('sha256', 'live')));

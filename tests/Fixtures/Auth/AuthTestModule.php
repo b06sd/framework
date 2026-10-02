@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Trunk\Auth\Http\CsrfMiddleware;
 use Trunk\Auth\Http\RequireLogin;
 use Trunk\Auth\Http\RequireToken;
+use Trunk\Auth\Http\RequireVerifiedEmail;
 use Trunk\Auth\Http\SessionMiddleware;
 use Trunk\Container\ContainerBuilder;
 use Trunk\Contracts\Module;
@@ -36,6 +37,7 @@ final class AuthTestModule implements Module, RouteProvider
             $web->post('/logout', [AuthTestController::class, 'logout']);
             $web->get('/me', [AuthTestController::class, 'me'], middleware: [RequireLogin::class]);
             $web->get('/page', [AuthTestController::class, 'page'], middleware: [RequireLogin::class]);
+            $web->get('/verified', [AuthTestController::class, 'secret'], middleware: [RequireLogin::class, RequireVerifiedEmail::class]);
             $web->post('/put/{key}/{value}', [AuthTestController::class, 'put']);
             $web->get('/get/{key}', [AuthTestController::class, 'get']);
             $web->get('/flash/set', [AuthTestController::class, 'flashSet']);
@@ -43,6 +45,7 @@ final class AuthTestModule implements Module, RouteProvider
         }, middleware: [SessionMiddleware::class, CsrfMiddleware::class]);
         $routes->group('/api', static function (RouteCollector $api): void {
             $api->get('/whoami', [AuthTestController::class, 'whoami']);
+            $api->get('/verified', [AuthTestController::class, 'whoami'], middleware: [RequireVerifiedEmail::class]);
         }, middleware: [RequireToken::class]);
     }
 }

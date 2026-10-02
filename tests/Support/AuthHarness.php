@@ -8,6 +8,7 @@ use Trunk\Auth\Console\AuthTables;
 use Trunk\Auth\Password\NativePasswordHasher;
 use Trunk\Auth\Password\PasswordHasher;
 use Trunk\Auth\Settings\AuthSettings;
+use Trunk\Auth\Settings\LinkSettings;
 use Trunk\Auth\Settings\PasswordSettings;
 use Trunk\Auth\Settings\SessionSettings;
 use Trunk\Auth\Settings\ThrottleSettings;
@@ -68,6 +69,7 @@ final class AuthHarness
             $session,
             new TokenSettings('trunk_at_tokens'),
             new ThrottleSettings('trunk_at_throttles', 3, 10, 600, 10),
+            links: new LinkSettings('trunk_at_links'),
         );
         $harness = new self(new ConnectionFactory()->make('auth-test', $config, $log), $settings);
         $harness->tables(true);
@@ -95,7 +97,7 @@ final class AuthHarness
     {
         $schema = new Schema($this->connection);
 
-        foreach (['trunk_at_users', 'trunk_at_throttles', 'trunk_at_tokens', 'trunk_at_sessions'] as $table) {
+        foreach (['trunk_at_links', 'trunk_at_users', 'trunk_at_throttles', 'trunk_at_tokens', 'trunk_at_sessions'] as $table) {
             $schema->dropIfExists($table);
         }
 

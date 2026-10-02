@@ -266,8 +266,10 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Auth\Http\CsrfMiddleware` (class)
 - `Trunk\Auth\Http\RequireLogin` (class)
 - `Trunk\Auth\Http\RequireToken` (class)
+- `Trunk\Auth\Http\RequireVerifiedEmail` (class)
 - `Trunk\Auth\Http\SessionMiddleware` (class)
 - `Trunk\Auth\Password\PasswordHasher` (interface)
+- `Trunk\Auth\Password\PasswordReset` (class)
 - `Trunk\Auth\Session\Session` (class)
 - `Trunk\Auth\Session\SessionRecord` (class)
 - `Trunk\Auth\Session\SessionStore` (interface)
@@ -279,6 +281,7 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Auth\User\Authenticatable` (interface)
 - `Trunk\Auth\User\DatabaseUser` (class)
 - `Trunk\Auth\User\UserProvider` (interface)
+- `Trunk\Auth\Verification\EmailVerification` (class)
 
 ### Testing
 

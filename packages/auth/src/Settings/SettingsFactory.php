@@ -41,4 +41,9 @@ final readonly class SettingsFactory
     {
         return $settings->throttle;
     }
+
+    public function links(AuthSettings $settings): LinkSettings
+    {
+        return $settings->links;
+    }
 }

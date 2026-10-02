@@ -36,7 +36,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `password.algorithm` | `argon2id` | or `bcrypt` (build fails if argon2id is missing from PHP) |
 | `password.memory_cost` `time_cost` `threads` | 65536 KiB, 4, 1 | argon2id cost |
 | `password.min_length` `max_length` | 12, 1024 | New passwords; anything over max is refused when checking |
-| `users.table` `id` `identifier` `password` `session_version` | `users`, `id`, `email`, `password`, `session_version` | The built-in provider's table and columns |
+| `users.table` `id` `identifier` `password` `session_version` `verified_at` | `users`, `id`, `email`, `password`, `session_version`, `email_verified_at` | The built-in provider's table and columns (`verified_at`: when the address was verified, nullable) |
 | `session.store` | `database` | `database`, `file`, `array` |
 | `session.table` `path` | `trunk_sessions`, `storage/sessions` | Database table / file directory |
 | `session.cookie` | `session` | Name (a `__Host-` prefix is added when secure) |
@@ -48,6 +48,8 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `throttle.max_attempts` `max_attempts_per_ip` `window` | 5, 30, 900 s | Failed-login limits |
 | `throttle.max_new_sessions_per_ip` | 60 | Anonymous sessions per address per window |
 | `login_path` | `/login` | Where `RequireLogin` sends browsers (a local path) |
+| `verify_path` | `/verify-email` | Where `RequireVerifiedEmail` sends browsers (a local path) |
+| `links.table` `reset_ttl` `verify_ttl` `resend_after` | `trunk_auth_links`, 3600 s, 86400 s, 60 s | One-time links for password reset and email verification; no new link within `resend_after` of the last |
 
 ## Other files
 

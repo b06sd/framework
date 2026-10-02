@@ -27,6 +27,8 @@ return static fn(Runtime $runtime): array => [
         'password' => 'password',
         // Changing this value signs a user out everywhere (change it whenever the password changes).
         'session_version' => 'session_version',
+        // When the email address was verified (a nullable integer column); used by EmailVerification.
+        'verified_at' => 'email_verified_at',
     ],
     'session' => [
         // database (works across servers), file, or array (tests).
@@ -61,4 +63,17 @@ return static fn(Runtime $runtime): array => [
     ],
     // Where RequireLogin sends browsers that are not signed in (API clients get 401).
     'login_path' => '/login',
+    // Where RequireVerifiedEmail sends signed-in browsers whose address is not verified (API clients get 403).
+    'verify_path' => '/verify-email',
+    // One-time links for password resets and email verification. Only a hash of each link is stored,
+    // and a link works once. Run `trunk auth:table --links` in a project made before these existed.
+    'links' => [
+        'table' => 'trunk_auth_links',
+        // Seconds a password-reset link works (one hour) and an email-verification link (one day).
+        'reset_ttl' => 3600,
+        'verify_ttl' => 86400,
+        // A new link for the same account and purpose is not issued within this many seconds of the
+        // last one, so a form cannot be used to flood someone's inbox.
+        'resend_after' => 60,
+    ],
 ];

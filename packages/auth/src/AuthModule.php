@@ -11,12 +11,15 @@ use Trunk\Auth\Authorization\Gate;
 use Trunk\Auth\Authorization\Policy;
 use Trunk\Auth\Csrf\Csrf;
 use Trunk\Auth\Doctor\AuthTablesCheck;
+use Trunk\Auth\Link\OneTimeLinks;
 use Trunk\Auth\Password\NativePasswordHasher;
 use Trunk\Auth\Password\PasswordHasher;
+use Trunk\Auth\Password\PasswordReset;
 use Trunk\Auth\Session\ConfiguredSessionStore;
 use Trunk\Auth\Session\Session;
 use Trunk\Auth\Session\SessionStore;
 use Trunk\Auth\Settings\AuthSettings;
+use Trunk\Auth\Settings\LinkSettings;
 use Trunk\Auth\Settings\PasswordSettings;
 use Trunk\Auth\Settings\SessionSettings;
 use Trunk\Auth\Settings\SettingsFactory;
@@ -27,6 +30,7 @@ use Trunk\Auth\Token\DatabaseTokenStore;
 use Trunk\Auth\Token\TokenStore;
 use Trunk\Auth\User\DatabaseUserProvider;
 use Trunk\Auth\User\UserProvider;
+use Trunk\Auth\Verification\EmailVerification;
 use Trunk\Compiler\Build\BuildContext;
 use Trunk\Compiler\Build\BuildContribution;
 use Trunk\Compiler\Exception\CompilationException;
@@ -75,6 +79,7 @@ final class AuthModule implements Module, BuildContributor, ModuleDependencies
         $builder->factory(SessionSettings::class, [SettingsFactory::class, 'session'], [new Reference(AuthSettings::class)]);
         $builder->factory(TokenSettings::class, [SettingsFactory::class, 'tokens'], [new Reference(AuthSettings::class)]);
         $builder->factory(ThrottleSettings::class, [SettingsFactory::class, 'throttle'], [new Reference(AuthSettings::class)]);
+        $builder->factory(LinkSettings::class, [SettingsFactory::class, 'links'], [new Reference(AuthSettings::class)]);
         $builder->bindDefault(Clock::class, SystemClock::class);
         $builder->bindDefault(SessionStore::class, ConfiguredSessionStore::class);
         $builder->scoped(Session::class);
@@ -84,7 +89,10 @@ final class AuthModule implements Module, BuildContributor, ModuleDependencies
         $builder->bindDefault(TokenStore::class, DatabaseTokenStore::class);
         $builder->bindDefault(PasswordHasher::class, NativePasswordHasher::class);
         $builder->bindDefault(UserProvider::class, DatabaseUserProvider::class);
-        $builder->service(AuthTablesCheck::class, AuthTablesCheck::class, [new Reference(Schema::class), new Reference(SessionSettings::class)]);
+        $builder->autowire(OneTimeLinks::class);
+        $builder->autowire(PasswordReset::class);
+        $builder->autowire(EmailVerification::class);
+        $builder->service(AuthTablesCheck::class, AuthTablesCheck::class, [new Reference(Schema::class), new Reference(SessionSettings::class), new Reference(LinkSettings::class)]);
         $builder->tag('trunk.doctor_check', AuthTablesCheck::class);
     }
 

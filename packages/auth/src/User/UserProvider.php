@@ -25,4 +25,18 @@ interface UserProvider
      * session version.
      */
     public function updatePasswordHash(Authenticatable $user, string $hash): void;
+
+    /**
+     * Stores a new password hash and a new session version together, in one write: every session and
+     * token issued before ends (a password reset or change).
+     */
+    public function changePassword(Authenticatable $user, string $hash, string $sessionVersion): void;
+
+    /**
+     * Records that `$address` was verified, only while it is still this user's address (an address
+     * changed after the link was sent is not verified by it). Returns whether it was recorded.
+     */
+    public function markEmailVerified(Authenticatable $user, string $address, int $at): bool;
+
+    public function emailVerified(Authenticatable $user): bool;
 }

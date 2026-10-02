@@ -12,5 +12,6 @@ final readonly class UserSettings
         public string $identifier = 'email',
         public string $password = 'password',
         public string $sessionVersion = 'session_version',
+        public string $verifiedAt = 'email_verified_at',
     ) {}
 }
