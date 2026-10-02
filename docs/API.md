@@ -317,4 +317,10 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Mail\MailModule` (class)
 - `Trunk\Mail\Mailer` (class)
 
+### Storage
+
+- `Trunk\Storage\Exception\StorageException` (class)
+- `Trunk\Storage\Storage` (class)
+- `Trunk\Storage\StorageModule` (class)
+
 <!-- api-list:end -->

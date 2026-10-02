@@ -128,6 +128,16 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Mail\\Console\\MailConsoleModule']],
             ),
             new Capability(
+                'storage',
+                'Storage',
+                'Files on the local disk, S3 or an S3-compatible service (Flysystem)',
+                ['Trunk\\Storage\\StorageModule'],
+                config: ['storage' => $root . '/packages/storage/resources/config/storage.php'],
+                directories: ['storage/app'],
+                env: ['STORAGE_DISK' => 'local'],
+                composer: ['league/flysystem' => '^3.0'],
+            ),
+            new Capability(
                 'rate-limit',
                 'Rate limit',
                 'A database-backed rate limiter and a ready-made middleware for any route',

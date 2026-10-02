@@ -1,0 +1,46 @@
+{
+    "name": "trunkphp/storage",
+    "description": "File storage for Trunk over Flysystem: local disk, S3 and S3-compatible services, memory for tests, and safe upload storing.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "league/flysystem": "^3.0",
+        "psr/http-message": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Storage\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "storage",
+                "name": "Storage",
+                "description": "Files on the local disk, S3 or an S3-compatible service (Flysystem)",
+                "modules": [
+                    "Trunk\\Storage\\StorageModule"
+                ],
+                "config": {
+                    "storage": "resources/config/storage.php"
+                },
+                "directories": [
+                    "storage/app"
+                ],
+                "env": {
+                    "STORAGE_DISK": "local"
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "suggest": {
+        "league/flysystem-aws-s3-v3": "Enables the s3 driver (Amazon S3, MinIO, Cloudflare R2...)",
+        "league/flysystem-memory": "Enables the memory driver, for tests"
+    }
+}

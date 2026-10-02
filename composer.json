@@ -12,6 +12,9 @@
         "ext-pdo": "*",
         "fakerphp/faker": "^1.24",
         "friendsofphp/php-cs-fixer": "^3.0",
+        "league/flysystem": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "league/flysystem-memory": "^3.0",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^12.0",
         "predis/predis": "^3.0",
@@ -42,7 +45,8 @@
             "Trunk\\Testing\\": "packages/testing/src/",
             "Trunk\\Schedule\\": "packages/schedule/src/",
             "Trunk\\Pipeline\\": "packages/pipeline/src/",
-            "Trunk\\Mail\\": "packages/mail/src/"
+            "Trunk\\Mail\\": "packages/mail/src/",
+            "Trunk\\Storage\\": "packages/storage/src/"
         }
     },
     "autoload-dev": {

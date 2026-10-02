@@ -52,6 +52,7 @@
             <directory>packages/schedule/src</directory>
             <directory>packages/pipeline/src</directory>
             <directory>packages/mail/src</directory>
+            <directory>packages/storage/src</directory>
         </include>
     </source>
 </phpunit>

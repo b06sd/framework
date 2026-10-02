@@ -142,6 +142,28 @@ final class RealInstallTest extends TestCase
         self::assertStringContainsString('Subject: Trunk mail test', (string) file_get_contents($transcript));
     }
 
+    public function test_storage_installs_flysystem_and_serves_a_stored_file_from_the_production_build(): void
+    {
+        // Arrange
+        $project = $this->project = new ScaffoldedProject('stored', 'api', realInstall: true);
+        file_put_contents($project->directory . '/app/Controllers/FileController.php', "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Controllers;\n\nuse Psr\\Http\\Message\\ResponseInterface;\nuse Trunk\\Http\\Response\\ResponseBuilder;\nuse Trunk\\Storage\\Storage;\n\nfinal readonly class FileController\n{\n    public function __construct(private Storage \$storage, private ResponseBuilder \$responses) {}\n\n    public function show(): ResponseInterface\n    {\n        \$this->storage->disk()->write('notes/hello.txt', 'stored by flysystem');\n\n        return \$this->responses->download(\$this->storage->disk()->readStream('notes/hello.txt'), 'hello.txt', 'text/plain');\n    }\n}\n");
+        file_put_contents($project->directory . '/routes/api.php', "<?php\n\ndeclare(strict_types=1);\n\nuse App\\Controllers\\FileController;\nuse Trunk\\Router\\Definition\\RouteCollector;\n\nreturn static function (RouteCollector \$routes): void {\n    \$routes->get('/file', [FileController::class, 'show']);\n};\n");
+
+        // Act
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'storage']);
+        [$doctorCode, $doctorOut] = $project->trunk(['doctor']);
+        [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+        [, $body] = $project->request('GET', '/file', 'production');
+
+        // Assert
+        self::assertSame(0, $installCode, $installOut . $installErr);
+        self::assertDirectoryExists($project->directory . '/vendor/league/flysystem', 'package:install ran a real composer require');
+        self::assertSame(0, $doctorCode, $doctorOut);
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertSame('stored by flysystem', $body);
+        self::assertSame('0640', substr(\sprintf('%o', fileperms($project->directory . '/storage/app/notes/hello.txt')), -4));
+    }
+
     public function test_a_fresh_web_project_serves_its_page_and_its_static_files_over_a_real_http_server(): void
     {
         // Arrange
