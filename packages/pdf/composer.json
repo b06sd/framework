@@ -1,0 +1,35 @@
+{
+    "name": "trunkphp/pdf",
+    "description": "HTML to PDF for Trunk over dompdf, locked down: no remote fetches, no PHP or JavaScript, local files only from one directory.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "dompdf/dompdf": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\Pdf\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "pdf",
+                "name": "PDF",
+                "description": "HTML to PDF (dompdf), for invoices, delivery notes and reports",
+                "modules": [
+                    "Trunk\\Pdf\\PdfModule"
+                ],
+                "config": {
+                    "pdf": "resources/config/pdf.php"
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

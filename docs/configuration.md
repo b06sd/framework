@@ -13,6 +13,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `QUEUE_CONNECTION` | Which `database.connections` entry holds the queue tables. |
 | `CACHE_DRIVER` `CACHE_PATH` `CACHE_PREFIX` `CACHE_REDIS_HOST` `CACHE_REDIS_PORT` `CACHE_REDIS_PASSWORD` `CACHE_REDIS_DATABASE` | Cache (`file`, `array`, `null`, `redis`). Only `redis` stays correct once an application runs on more than one server; it needs `composer require predis/predis`. |
 | `STORAGE_DISK` `S3_BUCKET` `S3_REGION` `S3_KEY` `S3_SECRET` `S3_ENDPOINT` `S3_PATH_STYLE` | Storage: the default disk, and the `s3` disk (`S3_SECRET` is a secret, never built). See [Storage](storage.md). |
+| `PDF_PAPER` | Default page size for PDFs (`a4`, `letter`...). See [PDF](pdf.md). |
 | `MAIL_DSN` `MAIL_FROM_ADDRESS` `MAIL_FROM_NAME` | Mail: where it goes (`smtp://...`, a provider, `file://default` in development, `null://null`) and the default sender. `MAIL_DSN` is a secret, never built into `build/`. See [Mail](mail.md). |
 | `LOG_LEVEL` `LOG_CHANNEL` | Logging (`debug`..`emergency`; `stderr`, `file`, `null`). |
 | `METRICS_TOKEN` | Enables `/metrics` (health capability). |
@@ -69,6 +70,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `health.php` | `metrics_token` (from `secret('METRICS_TOKEN')`), `debug` |
 | `ratelimit.php` | `table`, `max`, `window` |
 | `storage.php` | `default` (`STORAGE_DISK`), `disks.*` (`driver`: `local` with `root`, `s3` with `bucket` `region` `key` `secret` `endpoint` `path_style` `prefix`, or `memory`) |
+| `pdf.php` | `paper` (`PDF_PAPER`), `assets` (the only directory documents may load files from), `cache` |
 | `mail.php` | `dsn` (secret, `MAIL_DSN`), `from.address`, `from.name` |
 | `pipeline.php` | `pipelines` (discovered from `app/Pipelines/*.php`), `table`, `job` |
 

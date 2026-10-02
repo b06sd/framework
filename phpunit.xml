@@ -53,6 +53,7 @@
             <directory>packages/pipeline/src</directory>
             <directory>packages/mail/src</directory>
             <directory>packages/storage/src</directory>
+            <directory>packages/pdf/src</directory>
         </include>
     </source>
 </phpunit>

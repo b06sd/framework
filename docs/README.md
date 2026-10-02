@@ -27,6 +27,7 @@ Every example in these guides was run in a real project created with `trunk new`
 * [Auth: passwords, sessions, CSRF, tokens, throttling, policies](auth.md)
 * [Rate limiting: a database-backed counter and a ready-made middleware](rate-limiting.md)
 * [Storage: local disk, S3 and S3-compatible services, safe uploads and downloads](storage.md)
+* [PDF: HTML to PDF for invoices and reports, locked down](pdf.md)
 * [Mail: SMTP and providers over Symfony Mailer, a file transport for development](mail.md)
 * [Logging: structured records, request ids, levels per category, redaction](logging.md)
 * [Deployment](deployment.md)

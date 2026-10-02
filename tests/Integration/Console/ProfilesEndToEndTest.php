@@ -315,7 +315,7 @@ final class ProfilesEndToEndTest extends TestCase
         self::assertSame(0, $removeCode);
         self::assertStringNotContainsString('CacheModule', (string) file_get_contents($project->directory . '/trunk.php'));
         self::assertSame(0, $buildCode);
-        self::assertStringContainsString('Not compiled (not enabled): validation, console, cache, database, orm, queue, schedule, pipeline, mail, storage, rate-limit, observability, auth, health.', $buildOut);
+        self::assertStringContainsString('Not compiled (not enabled): validation, console, cache, database, orm, queue, schedule, pipeline, mail, storage, pdf, rate-limit, observability, auth, health.', $buildOut);
     }
 
     public function test_doctor_and_build_report_a_missing_requirement_with_the_fix(): void

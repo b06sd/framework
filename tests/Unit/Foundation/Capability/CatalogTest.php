@@ -34,7 +34,7 @@ final class CatalogTest extends TestCase
         $ids = array_map(static fn($c): string => $c->id, $catalog->all());
 
         // Assert
-        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'mail', 'storage', 'rate-limit', 'observability', 'auth', 'health'], $ids);
+        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'mail', 'storage', 'pdf', 'rate-limit', 'observability', 'auth', 'health'], $ids);
         self::assertSame(['http', 'tusk'], $catalog->find('mvc')?->requires);
         self::assertTrue($catalog->find('cache')?->isBuiltIn());
         self::assertFileExists($catalog->find('cache')->config['cache'] ?? '');

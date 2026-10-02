@@ -20,6 +20,7 @@ parameters:
         - packages/pipeline/src
         - packages/mail/src
         - packages/storage/src
+        - packages/pdf/src
         - tests
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: true

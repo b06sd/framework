@@ -164,6 +164,31 @@ final class RealInstallTest extends TestCase
         self::assertSame('0640', substr(\sprintf('%o', fileperms($project->directory . '/storage/app/notes/hello.txt')), -4));
     }
 
+    public function test_pdf_installs_dompdf_and_serves_an_invoice_rendered_from_a_template(): void
+    {
+        // Arrange: a web project (Tusk views), an invoice template and a controller that renders it to PDF
+        $project = $this->project = new ScaffoldedProject('billing', 'web', realInstall: true);
+        @mkdir($project->directory . '/resources/views/invoices', 0o755, true);
+        file_put_contents($project->directory . '/resources/views/invoices/show.tusk.php', "<html><body><h1>Invoice {{ number }}</h1><p>Total: {{ total }}</p></body></html>\n");
+        file_put_contents($project->directory . '/app/Controllers/InvoiceController.php', "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Controllers;\n\nuse Psr\\Http\\Message\\ResponseInterface;\nuse Trunk\\Http\\Response\\ResponseBuilder;\nuse Trunk\\Pdf\\Pdf;\nuse Trunk\\Tusk\\Renderer;\n\nfinal readonly class InvoiceController\n{\n    public function __construct(private Pdf \$pdf, private Renderer \$views, private ResponseBuilder \$responses) {}\n\n    public function show(): ResponseInterface\n    {\n        \$bytes = \$this->pdf->render(\$this->views->render('invoices/show', ['number' => 'INV-7', 'total' => '19.99']));\n\n        return \$this->responses->download(\$bytes, 'invoice-INV-7.pdf', 'application/pdf');\n    }\n}\n");
+        $routes = (string) file_get_contents($project->directory . '/routes/web.php');
+        file_put_contents($project->directory . '/routes/web.php', preg_replace('/\};\s*$/', "    \$routes->get('/invoice', [\\App\\Controllers\\InvoiceController::class, 'show']);\n};\n", $routes, 1));
+
+        // Act
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'pdf']);
+        [$doctorCode, $doctorOut] = $project->trunk(['doctor']);
+        [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+        [, $body, $error] = $project->request('GET', '/invoice', 'production');
+
+        // Assert
+        self::assertSame(0, $installCode, $installOut . $installErr);
+        self::assertDirectoryExists($project->directory . '/vendor/dompdf/dompdf', 'package:install ran a real composer require');
+        self::assertSame(0, $doctorCode, $doctorOut);
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertStringStartsWith('%PDF-', $body, $error);
+        self::assertStringContainsString('%%EOF', $body);
+    }
+
     public function test_a_fresh_web_project_serves_its_page_and_its_static_files_over_a_real_http_server(): void
     {
         // Arrange

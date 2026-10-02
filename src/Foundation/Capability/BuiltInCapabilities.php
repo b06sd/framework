@@ -138,6 +138,14 @@ final class BuiltInCapabilities
                 composer: ['league/flysystem' => '^3.0'],
             ),
             new Capability(
+                'pdf',
+                'PDF',
+                'HTML to PDF (dompdf), for invoices, delivery notes and reports',
+                ['Trunk\\Pdf\\PdfModule'],
+                config: ['pdf' => $root . '/packages/pdf/resources/config/pdf.php'],
+                composer: ['dompdf/dompdf' => '^3.1'],
+            ),
+            new Capability(
                 'rate-limit',
                 'Rate limit',
                 'A database-backed rate limiter and a ready-made middleware for any route',

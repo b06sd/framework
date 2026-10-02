@@ -327,4 +327,10 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Storage\Storage` (class)
 - `Trunk\Storage\StorageModule` (class)
 
+### Pdf
+
+- `Trunk\Pdf\Exception\PdfException` (class)
+- `Trunk\Pdf\Pdf` (class)
+- `Trunk\Pdf\PdfModule` (class)
+
 <!-- api-list:end -->

@@ -10,6 +10,7 @@
     },
     "require-dev": {
         "ext-pdo": "*",
+        "dompdf/dompdf": "^3.1",
         "fakerphp/faker": "^1.24",
         "friendsofphp/php-cs-fixer": "^3.0",
         "league/flysystem": "^3.0",
@@ -46,7 +47,8 @@
             "Trunk\\Schedule\\": "packages/schedule/src/",
             "Trunk\\Pipeline\\": "packages/pipeline/src/",
             "Trunk\\Mail\\": "packages/mail/src/",
-            "Trunk\\Storage\\": "packages/storage/src/"
+            "Trunk\\Storage\\": "packages/storage/src/",
+            "Trunk\\Pdf\\": "packages/pdf/src/"
         }
     },
     "autoload-dev": {
