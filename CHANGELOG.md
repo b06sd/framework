@@ -4,6 +4,8 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+## 0.1.5
+
 * Added: the `pdf` capability (`trunkphp/pdf`, `Trunk\Pdf`). `Pdf::render($html, $paper, $orientation)` turns HTML (a Tusk template, typically) into a PDF with dompdf, in pure PHP. Locked down because the HTML carries user text: it never fetches a URL, never runs PHP or JavaScript, and reads local files only from `pdf.assets`. Send it with `ResponseBuilder::download()`. `trunk package:install pdf` (installs `dompdf/dompdf`). See `docs/pdf.md`.
 * Added: composite primary keys in the ORM. `$map->key('orderId', 'lineNo')` names mapped int/string properties as the key; `find(['orderId' => 7, 'lineNo' => 2])`; updates and deletes match the whole key; `cursor()` pages through it without skipping rows; change listeners get the key by property. Relations join on single columns (named explicitly from a composite-keyed entity); `trunk build` refuses the rest with the fix. Checked on SQLite, MySQL and PostgreSQL.
 * Added: ORM change listeners. A service tagged `orm.change_listener` implementing `Trunk\Orm\UnitOfWork\ChangeListener` is told what each `flush()` wrote (`Changes` of `Change`: insert, update or delete, the entity, its id, and before/after values by property in stored form, only the changed properties for an update, hidden ones masked). It runs inside the flush's transaction, so an audit row written there commits or rolls back with the changes, and a failing listener rolls the flush back. The building block for audit trails, search indexes and outgoing events; see `docs/orm.md`.

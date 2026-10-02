@@ -4,6 +4,8 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+## 0.1.5
+
 * New capability **`pdf`** (`packages/pdf`, `Trunk\Pdf`): public types `Pdf`, `PdfModule` and `Exception\PdfException`. Enable it with `trunk package:install pdf`. Nothing changes for an existing project until it does.
 * New `MapBuilder::key()` for composite primary keys; `Repository::find()` / `findOrFail()` also take an array (the key by property). `Change::$id` is `int|string|array` (an array for a composite key). Additive for existing maps; run `trunk build` again so build/orm.php carries the new key data.
 * New public types `Trunk\Orm\UnitOfWork\ChangeListener`, `Changes`, `Change` and `ChangeKind`, and a new container tag `orm.change_listener`. Additive. `EntityManager::__construct()` (internal) takes the listeners before the clock.
