@@ -40,7 +40,7 @@ final class S3DiskTest extends TestCase
             'prefix' => $prefix,
         ]]]]));
         $disk = $storage->disk();
-        $png = "\x89PNG\r\n\x1a\n" . str_repeat("\0", 64);
+        $png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82";
 
         try {
             // Act
