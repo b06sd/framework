@@ -4,6 +4,7 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New capability **`jwt`** (in `packages/auth`, `Trunk\Auth\Jwt`): public types `JwtModule`, `JwtVerifier`, `JwtUserResolver`, `Claims`, `InvalidJwt` and `Trunk\Auth\Http\RequireJwt`; new method `Auth::claims()`. Enable it with `trunk package:install jwt`, then set `JWT_ISSUER` and `JWT_AUDIENCE`. Nothing changes for an existing project until it does.
 * New capability **`openapi`** (`packages/openapi`, `Trunk\OpenApi`): public types `OpenApi`, `OpenApiModule`, `Attribute\Returns` and `Exception\OpenApiException`. It needs `validation`. Enable it with `trunk package:install openapi`. Nothing changes for an existing project until it does.
 * New attributes `Trunk\Router\Attribute\Body` and `Query`, and a new interface `Trunk\Http\Routing\InputBinder` (implemented by `RequestValidator`). `ArgumentKind` has two new cases, `Body` and `Query`: code that `match`es over every case needs arms for them. `trunkphp/validation` now requires `trunkphp/router`. Additive otherwise; `RequestValidator::validate()` is unchanged. Run `trunk build` again.
 

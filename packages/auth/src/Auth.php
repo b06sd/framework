@@ -7,6 +7,7 @@ namespace Trunk\Auth;
 use Psr\Http\Message\ServerRequestInterface;
 use SensitiveParameter;
 use Trunk\Auth\Exception\InvalidPasswordException;
+use Trunk\Auth\Jwt\Claims;
 use Trunk\Auth\Password\PasswordHasher;
 use Trunk\Auth\Session\Session;
 use Trunk\Auth\Throttle\LoginThrottle;
@@ -38,6 +39,8 @@ final class Auth
 
     /** @var list<string>|null abilities of the bearer token that authenticated this request */
     private ?array $tokenAbilities = null;
+
+    private ?Claims $claims = null;
 
     /** @internal wired by the container */
     public function __construct(
@@ -138,6 +141,7 @@ final class Auth
         $this->user = null;
         $this->resolved = true;
         $this->tokenAbilities = null;
+        $this->claims = null;
     }
 
     /**
@@ -175,6 +179,14 @@ final class Auth
     }
 
     /**
+     * The claims of the JWT that authenticated this request (`RequireJwt`), or null.
+     */
+    public function claims(): ?Claims
+    {
+        return $this->claims;
+    }
+
+    /**
      * @param list<string> $abilities
      *
      * @internal used by RequireToken
@@ -184,6 +196,20 @@ final class Auth
         $this->user = $user;
         $this->resolved = true;
         $this->tokenAbilities = $abilities;
+    }
+
+    /**
+     * The token's scopes become its abilities, as for an API token. The user is null when
+     * `jwt.user.match` is `none`.
+     *
+     * @internal used by RequireJwt
+     */
+    public function authenticatedByJwt(?Authenticatable $user, Claims $claims): void
+    {
+        $this->user = $user;
+        $this->resolved = true;
+        $this->tokenAbilities = $claims->scopes;
+        $this->claims = $claims;
     }
 
     private function upgrade(Authenticatable $user, #[SensitiveParameter] string $password, string $hash): void

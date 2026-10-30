@@ -172,6 +172,16 @@ final class BuiltInCapabilities
                 integrations: ['console' => ['Trunk\\Auth\\Console\\AuthConsoleModule']],
             ),
             new Capability(
+                'jwt',
+                'JWT',
+                'Access tokens (JWTs) from an identity provider such as Auth0, Clerk, Cognito, Entra ID or Supabase',
+                ['Trunk\\Auth\\Jwt\\JwtModule'],
+                requires: ['auth'],
+                config: ['jwt' => $root . '/packages/auth/resources/config/jwt.php'],
+                env: ['JWT_ISSUER' => '', 'JWT_AUDIENCE' => ''],
+                composer: ['firebase/php-jwt' => '^7.2'],
+            ),
+            new Capability(
                 'health',
                 'Health',
                 'Liveness and readiness endpoints, and an optional token-protected /metrics',

@@ -14,7 +14,8 @@
         }
     },
     "suggest": {
-        "trunkphp/console": "Enables auth:table, auth:token and auth:prune"
+        "trunkphp/console": "Enables auth:table, auth:token and auth:prune",
+        "firebase/php-jwt": "Verifies JWTs from an identity provider (the jwt capability: trunk package:install jwt)"
     },
     "extra": {
         "branch-alias": {

@@ -44,8 +44,9 @@ final class AuthApp
      * @param array<string, mixed> $auth       overrides for the `auth` configuration
      * @param list<class-string<\Trunk\Contracts\Module>> $extraModules
      * @param array<string, mixed> $logging    overrides for the `logging` configuration
+     * @param array<string, mixed> $configuration more configuration sections (`jwt`...)
      */
-    public function __construct(array $auth = [], array $extraModules = [], array $logging = [])
+    public function __construct(array $auth = [], array $extraModules = [], array $logging = [], array $configuration = [])
     {
         $this->clock = new FixedClock(time());
         $this->directory = sys_get_temp_dir() . '/trunk-authapp-' . bin2hex(random_bytes(4));
@@ -64,6 +65,7 @@ final class AuthApp
                 'logging' => [...['channel' => 'null', 'level' => 'error'], ...$logging],
                 'database' => ['default' => 'main', 'log_queries' => false, 'migrations' => $this->directory, 'connections' => ['main' => ['driver' => 'sqlite', 'database' => $database]]],
                 'auth' => $auth,
+                ...$configuration,
             ],
         );
     }

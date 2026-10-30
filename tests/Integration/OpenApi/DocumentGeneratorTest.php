@@ -43,7 +43,7 @@ final class DocumentGeneratorTest extends TestCase
         $paths = $this->keys('paths');
 
         // Assert
-        self::assertSame(['/me/orders/{id}', '/orders', '/orders/preview', '/orders/{id}', '/pages', '/pages/{page}', '/register', '/shops/{shop}/orders'], $paths);
+        self::assertSame(['/jwt/orders/{id}', '/me/orders/{id}', '/orders', '/orders/preview', '/orders/{id}', '/pages', '/pages/{page}', '/register', '/shops/{shop}/orders'], $paths);
         self::assertSame(['delete', 'get'], $this->keys('paths', '/orders/{id}'));
     }
 
@@ -135,7 +135,9 @@ final class DocumentGeneratorTest extends TestCase
         // Assert
         self::assertSame([['apiKey' => []]], $this->at('paths', '/orders/{id}', 'get', 'security'));
         self::assertSame(['type' => 'apiKey', 'in' => 'header', 'name' => 'X-Api-Key'], $this->at('components', 'securitySchemes', 'apiKey'));
-        self::assertSame(['apiKey', 'apiToken'], $this->keys('components', 'securitySchemes'));
+        self::assertSame(['apiKey', 'apiToken', 'jwt'], $this->keys('components', 'securitySchemes'));
+        self::assertSame([['jwt' => []]], $this->at('paths', '/jwt/orders/{id}', 'get', 'security'));
+        self::assertSame('JWT', $this->at('components', 'securitySchemes', 'jwt', 'bearerFormat'));
     }
 
     public function test_deprecated_handlers_and_undocumented_responses_are_marked(): void

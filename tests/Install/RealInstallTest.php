@@ -8,6 +8,7 @@ use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Trunk\Tests\Support\Cli;
+use Trunk\Tests\Support\JwtKit;
 use Trunk\Tests\Support\ScaffoldedProject;
 
 /**
@@ -317,6 +318,48 @@ final class RealInstallTest extends TestCase
         self::assertSame(0, $buildCode, $buildOut . $buildErr);
         self::assertFileExists($dir . '/build/openapi.json');
         self::assertStringContainsString('"code":"NOT_FOUND"', $productionSpec, 'production does not serve the document unless openapi.serve is on');
+    }
+
+    public function test_jwt_installs_php_jwt_and_accepts_a_providers_token_in_the_production_build(): void
+    {
+        // Arrange: a stand-in identity provider publishing its key set on this machine
+        $jwks = sys_get_temp_dir() . '/trunk-e2e-jwks-' . bin2hex(random_bytes(4)) . '.json';
+        file_put_contents($jwks, JwtKit::jwks(['k1' => JwtKit::shared()->rsa]));
+        $probe = stream_socket_server('tcp://127.0.0.1:0');
+        self::assertNotFalse($probe);
+        $address = (string) stream_socket_get_name($probe, false);
+        fclose($probe);
+        $provider = proc_open([\PHP_BINARY, '-S', $address, \dirname(__DIR__) . '/Support/jwks_server.php'], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, null, ['TRUNK_JWKS_FILE' => $jwks]);
+        self::assertIsResource($provider);
+        $issuer = 'http://' . $address . '/';
+
+        $project = $this->project = new ScaffoldedProject('partners', 'api', realInstall: true);
+        $dir = $project->directory;
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'jwt']);
+        file_put_contents($dir . '/.env', preg_replace(['/^JWT_ISSUER=.*$/m', '/^JWT_AUDIENCE=.*$/m'], ['JWT_ISSUER=' . $issuer, 'JWT_AUDIENCE=partners-api'], (string) file_get_contents($dir . '/.env')) ?? '');
+        file_put_contents($dir . '/config/jwt.php', str_replace("'match' => 'id'", "'match' => 'none'", (string) file_get_contents($dir . '/config/jwt.php')));
+        file_put_contents($dir . '/app/Controllers/PartnerController.php', "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Controllers;\n\nuse Psr\\Http\\Message\\ResponseInterface;\nuse Trunk\\Auth\\Auth;\nuse Trunk\\Http\\Response\\ResponseBuilder;\n\nfinal readonly class PartnerController\n{\n    public function __construct(private Auth \$auth, private ResponseBuilder \$responses) {}\n\n    public function me(): ResponseInterface\n    {\n        return \$this->responses->json(['partner' => \$this->auth->claims()?->subject, 'canExport' => \$this->auth->tokenCan('export')]);\n    }\n}\n");
+        $routes = (string) file_get_contents($dir . '/routes/api.php');
+        file_put_contents($dir . '/routes/api.php', str_replace("        \$api->get('/customers', ", "        \$api->get('/partner', [\\App\\Controllers\\PartnerController::class, 'me'], middleware: [\\Trunk\\Auth\\Http\\RequireJwt::class]);\n        \$api->get('/customers', ", $routes));
+        $token = JwtKit::sign(JwtKit::shared()->rsa, 'RS256', 'k1', ['iss' => $issuer, 'aud' => 'partners-api', 'sub' => 'acme', 'scope' => 'export'], time());
+
+        try {
+            // Act
+            [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+            [, $accepted, $acceptedErr] = $project->request('GET', '/api/partner', 'production', authorization: 'Bearer ' . $token);
+            [, $refused] = $project->request('GET', '/api/partner', 'production', accept: 'application/json', authorization: 'Bearer ' . JwtKit::sign(JwtKit::shared()->otherRsa, 'RS256', 'k1', ['iss' => $issuer, 'aud' => 'partners-api'], time()));
+        } finally {
+            proc_terminate($provider);
+            proc_close($provider);
+            @unlink($jwks);
+        }
+
+        // Assert
+        self::assertSame(0, $installCode, $installOut . $installErr);
+        self::assertDirectoryExists($dir . '/vendor/firebase/php-jwt', 'package:install ran a real composer require');
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertSame('{"partner":"acme","canExport":true}', $accepted, $acceptedErr);
+        self::assertStringContainsString('"code":"AUTHENTICATION_REQUIRED"', $refused);
     }
 
     public function test_enabling_a_capability_installs_what_it_needs(): void

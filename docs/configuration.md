@@ -16,6 +16,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `PDF_PAPER` | Default page size for PDFs (`a4`, `letter`...). See [PDF](pdf.md). |
 | `MAIL_DSN` `MAIL_FROM_ADDRESS` `MAIL_FROM_NAME` | Mail: where it goes (`smtp://...`, a provider, `file://default` in development, `null://null`) and the default sender. `MAIL_DSN` is a secret, never built into `build/`. See [Mail](mail.md). |
 | `LOG_LEVEL` `LOG_CHANNEL` | Logging (`debug`..`emergency`; `stderr`, `file`, `null`). |
+| `JWT_ISSUER` `JWT_AUDIENCE` `JWT_JWKS_URL` `JWT_SECRET` | JWTs from an identity provider (jwt capability): its issuer, your API's audience, its key set (default `<issuer>/.well-known/jwks.json`) and, for HS algorithms only, the shared secret (a secret, never built). See [Auth](auth.md#jwts-from-an-identity-provider). |
 | `METRICS_TOKEN` | Enables `/metrics` (health capability). |
 | `RATE_LIMIT_MAX` `RATE_LIMIT_WINDOW` | The limit `RateLimitMiddleware` enforces (default 60 per 60 seconds). |
 
@@ -71,6 +72,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `ratelimit.php` | `table`, `max`, `window` |
 | `storage.php` | `default` (`STORAGE_DISK`), `disks.*` (`driver`: `local` with `root`, `s3` with `bucket` `region` `key` `secret` `endpoint` `path_style` `prefix`, or `memory`) |
 | `pdf.php` | `paper` (`PDF_PAPER`), `assets` (the only directory documents may load files from), `cache` |
+| `jwt.php` | `issuer`, `audience`, `jwks_url`, `algorithms` (default `['RS256']`; `none` never), `secret` (HS only), `leeway` (30 s), `cache_ttl` (1 h), `cache`, `user.claim` / `user.match` (`id`, `identifier`, `none`), `scopes` (claims that become abilities) |
 | `openapi.php` | `title` (`APP_NAME`), `version`, `description`, `servers`, `serve` (GET /docs and /openapi.json; local only by default), `security` (your middleware => scheme) |
 | `mail.php` | `dsn` (secret, `MAIL_DSN`), `from.address`, `from.name` |
 | `pipeline.php` | `pipelines` (discovered from `app/Pipelines/*.php`), `table`, `job` |

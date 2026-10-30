@@ -15,6 +15,7 @@ Nothing runs on a route until you put its middleware there, so API routes and pu
 | `CsrfMiddleware` | Rejects unsafe requests without a valid token | SessionMiddleware |
 | `RequireLogin` | Browsers go to `auth.login_path`, everything else gets 401 | SessionMiddleware |
 | `RequireToken` | Bearer-token API authentication (no cookies, no CSRF) | |
+| `RequireJwt` | JWTs from your identity provider (`trunk package:install jwt`) | |
 | `RequireVerifiedEmail` | Only users with a verified address; browsers go to `auth.verify_path`, API clients get 403 `EMAIL_NOT_VERIFIED` | RequireLogin or RequireToken |
 
 Services (request-scoped, inject them): `Auth`, `Csrf`, `Session`, `Gate`. `TokenManager`, `PasswordReset` and `EmailVerification` are singletons.
@@ -200,10 +201,41 @@ if ($this->gate->allows('manage-users')) { ... }
 
 A class tagged `auth.policy` that does not implement `Policy` (or `auth.ability` / `Ability`) fails `trunk build`.
 
+## JWTs from an identity provider
+
+When users sign in somewhere else (Auth0, Clerk, Cognito, Entra ID, Supabase, Keycloak...) and your Next.js app calls the API with the provider's access token, Trunk verifies it. It never issues JWTs itself: for tokens of its own, the API tokens above are safer, since each one can be revoked.
+
+```bash
+trunk package:install jwt        # installs firebase/php-jwt; publishes config/jwt.php
+```
+
+```dotenv
+JWT_ISSUER=https://your-tenant.eu.auth0.com/     # exactly the tokens' "iss"
+JWT_AUDIENCE=https://api.example.com             # your API's identifier at the provider ("aud")
+```
+
+```php
+$routes->group('/api', static function (RouteCollector $api): void {
+    $api->get('/orders', [OrderController::class, 'index']);
+}, middleware: [RequireJwt::class]);
+```
+
+In the route, `$auth->user()` is the local user the token is about, `$auth->claims()` the token's claims (`->subject`, `->get('tenant')`), and the token's scopes (`scope`, `scp` and `permissions` claims) are its abilities: `$auth->tokenCan('read:orders')`, and `Gate` refuses what the token does not grant, exactly as for API tokens.
+
+What is checked: the signature, with a key from the provider's key set (`<issuer>/.well-known/jwks.json` unless `JWT_JWKS_URL` says otherwise), using only the algorithms in `jwt.algorithms` (`RS256` by default; `none` never, and a key from the key set is never used as an HMAC secret); `iss` exactly; `aud`; `exp` (required) and `nbf`, with 30 seconds of leeway; and `sub`. Every refusal is the same `401` (`WWW-Authenticate: Bearer error="invalid_token"`); the reason ("expired", "wrong audience") is logged at `info`, the token never. The key set is fetched over https (certificates checked, no redirects, 5 s, 1 MB at most), kept in `storage/cache` for an hour, refetched when a token names a key it does not have (the provider rotated its keys) but at most once a minute, and if the provider is down the keys already fetched keep working.
+
+Which local user: `jwt.user` says which claim names the user and how to find them. `match: 'id'` (default) when the claim (`sub`) is your users' id, as with Supabase; `match: 'identifier'` with `claim: 'email'` to find users by email (only tokens with `"email_verified": true` match); `match: 'none'` when there are no local users (machine clients): the route reads `$auth->claims()` and `$auth->user()` is null. A token for a user you do not have is a `401`. To look users up by an external id column, or to create them on first sight, bind your own `JwtUserResolver`:
+
+```php
+$builder->bind(JwtUserResolver::class, ExternalUsers::class);   // resolve(Claims $claims): ?Authenticatable
+```
+
+Providers that sign with a shared secret (Supabase's legacy JWT secret): `'algorithms' => ['HS256']` and `JWT_SECRET` (at least 32 bytes; a secret, never built). Outside HTTP (a WebSocket handshake), inject `JwtVerifier` and call `verify($token)`, which returns the `Claims` or throws `InvalidJwt` with the reason.
+
 ## Maintenance and measured cost
 
 `trunk auth:prune` (run it from cron) removes dead sessions, expired or long-revoked tokens, finished throttle windows and expired one-time links. On the reference laptop (PHP 8.5, SQLite file): an authenticated session request about 41 µs versus 17 µs for an unauthenticated route (one session read and one user read, no writes while the session is in use); bearer-token request 38 µs; login about 150 ms, almost all argon2id at the default 64 MiB / 4 passes (19 MiB / 2 passes, the OWASP minimum, is 19 ms). Lower `auth.password.memory_cost` / `time_cost` if login concurrency matters more than the margin.
 
 ## Not built yet
 
-Remember-me cookies, two-factor, OAuth/OIDC, WebAuthn, other session stores.
+Remember-me cookies, two-factor, signing in through OAuth/OIDC (verifying a provider's JWTs is built: see above), WebAuthn, other session stores.

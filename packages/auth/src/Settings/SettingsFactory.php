@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Trunk\Auth\Settings;
 
+use Trunk\Auth\Jwt\JwtSettings;
 use Trunk\Foundation\Configuration;
 
 /**
@@ -45,5 +46,10 @@ final readonly class SettingsFactory
     public function links(AuthSettings $settings): LinkSettings
     {
         return $settings->links;
+    }
+
+    public function jwt(Configuration $configuration): JwtSettings
+    {
+        return JwtSettings::fromConfiguration($configuration);
     }
 }
