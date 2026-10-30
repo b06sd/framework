@@ -200,6 +200,7 @@ final class CatalogTest extends TestCase
 
         // Act & Assert
         self::assertContains('symfony/mailer:^7.4||^8.0', $specs);
+        self::assertContains('symfony/mime:^7.4.22||^8.1.10', $specs);
 
         foreach ($specs as $spec) {
             self::assertTrue($runner->isPackageSpec($spec), $spec . ' would be refused by package:install');

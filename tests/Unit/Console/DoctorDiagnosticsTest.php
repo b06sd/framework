@@ -51,10 +51,19 @@ final class DoctorDiagnosticsTest extends TestCase
     {
         // Arrange & Act
         [, $output] = $this->doctor([], ['APP_ENV' => 'local']);
-        $patched = (\PHP_VERSION_ID >= 80427 && \PHP_VERSION_ID < 80500) || \PHP_VERSION_ID >= 80512;
 
         // Assert
-        self::assertSame($patched, !str_contains($output, 'Update PHP to 8.4.27+ or 8.5.12+'));
+        self::assertSame(DoctorCommand::patchedPhp(\PHP_VERSION_ID), !str_contains($output, 'Update PHP to 8.4.27+ or 8.5.12+'));
+    }
+
+    public function test_only_patched_php_releases_count_as_patched(): void
+    {
+        // Act & Assert
+        self::assertFalse(DoctorCommand::patchedPhp(80426));
+        self::assertTrue(DoctorCommand::patchedPhp(80427));
+        self::assertFalse(DoctorCommand::patchedPhp(80500));
+        self::assertFalse(DoctorCommand::patchedPhp(80511));
+        self::assertTrue(DoctorCommand::patchedPhp(80512));
     }
 
     public function test_third_party_capabilities_are_listed_with_their_package_and_a_trust_warning(): void

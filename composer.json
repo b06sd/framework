@@ -27,7 +27,8 @@
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "psr/simple-cache": "^3.0",
-        "symfony/mailer": "^7.4 || ^8.0"
+        "symfony/mailer": "^7.4 || ^8.0",
+        "symfony/mime": "^7.4.22 || ^8.1.10"
     },
     "autoload": {
         "psr-4": {

@@ -124,7 +124,7 @@ final class BuiltInCapabilities
                 requires: ['logging'],
                 config: ['mail' => $root . '/packages/mail/resources/config/mail.php'],
                 env: ['MAIL_DSN' => 'file://default', 'MAIL_FROM_ADDRESS' => 'hello@example.com'],
-                composer: ['symfony/mailer' => '^7.4||^8.0'],
+                composer: ['symfony/mailer' => '^7.4||^8.0', 'symfony/mime' => '^7.4.22||^8.1.10'],
                 integrations: ['console' => ['Trunk\\Mail\\Console\\MailConsoleModule']],
             ),
             new Capability(

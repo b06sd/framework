@@ -46,7 +46,7 @@ final readonly class DoctorCommand implements Command
         $output->title('Trunk doctor: ' . $this->project->name . ' (' . $this->project->type . ')');
         $output->line();
 
-        $php = (\PHP_VERSION_ID >= 80427 && \PHP_VERSION_ID < 80500) || \PHP_VERSION_ID >= 80512;
+        $php = self::patchedPhp(\PHP_VERSION_ID);
         $problems += $this->report($output, $php, 'PHP ' . \PHP_VERSION, $php ? '' : 'Update PHP to 8.4.27+ or 8.5.12+ (or a later patched release).');
 
         $missing = array_values(array_filter(['mbstring', 'json', 'ctype', 'tokenizer'], static fn(string $e): bool => !\extension_loaded($e)));
@@ -81,6 +81,12 @@ final readonly class DoctorCommand implements Command
         $problems === 0 ? $output->success('Project is healthy.') : $output->failure(\sprintf('%d problem(s) found.', $problems));
 
         return $problems === 0 ? 0 : 1;
+    }
+
+    /** PHP 8.4.27+ or 8.5.12+: the first releases with the October 2026 security fixes. */
+    public static function patchedPhp(int $versionId): bool
+    {
+        return ($versionId >= 80427 && $versionId < 80500) || $versionId >= 80512;
     }
 
     private function capabilities(CommandOutput $output): int
@@ -225,11 +231,6 @@ final readonly class DoctorCommand implements Command
         }
 
         return $problems;
-    }
-
-    private function atLeast(int $required, int $actual): bool
-    {
-        return $actual >= $required;
     }
 
     private function build(CommandOutput $output, Environment $env): int
