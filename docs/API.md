@@ -336,4 +336,11 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Pdf\Pdf` (class)
 - `Trunk\Pdf\PdfModule` (class)
 
+### OpenApi
+
+- `Trunk\OpenApi\Attribute\Returns` (class)
+- `Trunk\OpenApi\Exception\OpenApiException` (class)
+- `Trunk\OpenApi\OpenApi` (class)
+- `Trunk\OpenApi\OpenApiModule` (class)
+
 <!-- api-list:end -->

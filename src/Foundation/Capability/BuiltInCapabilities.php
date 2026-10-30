@@ -179,6 +179,15 @@ final class BuiltInCapabilities
                 requires: ['http', 'diagnostics'],
                 config: ['health' => $root . '/resources/config/health.php'],
             ),
+            new Capability(
+                'openapi',
+                'OpenAPI',
+                'OpenAPI document of the routes, with Swagger UI in development',
+                ['Trunk\\OpenApi\\OpenApiModule'],
+                requires: ['http', 'validation'],
+                config: ['openapi' => $root . '/packages/openapi/resources/config/openapi.php'],
+                integrations: ['console' => ['Trunk\\OpenApi\\Console\\OpenApiConsoleModule']],
+            ),
         ];
     }
 }

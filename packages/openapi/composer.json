@@ -1,0 +1,41 @@
+{
+    "name": "trunkphp/openapi",
+    "description": "OpenAPI 3.1 documents generated from Trunk routes, validated request classes and #[Returns], with Swagger UI in development.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4.27 <8.5 || >=8.5.12 <9.0",
+        "trunkphp/http": "^0.1",
+        "trunkphp/router": "^0.1",
+        "trunkphp/validation": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\OpenApi\\": "src/"
+        }
+    },
+    "extra": {
+        "trunk": {
+            "capability": {
+                "id": "openapi",
+                "name": "OpenAPI",
+                "description": "OpenAPI document of the routes, with Swagger UI in development",
+                "modules": [
+                    "Trunk\\OpenApi\\OpenApiModule"
+                ],
+                "requires": [
+                    "http",
+                    "validation"
+                ],
+                "config": {
+                    "openapi": "resources/config/openapi.php"
+                }
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -71,6 +71,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `ratelimit.php` | `table`, `max`, `window` |
 | `storage.php` | `default` (`STORAGE_DISK`), `disks.*` (`driver`: `local` with `root`, `s3` with `bucket` `region` `key` `secret` `endpoint` `path_style` `prefix`, or `memory`) |
 | `pdf.php` | `paper` (`PDF_PAPER`), `assets` (the only directory documents may load files from), `cache` |
+| `openapi.php` | `title` (`APP_NAME`), `version`, `description`, `servers`, `serve` (GET /docs and /openapi.json; local only by default), `security` (your middleware => scheme) |
 | `mail.php` | `dsn` (secret, `MAIL_DSN`), `from.address`, `from.name` |
 | `pipeline.php` | `pipelines` (discovered from `app/Pipelines/*.php`), `table`, `job` |
 

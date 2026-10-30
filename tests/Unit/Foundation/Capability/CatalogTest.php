@@ -34,7 +34,7 @@ final class CatalogTest extends TestCase
         $ids = array_map(static fn($c): string => $c->id, $catalog->all());
 
         // Assert
-        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'mail', 'storage', 'pdf', 'rate-limit', 'observability', 'auth', 'health'], $ids);
+        self::assertSame(['http', 'logging', 'diagnostics', 'tusk', 'mvc', 'validation', 'console', 'cache', 'database', 'orm', 'queue', 'schedule', 'pipeline', 'mail', 'storage', 'pdf', 'rate-limit', 'observability', 'auth', 'health', 'openapi'], $ids);
         self::assertSame(['http', 'tusk'], $catalog->find('mvc')?->requires);
         self::assertTrue($catalog->find('cache')?->isBuiltIn());
         self::assertFileExists($catalog->find('cache')->config['cache'] ?? '');
@@ -179,7 +179,7 @@ final class CatalogTest extends TestCase
         self::assertSame([], $catalog->integrationModules([$cache]));
         self::assertSame([], $catalog->integrationModules([$console]));
         self::assertSame(['Trunk\\Cache\\Console\\CacheConsoleModule'], $catalog->integrationModules([$cache, $console]));
-        self::assertSame(['Trunk\\Validation\\Console\\ValidationConsoleModule', 'Trunk\\Cache\\Console\\CacheConsoleModule', 'Trunk\\Database\\Console\\DatabaseConsoleModule', 'Trunk\\Orm\\Console\\OrmConsoleModule', 'Trunk\\Queue\\Console\\QueueConsoleModule', 'Trunk\\Schedule\\Console\\ScheduleConsoleModule', 'Trunk\\Pipeline\\Console\\PipelineConsoleModule', 'Trunk\\Mail\\Console\\MailConsoleModule', 'Trunk\\RateLimit\\Console\\RateLimitConsoleModule', 'Trunk\\Auth\\Console\\AuthConsoleModule'], $catalog->allIntegrationModules());
+        self::assertSame(['Trunk\\Validation\\Console\\ValidationConsoleModule', 'Trunk\\Cache\\Console\\CacheConsoleModule', 'Trunk\\Database\\Console\\DatabaseConsoleModule', 'Trunk\\Orm\\Console\\OrmConsoleModule', 'Trunk\\Queue\\Console\\QueueConsoleModule', 'Trunk\\Schedule\\Console\\ScheduleConsoleModule', 'Trunk\\Pipeline\\Console\\PipelineConsoleModule', 'Trunk\\Mail\\Console\\MailConsoleModule', 'Trunk\\RateLimit\\Console\\RateLimitConsoleModule', 'Trunk\\Auth\\Console\\AuthConsoleModule', 'Trunk\\OpenApi\\Console\\OpenApiConsoleModule'], $catalog->allIntegrationModules());
         self::assertSame(['App\\AppModule'], $catalog->unclaimedModules([$cache, 'Trunk\\Cache\\Console\\CacheConsoleModule', 'App\\AppModule']));
     }
 

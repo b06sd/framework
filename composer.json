@@ -51,7 +51,8 @@
             "Trunk\\Pipeline\\": "packages/pipeline/src/",
             "Trunk\\Mail\\": "packages/mail/src/",
             "Trunk\\Storage\\": "packages/storage/src/",
-            "Trunk\\Pdf\\": "packages/pdf/src/"
+            "Trunk\\Pdf\\": "packages/pdf/src/",
+            "Trunk\\OpenApi\\": "packages/openapi/src/"
         }
     },
     "autoload-dev": {

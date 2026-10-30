@@ -21,6 +21,7 @@ parameters:
         - packages/mail/src
         - packages/storage/src
         - packages/pdf/src
+        - packages/openapi/src
         - tests
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: true

@@ -16,6 +16,8 @@ const password = 'correct horse battery';
 let directory;
 let appPort;
 let attackerPort;
+let docsPort;
+let docsDirectory;
 let servers = [];
 let browser;
 let chromeVersion;
@@ -66,6 +68,9 @@ before(async () => {
     attackerPort = await freePort();
     await start('router.php', appPort, '127.0.0.1', { TRUNK_BROWSER_DIR: directory, TRUNK_BROWSER_CONFIG: appConfig() });
     await start('attacker.php', attackerPort, 'localhost', { TRUNK_BROWSER_APP: app() });
+    docsDirectory = mkdtempSync(join(tmpdir(), 'trunk-browser-docs-'));
+    docsPort = await freePort();
+    await start('docs.php', docsPort, '127.0.0.1', { TRUNK_BROWSER_DIR: docsDirectory });
     browser = await chromium.launch({ executablePath: process.env.TRUNK_CHROME, headless: true });
     chromeVersion = browser.version();
     console.log(`# Chrome ${chromeVersion}, PHP ${execFileSync(php, ['-r', 'echo PHP_VERSION;'], { encoding: 'utf8' })}`);
@@ -82,6 +87,7 @@ after(async () => {
         }
     }
     rmSync(directory, { recursive: true, force: true });
+    rmSync(docsDirectory, { recursive: true, force: true });
 });
 
 describe('signing in and out with real forms', () => {
@@ -292,6 +298,27 @@ describe('security headers', () => {
         const missing = await page.goto(app('/nothing-here'));
         assert.equal(missing.status(), 404);
         assert.equal(missing.headers()['x-frame-options'], 'DENY', 'error pages carry the policy too');
+        await context.close();
+    });
+});
+
+describe('API documentation (openapi capability)', () => {
+    it('GET /docs runs the pinned Swagger UI under its own strict policy and lists every operation', async () => {
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        const problems = [];
+        page.on('console', (message) => { if (message.type() === 'error') problems.push(message.text()); });
+        page.on('pageerror', (error) => problems.push(error.message));
+        page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`); });
+        const response = await page.goto(`http://127.0.0.1:${docsPort}/docs`);
+        assert.equal(response.status(), 200);
+        assert.match(response.headers()['content-security-policy'], /^default-src 'none'; script-src https:\/\/cdn\.jsdelivr\.net 'sha256-/);
+        await page.waitForSelector('.opblock', { timeout: 20000 });
+        const operations = await page.$$eval('.opblock-summary-path', (nodes) => nodes.map((n) => n.getAttribute('data-path')));
+        assert.ok(operations.includes('/shops/{shop}/orders'), operations.join(', '));
+        assert.ok(operations.includes('/orders/{id}'));
+        assert.equal(await page.textContent('.title'), 'Shop API 1.0.0 OAS 3.1');
+        assert.deepEqual(problems, [], 'no script errors and no policy or integrity violations');
         await context.close();
     });
 });

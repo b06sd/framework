@@ -281,6 +281,44 @@ final class RealInstallTest extends TestCase
         }
     }
 
+    public function test_openapi_installs_and_documents_a_typed_body_route_in_development_and_from_the_build(): void
+    {
+        // Arrange: an API with a #[Body] handler described by #[Returns]
+        $project = $this->project = new ScaffoldedProject('catalog', 'api', realInstall: true);
+        $dir = $project->directory;
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'validation']);
+        $project->trunk(['package:install', 'console']);
+        [$openApiCode, $openApiOut, $openApiErr] = $project->trunk(['package:install', 'openapi']);
+        file_put_contents($dir . '/app/Requests/AddProduct.php', "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Requests;\n\nuse Trunk\\Validation\\Rules\\Length;\nuse Trunk\\Validation\\Rules\\Required;\n\nfinal readonly class AddProduct\n{\n    public function __construct(#[Required, Length(max: 40)] public string \$name) {}\n}\n");
+        file_put_contents($dir . '/app/Controllers/ProductController.php', "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Controllers;\n\nuse App\\Requests\\AddProduct;\nuse Psr\\Http\\Message\\ResponseInterface;\nuse Trunk\\Http\\Response\\ResponseBuilder;\nuse Trunk\\OpenApi\\Attribute\\Returns;\nuse Trunk\\Router\\Attribute\\Body;\n\nfinal readonly class ProductController\n{\n    public function __construct(private ResponseBuilder \$responses) {}\n\n    /**\n     * Add a product.\n     */\n    #[Returns(201, AddProduct::class)]\n    public function store(#[Body] AddProduct \$product): ResponseInterface\n    {\n        return \$this->responses->json(['name' => \$product->name], 201);\n    }\n}\n");
+        $routes = (string) file_get_contents($dir . '/routes/api.php');
+        file_put_contents($dir . '/routes/api.php', str_replace("        \$api->get('/customers', ", "        \$api->post('/products', [\\App\\Controllers\\ProductController::class, 'store'], 'products.store');\n        \$api->get('/customers', ", $routes));
+        [$doctorCode, $doctorOut] = $project->trunk(['doctor']);
+
+        // Act
+        [$writeCode, $writeOut, $writeErr] = $project->trunk(['openapi', 'docs/api.json']);
+        [, $localSpec, $localErr] = $project->request('GET', '/openapi.json', 'local');
+        [, $localDocs] = $project->request('GET', '/docs', 'local');
+        [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+        [, $productionSpec] = $project->request('GET', '/openapi.json', 'production', accept: 'application/json');
+
+        // Assert
+        self::assertSame([0, 0], [$installCode, $openApiCode], $installOut . $installErr . $openApiOut . $openApiErr);
+        self::assertSame(0, $doctorCode, $doctorOut);
+        self::assertSame(0, $writeCode, $writeOut . $writeErr);
+        $written = json_decode((string) file_get_contents($dir . '/docs/api.json'), true, flags: \JSON_THROW_ON_ERROR);
+        self::assertIsArray($written);
+        self::assertSame('Add a product', self::dig($written, 'paths', '/api/products', 'post', 'summary'));
+        self::assertSame(['type' => 'string', 'minLength' => 1, 'maxLength' => 40], self::dig($written, 'components', 'schemas', 'AddProduct', 'properties', 'name'));
+        $served = json_decode($localSpec, true);
+        self::assertIsArray($served, $localSpec . $localErr);
+        self::assertSame(['$ref' => '#/components/schemas/AddProductResponse'], self::dig($served, 'paths', '/api/products', 'post', 'responses', '201', 'content', 'application/json', 'schema'));
+        self::assertStringContainsString('swagger-ui-bundle.js', $localDocs);
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertFileExists($dir . '/build/openapi.json');
+        self::assertStringContainsString('"code":"NOT_FOUND"', $productionSpec, 'production does not serve the document unless openapi.serve is on');
+    }
+
     public function test_enabling_a_capability_installs_what_it_needs(): void
     {
         // Arrange
@@ -335,5 +373,14 @@ final class RealInstallTest extends TestCase
             proc_terminate($server);
             proc_close($server);
         }
+    }
+
+    private static function dig(mixed $data, string ...$path): mixed
+    {
+        foreach ($path as $key) {
+            $data = \is_array($data) ? ($data[$key] ?? null) : null;
+        }
+
+        return $data;
     }
 }
