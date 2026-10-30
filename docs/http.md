@@ -16,7 +16,7 @@ $routes->group('/admin', static function (RouteCollector $admin): void {
 
 Constraints: `int`, `alpha`, `alnum`, `slug`, `uuid`, `any` (matches slashes), or a single character class such as `[a-z]+` or `\d{2,4}`. Free-form regular expressions are refused. A parameter never contains an encoded slash.
 
-**Handler arguments are bound by name and type**: the request (`ServerRequestInterface $request`), route parameters (`int $id` converts and rejects overflow), and defaults. An argument that cannot be bound fails the **build** (and `trunk route:list` shows how each one is bound). Duplicate routes fail the build.
+**Handler arguments are bound by name and type**: the request (`ServerRequestInterface $request`), route parameters (`int $id` converts and rejects overflow), validated input (`#[Body] Signup $signup`, `#[Query] Filters $filters`, with the validation capability: see [Validation](validation.md)), and defaults. An argument that cannot be bound fails the **build** (and `trunk route:list` shows how each one is bound). Duplicate routes fail the build.
 
 Behaviour you get for free: `HEAD` runs the `GET` route (no body), a known path with the wrong method is `405` with an `Allow` header, and trailing slashes are not normalized (`/posts/` is a 404).
 

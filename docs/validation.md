@@ -25,26 +25,28 @@ final readonly class Signup
 
 ```php
 // app/Controllers/SignupController.php
+use Trunk\Router\Attribute\Body;
+
 final readonly class SignupController
 {
-    public function __construct(private RequestValidator $requests, private ResponseBuilder $responses) {}
+    public function __construct(private ResponseBuilder $responses) {}
 
-    public function store(ServerRequestInterface $request): ResponseInterface
+    public function store(#[Body] Signup $signup): ResponseInterface      // a valid Signup, or a 422
     {
-        $signup = $this->requests->validate(Signup::class, $request);   // a Signup, or a 422
-
         return $this->responses->json(['email' => $signup->email], 201);
     }
 }
 ```
 
-If `validate()` returns, every rule passed: holding a `Signup` *is* the proof. If not, it throws `Trunk\Error\ValidationException` (the one exception the whole framework uses for a 422), and the error pipeline answers:
+If the controller runs, every rule passed: holding a `Signup` *is* the proof. If not, `Trunk\Error\ValidationException` is thrown before the call (the one exception the whole framework uses for a 422), and the error pipeline answers:
 
 ```json
 {"error":{"code":"VALIDATION_FAILED","message":"The given data was invalid.","requestId":"...",
   "details":{"fields":{"email":["Must be a valid email address."],"age":["Must be at least 13."]},
              "rules":{"email":"email","age":"min"}}}}
 ```
+
+`#[Query] Filters $filters` does the same for the query string of a `GET` (a `GET` route cannot take a `#[Body]`, and the build says so). Both sit next to route parameters and the request: `update(int $id, #[Body] Rename $rename)`. A class used this way does not have to live in `app/Requests`: the build finds it through the route. Need the request object itself, or a validation in the middle of other work? Inject `RequestValidator` and call `$this->requests->validate(Signup::class, $request)`, which reads the input in exactly the same way.
 
 Field names are paths (`email`, `address.city`, `tags.0`). Each field reports its **first** failure, and `rules` gives that failure's stable code. Messages contain the field name and rule limits, never the submitted value.
 

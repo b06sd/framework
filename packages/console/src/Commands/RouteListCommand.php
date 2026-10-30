@@ -49,7 +49,12 @@ final readonly class RouteListCommand implements Command
         $rows = [];
 
         foreach ($table->routes as $route) {
-            $arguments = array_map(static fn(array $a): string => $a['kind'] === 'request' ? 'request' : ($a['kind'] === 'param' ? $a['name'] . ':' . $a['type'] : $a['name'] . '=default'), $route['args']);
+            $arguments = array_map(static fn(array $a): string => match ($a['kind']) {
+                'request' => 'request',
+                'param' => $a['name'] . ':' . $a['type'],
+                'body', 'query' => $a['name'] . ':' . $a['kind'] . '(' . substr(strrchr('\\' . $a['type'], '\\') ?: $a['type'], 1) . ')',
+                default => $a['name'] . '=default',
+            }, $route['args']);
             $rows[] = [implode('|', $route['methods']), $route['pattern'], $route['name'] ?? '-', $route['handler'][0] . '::' . $route['handler'][1], implode(', ', $arguments), implode(', ', array_map(static fn(string $m): string => substr(strrchr('\\' . $m, '\\') ?: $m, 1), $route['middleware']))];
         }
 

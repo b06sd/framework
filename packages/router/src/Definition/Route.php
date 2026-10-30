@@ -63,6 +63,16 @@ final readonly class Route
         $this->methods = array_values(array_unique($methods));
         $this->handler = self::normalizeHandler($handler, $pattern);
         $this->arguments = new ArgumentPlanner()->plan($this->handler[0], $this->handler[1], new PatternParser()->parse($pattern), $pattern);
+
+        $bodies = \count(array_filter($this->arguments, static fn(array $argument): bool => $argument['kind'] === ArgumentKind::Body->value));
+
+        if ($bodies > 1) {
+            throw new InvalidRouteException(\sprintf('Route "%s": a handler takes at most one #[Body].', $pattern));
+        }
+
+        if ($bodies === 1 && array_intersect($this->methods, ['GET', 'HEAD']) !== []) {
+            throw new InvalidRouteException(\sprintf('Route "%s": GET and HEAD requests have no body; use #[Query] instead of #[Body].', $pattern));
+        }
     }
 
     /**

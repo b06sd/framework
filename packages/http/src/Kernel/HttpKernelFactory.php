@@ -25,6 +25,7 @@ use Trunk\Http\Pipeline\MiddlewareCollector;
 use Trunk\Http\Pipeline\MiddlewareProvider;
 use Trunk\Http\Pipeline\Pipeline;
 use Trunk\Http\Routing\ControllerDispatcher;
+use Trunk\Http\Routing\RouteInputValidator;
 use Trunk\Http\Routing\RouteMiddlewareValidator;
 use Trunk\Http\Routing\RoutingMiddleware;
 use Trunk\Http\Security\SecurityHeaders;
@@ -62,7 +63,7 @@ final readonly class HttpKernelFactory
         }
 
         $table = new RouteCompiler()->compileProviders($routeProviders);
-        $problems = new RouteMiddlewareValidator()->errors($table);
+        $problems = [...new RouteMiddlewareValidator()->errors($table), ...new RouteInputValidator()->errors($table, $manifest->modules)];
 
         if ($problems !== []) {
             throw new CompilationException($problems);

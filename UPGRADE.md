@@ -4,6 +4,8 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+* New attributes `Trunk\Router\Attribute\Body` and `Query`, and a new interface `Trunk\Http\Routing\InputBinder` (implemented by `RequestValidator`). `ArgumentKind` has two new cases, `Body` and `Query`: code that `match`es over every case needs arms for them. `trunkphp/validation` now requires `trunkphp/router`. Additive otherwise; `RequestValidator::validate()` is unchanged. Run `trunk build` again.
+
 ## 0.1.6
 
 * Every package now requires `php: >=8.4.27 <8.5 || >=8.5.12 <9.0`. Update PHP (CLI and the FPM/Apache runtime) before running `composer update`, and update the `php` constraint in your project's `composer.json` to match. No API changes.

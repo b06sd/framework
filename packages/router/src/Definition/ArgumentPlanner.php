@@ -7,6 +7,9 @@ namespace Trunk\Router\Definition;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionMethod;
 use ReflectionNamedType;
+use ReflectionParameter;
+use Trunk\Router\Attribute\Body;
+use Trunk\Router\Attribute\Query;
 use Trunk\Router\Exception\InvalidRouteException;
 use Trunk\Router\Pattern\ParsedPattern;
 
@@ -57,6 +60,22 @@ final class ArgumentPlanner
                 continue;
             }
 
+            $input = $this->input($parameter);
+
+            if ($input !== null) {
+                if (isset($optional[$name])) {
+                    throw new InvalidRouteException($where . ' is a route parameter and cannot also be #[' . ucfirst($input->value) . '].');
+                }
+
+                if ($namedType === null || $namedType->isBuiltin() || $namedType->allowsNull() || !class_exists($namedType->getName())) {
+                    throw new InvalidRouteException($where . ' is #[' . ucfirst($input->value) . '] and must be typed with a request class (not nullable).');
+                }
+
+                $plan[] = ['kind' => $input->value, 'name' => $name, 'type' => $namedType->getName(), 'nullable' => false, 'hasDefault' => false, 'default' => null];
+
+                continue;
+            }
+
             if (isset($optional[$name])) {
                 if ($namedType === null || !$namedType->isBuiltin() || !\in_array($namedType->getName(), self::SCALARS, true)) {
                     throw new InvalidRouteException($where . ' must be typed int, float, bool or string to receive a route parameter.');
@@ -88,5 +107,17 @@ final class ArgumentPlanner
         }
 
         return $plan;
+    }
+
+    private function input(ReflectionParameter $parameter): ?ArgumentKind
+    {
+        $body = $parameter->getAttributes(Body::class) !== [];
+        $query = $parameter->getAttributes(Query::class) !== [];
+
+        if ($body && $query) {
+            throw new InvalidRouteException(\sprintf('Parameter $%s cannot be both #[Body] and #[Query].', $parameter->getName()));
+        }
+
+        return $body ? ArgumentKind::Body : ($query ? ArgumentKind::Query : null);
     }
 }

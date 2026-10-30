@@ -217,7 +217,7 @@ final readonly class Signup
     ) {}
 }
 
-$signup = $this->requests->validate(Signup::class, $request);   // inject RequestValidator; a Signup or a 422
+public function store(#[Body] Signup $signup): ResponseInterface   // a valid Signup, or a 422 before the call
 ```
 
 JSON stays strictly typed, form and query values are read strictly from text, backed enums, nested objects and lists of objects work, and a wrong type is a field error, never a server error. `trunk build` checks every request class and writes `build/validation.php`. Full guide: [docs/validation.md](docs/validation.md).

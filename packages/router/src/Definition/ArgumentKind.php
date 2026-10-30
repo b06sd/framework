@@ -14,4 +14,10 @@ enum ArgumentKind: string
 
     /** A constant default value. */
     case Default = 'default';
+
+    /** A request class validated from the body (`#[Body]`). */
+    case Body = 'body';
+
+    /** A request class validated from the query string (`#[Query]`). */
+    case Query = 'query';
 }

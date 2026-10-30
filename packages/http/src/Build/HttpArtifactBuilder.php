@@ -10,6 +10,7 @@ use Trunk\Foundation\Manifest\ModuleInstances;
 use Trunk\Foundation\Manifest\ModuleManifest;
 use Trunk\Http\Pipeline\MiddlewareCollector;
 use Trunk\Http\Pipeline\MiddlewareProvider;
+use Trunk\Http\Routing\RouteInputValidator;
 use Trunk\Http\Routing\RouteMiddlewareValidator;
 use Trunk\Router\Compiler\RouteArtifactWriter;
 use Trunk\Router\Exception\RouteCompilationException;
@@ -41,7 +42,7 @@ final readonly class HttpArtifactBuilder
             throw new CompilationException($e->errors);
         }
 
-        $problems = new RouteMiddlewareValidator()->errors($table);
+        $problems = [...new RouteMiddlewareValidator()->errors($table), ...new RouteInputValidator()->errors($table, $manifest->modules)];
 
         if ($problems !== []) {
             throw new CompilationException($problems);

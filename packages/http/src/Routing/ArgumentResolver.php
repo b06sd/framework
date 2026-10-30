@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Trunk\Http\Routing;
 
+use LogicException;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Trunk\Http\Exception\HttpException;
 use Trunk\Router\Definition\ArgumentKind;
@@ -20,10 +22,11 @@ final class ArgumentResolver
     /**
      * @param list<ArgumentPlan>    $plan
      * @param array<string, string> $params
+     * @param ContainerInterface|null $container where the `InputBinder` for #[Body] and #[Query] arguments comes from
      *
      * @return list<mixed>
      */
-    public function resolve(array $plan, ServerRequestInterface $request, array $params): array
+    public function resolve(array $plan, ServerRequestInterface $request, array $params, ?ContainerInterface $container = null): array
     {
         $arguments = [];
 
@@ -31,11 +34,26 @@ final class ArgumentResolver
             $arguments[] = match ($argument['kind']) {
                 ArgumentKind::Request->value => $request,
                 ArgumentKind::Default->value => $argument['default'],
+                ArgumentKind::Body->value, ArgumentKind::Query->value => $this->input($argument, $request, $container),
                 default => $this->param($argument, $params),
             };
         }
 
         return $arguments;
+    }
+
+    /**
+     * @param ArgumentPlan $argument
+     */
+    private function input(array $argument, ServerRequestInterface $request, ?ContainerInterface $container): object
+    {
+        $binder = $container?->get(InputBinder::class);
+
+        if (!$binder instanceof InputBinder || !class_exists($argument['type'])) {
+            throw new LogicException(\sprintf('Parameter $%s is #[Body] or #[Query], which needs the validation capability: trunk package:install validation', $argument['name']));
+        }
+
+        return $binder->bind($argument['type'], $request, $argument['kind'] === ArgumentKind::Query->value);
     }
 
     /**

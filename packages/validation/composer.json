@@ -6,7 +6,8 @@
     "require": {
         "php": ">=8.4.27 <8.5 || >=8.5.12 <9.0",
         "ext-mbstring": "*",
-        "trunkphp/http": "^0.1"
+        "trunkphp/http": "^0.1",
+        "trunkphp/router": "^0.1"
     },
     "autoload": {
         "psr-4": {

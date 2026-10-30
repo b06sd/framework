@@ -120,12 +120,15 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\Http\Pipeline\MiddlewareCollector` (class)
 - `Trunk\Http\Pipeline\MiddlewareProvider` (interface)
 - `Trunk\Http\Response\ResponseBuilder` (class)
+- `Trunk\Http\Routing\InputBinder` (interface)
 - `Trunk\Http\Security\Cors` (class)
 - `Trunk\Http\Security\SecurityHeaders` (class)
 - `Trunk\Http\Server\JsonBody` (class)
 
 ### Router
 
+- `Trunk\Router\Attribute\Body` (class)
+- `Trunk\Router\Attribute\Query` (class)
 - `Trunk\Router\Definition\RouteCollector` (class)
 - `Trunk\Router\Definition\RouteFile` (class)
 - `Trunk\Router\Definition\RouteProvider` (interface)

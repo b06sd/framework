@@ -59,7 +59,7 @@ final readonly class ControllerDispatcher implements RequestHandlerInterface
             throw new LogicException(\sprintf('The container did not return a controller providing %s::%s().', $class, $method));
         }
 
-        $response = $controller->{$method}(...$this->arguments->resolve($match->arguments, $request, $match->params));
+        $response = $controller->{$method}(...$this->arguments->resolve($match->arguments, $request, $match->params, $this->container));
 
         return $response instanceof ResponseInterface
             ? $response

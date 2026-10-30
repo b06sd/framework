@@ -4,6 +4,8 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+* Added: validated handler parameters. `public function store(#[Body] Signup $signup)` receives a valid request object, or the request is a 422 before the controller runs; `#[Query] Filters $filters` does the same for the query string. They sit next to route parameters (`update(int $id, #[Body] Rename $rename)`). The build refuses `#[Body]` on a GET route, two bodies, a nullable or scalar type, a class whose `#[From]` says otherwise, and typed inputs without the validation capability (with the fix). The build finds these classes through the routes, so they need not live in `app/Requests`. `trunk route:list` shows them as `signup:body(Signup)`.
+
 ## 0.1.6
 
 * Security: Trunk now requires a patched PHP runtime, PHP 8.4.27+ or 8.5.12+ (the October 2026 security fixes). Composer refuses older runtimes, `trunk doctor` reports them, and new projects from `trunk new` carry the same constraint.
