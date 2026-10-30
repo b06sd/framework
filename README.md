@@ -19,7 +19,7 @@ export PATH="$(composer global config bin-dir --absolute):$PATH"
 trunk new blog --type=web && cd blog && composer install && php vendor/bin/trunk serve
 ```
 
-Requires PHP 8.4+ and Composer 2. Package page: <https://packagist.org/packages/trunkphp/framework>.
+Requires PHP 8.4.27+ or 8.5.12+ (or a later patched release) and Composer 2. Package page: <https://packagist.org/packages/trunkphp/framework>.
 
 ## Documentation
 
@@ -252,7 +252,7 @@ compatibility rules, the extension points (container tags, capability metadata) 
 
 ## Requirements
 
-PHP 8.4+ and Composer 2.x.
+PHP 8.4.27+ or 8.5.12+ (or a later patched release) and Composer 2.x.
 
 ## Development
 

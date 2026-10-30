@@ -2,7 +2,7 @@
 
 ## Requirements
 
-PHP 8.4 or newer with `mbstring`, `json`, `ctype`, `tokenizer` (and `pdo_sqlite`, `pdo_mysql` or `pdo_pgsql` for a database, `pcntl` for queue timeouts), and Composer 2.
+PHP 8.4.27+ or 8.5.12+ (or a later patched release) with `mbstring`, `json`, `ctype`, `tokenizer` (and `pdo_sqlite`, `pdo_mysql` or `pdo_pgsql` for a database, `pcntl` for queue timeouts), and Composer 2.
 
 ## Get the framework
 

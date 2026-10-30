@@ -47,6 +47,16 @@ final class DoctorDiagnosticsTest extends TestCase
         }
     }
 
+    public function test_unpatched_php_runtime_is_reported(): void
+    {
+        // Arrange & Act
+        [, $output] = $this->doctor([], ['APP_ENV' => 'local']);
+        $patched = (\PHP_VERSION_ID >= 80427 && \PHP_VERSION_ID < 80500) || \PHP_VERSION_ID >= 80512;
+
+        // Assert
+        self::assertSame($patched, !str_contains($output, 'Update PHP to 8.4.27+ or 8.5.12+'));
+    }
+
     public function test_third_party_capabilities_are_listed_with_their_package_and_a_trust_warning(): void
     {
         // Arrange

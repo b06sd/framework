@@ -1,6 +1,6 @@
 # Trunk documentation
 
-Trunk is a PHP 8.4+ framework built around three ideas: **explicit** (constructor injection, no facades, no global helpers, no base classes), **compiled** (`trunk build` validates and precompiles the container, routes, views, ORM maps, job codecs and request plans, and production runs only that build), and **safe by default** (generic errors in production, strict input limits, secrets kept out of the build, layered defences in the auth and http packages).
+Trunk requires a patched PHP runtime: PHP 8.4.27+ or 8.5.12+ (or a later patched release). It is built around three ideas: **explicit** (constructor injection, no facades, no global helpers, no base classes), **compiled** (`trunk build` validates and precompiles the container, routes, views, ORM maps, job codecs and request plans, and production runs only that build), and **safe by default** (generic errors in production, strict input limits, secrets kept out of the build, layered defences in the auth and http packages).
 
 Every example in these guides was run in a real project created with `trunk new` and installed with `composer install`, in development and in the compiled production mode.
 

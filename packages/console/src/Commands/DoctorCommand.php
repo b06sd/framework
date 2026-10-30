@@ -46,8 +46,8 @@ final readonly class DoctorCommand implements Command
         $output->title('Trunk doctor: ' . $this->project->name . ' (' . $this->project->type . ')');
         $output->line();
 
-        $php = $this->atLeast(80400, \PHP_VERSION_ID);
-        $problems += $this->report($output, $php, 'PHP ' . \PHP_VERSION, $php ? '' : 'Trunk needs PHP 8.4 or newer.');
+        $php = (\PHP_VERSION_ID >= 80427 && \PHP_VERSION_ID < 80500) || \PHP_VERSION_ID >= 80512;
+        $problems += $this->report($output, $php, 'PHP ' . \PHP_VERSION, $php ? '' : 'Update PHP to 8.4.27+ or 8.5.12+ (or a later patched release).');
 
         $missing = array_values(array_filter(['mbstring', 'json', 'ctype', 'tokenizer'], static fn(string $e): bool => !\extension_loaded($e)));
         $problems += $this->report($output, $missing === [], 'PHP extensions', $missing === [] ? '' : 'Missing: ' . implode(', ', $missing));

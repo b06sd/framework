@@ -25,6 +25,8 @@ Enable OPcache (`opcache.validate_timestamps=0` in production, with a reload on 
 
 Set real environment variables (not a committed `.env`): `APP_ENV=production` (or unset), `DB_*` including `DB_PASSWORD`, `LOG_CHANNEL=stderr` in containers. Files in `build/` are `0640` in `0750` directories; `trunk doctor` warns about a world-readable `.env` or world-writable `storage/logs`.
 
+Keep the PHP runtime patched independently of application dependencies. PHP 8.4.27 and 8.5.12 include the October 2026 security fixes; use the latest supported patch release for your branch and verify the PHP-FPM/Apache runtime actually serving requests, not only the CLI version. Composer and `trunk doctor` reject PHP versions below these patched floors.
+
 ## Behind a load balancer
 
 List your proxies in `http.trusted_proxies` so scheme, host and client IP are right (HSTS is sent only on https requests, and cookies are `Secure` in production). Set `auth.session.secure` only if you serve https; over plain http, sessions need `secure = false`.

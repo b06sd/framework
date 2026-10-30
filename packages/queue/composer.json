@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": ">=8.4.27 <8.5 || >=8.5.12 <9.0",
         "trunkphp/database": "^0.1",
         "psr/log": "^3.0"
     },
