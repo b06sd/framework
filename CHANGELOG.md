@@ -4,6 +4,10 @@ Notable changes per release. Public API changes are described in `UPGRADE.md`.
 
 ## Unreleased
 
+## 0.1.6
+
+* Security: Trunk now requires a patched PHP runtime, PHP 8.4.27+ or 8.5.12+ (the October 2026 security fixes). Composer refuses older runtimes, `trunk doctor` reports them, and new projects from `trunk new` carry the same constraint.
+
 ## 0.1.5
 
 * Added: the `pdf` capability (`trunkphp/pdf`, `Trunk\Pdf`). `Pdf::render($html, $paper, $orientation)` turns HTML (a Tusk template, typically) into a PDF with dompdf, in pure PHP. Locked down because the HTML carries user text: it never fetches a URL, never runs PHP or JavaScript, and reads local files only from `pdf.assets`. Send it with `ResponseBuilder::download()`. `trunk package:install pdf` (installs `dompdf/dompdf`). See `docs/pdf.md`.

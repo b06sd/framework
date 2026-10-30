@@ -4,6 +4,10 @@ Public API changes are listed here (see `docs/API.md` for what counts as public)
 
 ## Unreleased
 
+## 0.1.6
+
+* Every package now requires `php: >=8.4.27 <8.5 || >=8.5.12 <9.0`. Update PHP (CLI and the FPM/Apache runtime) before running `composer update`, and update the `php` constraint in your project's `composer.json` to match. No API changes.
+
 ## 0.1.5
 
 * New capability **`pdf`** (`packages/pdf`, `Trunk\Pdf`): public types `Pdf`, `PdfModule` and `Exception\PdfException`. Enable it with `trunk package:install pdf`. Nothing changes for an existing project until it does.
