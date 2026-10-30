@@ -12,7 +12,6 @@ use ReflectionEnum;
 use ReflectionEnumBackedCase;
 use ReflectionNamedType;
 use ReflectionProperty;
-use ReflectionType;
 use stdClass;
 use Trunk\Compiler\Exception\CompilationException;
 use Trunk\OpenApi\Exception\OpenApiException;
@@ -254,7 +253,7 @@ final class SchemaBuilder
                 continue;
             }
 
-            $properties[$property->getName()] = $this->type($property->getType(), $listOf[$property->getName()] ?? null);
+            $properties[$property->getName()] = $this->type($property, $listOf[$property->getName()] ?? null);
         }
 
         return self::object($properties, array_keys($properties));
@@ -263,13 +262,22 @@ final class SchemaBuilder
     /**
      * @return array<string, mixed>
      */
-    private function type(?ReflectionType $type, ?string $items): array
+    private function type(ReflectionProperty $property, ?string $items): array
     {
+        $type = $property->getType();
+
         if (!$type instanceof ReflectionNamedType) {
             return [];
         }
 
         $name = $type->getName();
+
+        if ($name === 'self') {
+            $name = $property->getDeclaringClass()->getName();
+        } elseif ($name === 'parent' && ($parent = $property->getDeclaringClass()->getParentClass()) !== false) {
+            $name = $parent->getName();
+        }
+
         $schema = match (true) {
             $name === 'string' => ['type' => 'string'],
             $name === 'int' => ['type' => 'integer'],

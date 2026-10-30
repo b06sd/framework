@@ -42,7 +42,7 @@ final readonly class OrderController
 | the route name, or `order.store` | `operationId` |
 | `#[\Deprecated]` on the handler | `deprecated: true` |
 
-A handler without `#[Returns]` is listed with the response "Not documented yet". A response class is described as `json_encode` writes it: every public property, `DateTimeInterface` as a date-time string, `BcMath\Number` as a decimal string, nested classes as their own schemas, and `#[ListOf(Line::class)] public array $lines` as a list. Trunk does not check that the handler really returns that shape.
+A handler without `#[Returns]` is listed with the response "Not documented yet". A response class is described as `json_encode` writes it: every public property, `DateTimeInterface` as a date-time string, `BcMath\Number` as a decimal string, nested classes as their own schemas, and `#[ListOf(Line::class)] public array $lines` as a list. Property types `self` and `parent` refer to the property's declaring class and its parent, including inherited properties; nullable references such as `?self` also allow `null`. Trunk does not check that the handler really returns that shape.
 
 ## Seeing it
 
