@@ -119,6 +119,41 @@ final class Auth
     }
 
     /**
+     * Asks the signed-in user for their password again before something sensitive (creating an API
+     * token, changing an email address), so a session someone else got hold of is not enough. Failures
+     * are throttled like logins.
+     *
+     * @throws \Trunk\Http\Exception\HttpException 429 when there have been too many failed attempts
+     */
+    public function confirmPassword(#[SensitiveParameter] string $password): bool
+    {
+        $user = $this->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        $key = 'confirm:' . $user->authId();
+        $address = $this->address();
+        $this->throttle->assertAllowed($key, $address);
+        $hash = $user->authPasswordHash();
+
+        if ($hash === '' || !$this->hasher->verify($password, $hash)) {
+            if ($hash === '') {
+                $this->burn();
+            }
+
+            $this->throttle->recordFailure($key, $address);
+
+            return false;
+        }
+
+        $this->throttle->clear($key, $address);
+
+        return true;
+    }
+
+    /**
      * Signs a user in without a password (after email verification, single sign-on...). The session id
      * changes and a fresh lifetime starts, so a session an attacker planted earlier is worthless.
      */

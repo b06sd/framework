@@ -182,6 +182,15 @@ final class BuiltInCapabilities
                 composer: ['firebase/php-jwt' => '^7.2'],
             ),
             new Capability(
+                'api-tokens',
+                'API token page',
+                'A page where signed-in users create, see and revoke their own API tokens',
+                ['Trunk\\ApiTokens\\ApiTokensModule'],
+                requires: ['auth', 'mvc'],
+                config: ['api_tokens' => $root . '/packages/api-tokens/resources/config/api_tokens.php'],
+                views: ['account/tokens' => $root . '/packages/api-tokens/resources/views/account/tokens.tusk.php'],
+            ),
+            new Capability(
                 'health',
                 'Health',
                 'Liveness and readiness endpoints, and an optional token-protected /metrics',

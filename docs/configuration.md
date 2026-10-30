@@ -73,6 +73,7 @@ Config files are `config/<name>.php` returning an array, or a closure taking `Ru
 | `storage.php` | `default` (`STORAGE_DISK`), `disks.*` (`driver`: `local` with `root`, `s3` with `bucket` `region` `key` `secret` `endpoint` `path_style` `prefix`, or `memory`) |
 | `pdf.php` | `paper` (`PDF_PAPER`), `assets` (the only directory documents may load files from), `cache` |
 | `jwt.php` | `issuer`, `audience`, `jwks_url`, `algorithms` (default `['RS256']`; `none` never), `secret` (HS only), `leeway` (30 s), `cache_ttl` (1 h), `cache`, `user.claim` / `user.match` (`id`, `identifier`, `none`), `scopes` (claims that become abilities) |
+| `api_tokens.php` | `abilities` offered on the token page (empty: full access), `max_active` tokens per user (20) |
 | `openapi.php` | `title` (`APP_NAME`), `version`, `description`, `servers`, `serve` (GET /docs and /openapi.json; local only by default), `security` (your middleware => scheme) |
 | `mail.php` | `dsn` (secret, `MAIL_DSN`), `from.address`, `from.name` |
 | `pipeline.php` | `pipelines` (discovered from `app/Pipelines/*.php`), `table`, `job` |

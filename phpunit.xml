@@ -55,6 +55,7 @@
             <directory>packages/storage/src</directory>
             <directory>packages/pdf/src</directory>
             <directory>packages/openapi/src</directory>
+            <directory>packages/api-tokens/src</directory>
         </include>
     </source>
 </phpunit>

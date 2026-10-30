@@ -30,8 +30,8 @@ final class AuthClient
     }
 
     /**
-     * @param array<string, string> $form
-     * @param array<string, string> $headers
+     * @param array<string, string|list<string>> $form
+     * @param array<string, string>               $headers
      */
     public function post(string $path, array $form = [], array $headers = []): ResponseInterface
     {
@@ -39,8 +39,8 @@ final class AuthClient
     }
 
     /**
-     * @param array<string, string>|null $form
-     * @param array<string, string>      $headers
+     * @param array<string, string|list<string>>|null $form
+     * @param array<string, string>                   $headers
      */
     public function send(string $method, string $path, ?array $form, array $headers = [], ?string $address = null): ResponseInterface
     {

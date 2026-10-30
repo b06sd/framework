@@ -22,6 +22,7 @@ final readonly class Capability
      * @param list<string>          $directories project directories to create (each gets a .gitkeep)
      * @param array<string, string> $composer    Composer packages (or ext-* extensions) the capability's code needs beyond the core, name => constraint; built-in capabilities only, never read from third-party metadata
      * @param array<string, list<string>> $integrations capability id => modules that are added only while that other capability is also enabled (e.g. cache + console => cache:clear)
+     * @param array<string, string> $views       template name => absolute path of a stub to publish as resources/views/<name>.tusk.php, the project's own to change; built-in capabilities only
      */
     public function __construct(
         public string $id,
@@ -35,6 +36,7 @@ final readonly class Capability
         public array $integrations = [],
         public string $package = 'trunkphp/framework',
         public array $composer = [],
+        public array $views = [],
     ) {}
 
     public function isBuiltIn(): bool

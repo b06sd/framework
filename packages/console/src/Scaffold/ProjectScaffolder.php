@@ -75,6 +75,10 @@ final readonly class ProjectScaffolder
             foreach (array_keys($capability->config) as $config) {
                 $created[] = 'config/' . $config . '.php';
             }
+
+            foreach (array_keys($capability->views) as $view) {
+                $created[] = 'resources/views/' . $view . '.tusk.php';
+            }
         }
 
         return $created;

@@ -113,6 +113,10 @@ $routes->group('/api', static function (RouteCollector $api): void {
 curl -H "Authorization: Bearer trk_XXXXXXXXXXXXXXXX.…" localhost:8006/api/me
 ```
 
+### The token page
+
+In a web project, `trunk package:install api-tokens` adds `/account/tokens`, where a signed-in user creates, sees and revokes their own tokens. Creating one asks for the password again (throttled like a login), and the new token is shown once, in that response only: it is never stored, not even in the session, and a form the browser sends twice (reload) never makes a second token. Revoking takes effect at once. The page is `resources/views/account/tokens.tusk.php` in your project, published on install, so restyle or reword it freely (it uses the `app` layout). `config/api_tokens.php`: `abilities` the user may choose from (`['read', 'write:orders']`; empty means every token has full access) and `max_active` per user (20). Your own pages can ask for the password again the same way: `$auth->confirmPassword($password)`.
+
 `trk_<id>.<secret>`: the database keeps only the secret's hash; unknown, expired, revoked, malformed and orphaned tokens all give the same 401 with `WWW-Authenticate: Bearer`. A token is tied to its owner's `session_version`. In the route, `$auth->user()` is the owner and `$auth->tokenCan('write:posts')` checks what the token may do. Issue from code with `TokenManager::issue($user, 'ci', ['read'], ttl: 3600)` (returns a `NewToken`; show `->plainText` once); `revoke($id)`, `revokeAllFor($user)`.
 
 ## Password reset and email verification

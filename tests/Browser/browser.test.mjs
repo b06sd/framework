@@ -18,6 +18,8 @@ let appPort;
 let attackerPort;
 let docsPort;
 let docsDirectory;
+let tokensPort;
+let tokensDirectory;
 let servers = [];
 let browser;
 let chromeVersion;
@@ -71,6 +73,11 @@ before(async () => {
     docsDirectory = mkdtempSync(join(tmpdir(), 'trunk-browser-docs-'));
     docsPort = await freePort();
     await start('docs.php', docsPort, '127.0.0.1', { TRUNK_BROWSER_DIR: docsDirectory });
+    // Its own database: the login tests above lock Ada's account on purpose.
+    tokensDirectory = mkdtempSync(join(tmpdir(), 'trunk-browser-tokens-'));
+    execFileSync(php, [join(here, 'server/tool.php'), tokensDirectory, 'setup']);
+    tokensPort = await freePort();
+    await start('tokens.php', tokensPort, '127.0.0.1', { TRUNK_BROWSER_DIR: tokensDirectory });
     browser = await chromium.launch({ executablePath: process.env.TRUNK_CHROME, headless: true });
     chromeVersion = browser.version();
     console.log(`# Chrome ${chromeVersion}, PHP ${execFileSync(php, ['-r', 'echo PHP_VERSION;'], { encoding: 'utf8' })}`);
@@ -88,6 +95,7 @@ after(async () => {
     }
     rmSync(directory, { recursive: true, force: true });
     rmSync(docsDirectory, { recursive: true, force: true });
+    rmSync(tokensDirectory, { recursive: true, force: true });
 });
 
 describe('signing in and out with real forms', () => {
@@ -319,6 +327,77 @@ describe('API documentation (openapi capability)', () => {
         assert.ok(operations.includes('/orders/{id}'));
         assert.equal(await page.textContent('.title'), 'Shop API 1.0.0 OAS 3.1');
         assert.deepEqual(problems, [], 'no script errors and no policy or integrity violations');
+        await context.close();
+    });
+});
+
+describe('the API token page (api-tokens capability)', () => {
+    const tokens = (path = '') => `http://127.0.0.1:${tokensPort}${path}`;
+    const shot = async (page, name) => {
+        if (process.env.TRUNK_SCREENSHOTS) await page.waitForTimeout(900), await page.screenshot({ path: join(process.env.TRUNK_SCREENSHOTS, `${name}.png`), fullPage: true });
+    };
+
+    it('a signed-in user creates a token, copies it once, uses it, and revokes it', async () => {
+        const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+        const page = await context.newPage();
+        const problems = [];
+        page.on('pageerror', (error) => problems.push(error.message));
+        await page.goto(tokens('/web/form'));
+        await page.fill('#email', 'ada@example.com');
+        await page.fill('#password', password);
+        await Promise.all([page.waitForLoadState('load'), page.click('button[type=submit]')]);
+
+        const list = await page.goto(tokens('/account/tokens'));
+        assert.equal(list.status(), 200);
+        assert.equal(list.headers()['cache-control'], 'no-store');
+        await shot(page, 'tokens-empty');
+
+        await page.fill('input[name=name]', 'Nightly export');
+        await page.check('input[value=read]');
+        await page.selectOption('select[name=days]', '90');
+        await page.fill('input[name=password]', password);
+        await Promise.all([page.waitForLoadState('load'), page.click('form.create button[type=submit]')]);
+        const token = (await page.textContent('#path')).trim();
+        assert.match(token, /^trk_[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{43}$/);
+        await shot(page, 'tokens-created');
+
+        await page.click('#path');
+        assert.equal(await page.evaluate(() => navigator.clipboard.readText()), token, 'a click copies the token');
+
+        const api = await page.evaluate(async (t) => (await fetch('/api/whoami', { headers: { Authorization: `Bearer ${t}` }, credentials: 'omit' })).json(), token);
+        assert.deepEqual(api, { id: '1', viaToken: true, canRead: true, canWrite: false });
+
+        // The browser's reload sends the form again: no second token, back to the list, secret not shown.
+        page.on('dialog', (dialog) => dialog.accept());
+        await page.reload();
+        assert.match(page.url(), /done=stale/);
+        assert.equal(await page.$('#path'), null, 'the secret is never shown again');
+        assert.match(await page.textContent('.notice'), /nothing was created/);
+        assert.equal(await page.locator('tr', { hasText: 'Nightly export' }).count(), 1, 'one token, not two');
+        const row = page.locator('tr', { hasText: 'Nightly export' });
+        assert.match(await row.textContent(), /read.*Active/s);
+        await Promise.all([page.waitForURL(/done=revoked/), row.locator('button', { hasText: 'Revoke' }).click()]);
+        assert.match(await page.textContent('.notice'), /revoked/);
+        assert.match(await page.locator('tr', { hasText: 'Nightly export' }).textContent(), /Revoked/);
+        await shot(page, 'tokens-revoked');
+
+        const after = await page.evaluate(async (t) => (await fetch('/api/whoami', { headers: { Authorization: `Bearer ${t}` }, credentials: 'omit' })).status, token);
+        assert.equal(after, 401);
+        assert.deepEqual(problems, []);
+        await context.close();
+    });
+
+    it('the page reads well in dark mode and on a phone', async () => {
+        const context = await browser.newContext({ colorScheme: 'dark', viewport: { width: 390, height: 844 } });
+        const page = await context.newPage();
+        await page.goto(tokens('/web/form'));
+        await page.fill('#email', 'ada@example.com');
+        await page.fill('#password', password);
+        await Promise.all([page.waitForLoadState('load'), page.click('button[type=submit]')]);
+        await page.goto(tokens('/account/tokens'));
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        assert.equal(overflow, 0, 'no sideways scrolling at phone width');
+        await shot(page, 'tokens-dark-phone');
         await context.close();
     });
 });

@@ -349,4 +349,8 @@ code, log message wording, exception message wording, and the output text of com
 - `Trunk\OpenApi\OpenApi` (class)
 - `Trunk\OpenApi\OpenApiModule` (class)
 
+### ApiTokens
+
+- `Trunk\ApiTokens\ApiTokensModule` (class)
+
 <!-- api-list:end -->

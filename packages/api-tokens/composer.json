@@ -1,0 +1,25 @@
+{
+    "name": "trunkphp/api-tokens",
+    "description": "A page where signed-in users of a Trunk web application create, see and revoke their own API tokens.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4.27 <8.5 || >=8.5.12 <9.0",
+        "trunkphp/auth": "^0.1",
+        "trunkphp/http": "^0.1",
+        "trunkphp/mvc": "^0.1",
+        "trunkphp/router": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunk\\ApiTokens\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

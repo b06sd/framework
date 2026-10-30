@@ -10,7 +10,7 @@ use Trunk\Foundation\Project\Project;
 use Trunk\Support\FileWriter;
 
 /**
- * Adds what a capability needs to the project: its config file, its .env settings and its
+ * Adds what a capability needs to the project: its config file, its views, its .env settings and its
  * directories. Nothing that already exists is ever overwritten.
  */
 final readonly class CapabilityPublisher
@@ -45,6 +45,27 @@ final readonly class CapabilityPublisher
             is_dir($project->configDirectory()) || mkdir($project->configDirectory(), 0o755, true);
             $this->files->write($destination, $contents);
             $changes[] = \sprintf('Created config/%s.php.', $name);
+        }
+
+        foreach ($capability->views as $name => $stub) {
+            $relative = 'resources/views/' . $name . '.tusk.php';
+            $destination = $project->path($relative);
+
+            if (is_file($destination)) {
+                $changes[] = \sprintf('Kept your existing %s.', $relative);
+
+                continue;
+            }
+
+            $contents = file_get_contents($stub);
+
+            if ($contents === false) {
+                throw new ProjectException(\sprintf('The view stub for "%s" could not be read.', $name));
+            }
+
+            is_dir(\dirname($destination)) || mkdir(\dirname($destination), 0o755, true);
+            $this->files->write($destination, $contents);
+            $changes[] = \sprintf('Created %s.', $relative);
         }
 
         foreach (['.env.example', '.env'] as $file) {

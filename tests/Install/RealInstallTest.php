@@ -362,6 +362,27 @@ final class RealInstallTest extends TestCase
         self::assertStringContainsString('"code":"AUTHENTICATION_REQUIRED"', $refused);
     }
 
+    public function test_the_api_token_page_installs_into_a_web_project_and_its_view_is_the_projects_own(): void
+    {
+        // Arrange
+        $project = $this->project = new ScaffoldedProject('portal', 'web', realInstall: true);
+        $dir = $project->directory;
+
+        // Act
+        [$installCode, $installOut, $installErr] = $project->trunk(['package:install', 'api-tokens']);
+        [$buildCode, $buildOut, $buildErr] = $project->trunk(['build']);
+        [, $body, $error] = $project->request('GET', '/account/tokens', 'production', accept: 'application/json');
+
+        // Assert
+        self::assertSame(0, $installCode, $installOut . $installErr);
+        self::assertStringContainsString('resources/views/account/tokens.tusk.php', $installOut);
+        self::assertFileExists($dir . '/resources/views/account/tokens.tusk.php');
+        self::assertFileExists($dir . '/config/api_tokens.php');
+        self::assertSame(0, $buildCode, $buildOut . $buildErr);
+        self::assertStringContainsString('"code":"AUTHENTICATION_REQUIRED"', $body, $error);
+        self::assertStringNotContainsString('Your tokens', $body, 'a visitor who is not signed in never sees the page');
+    }
+
     public function test_enabling_a_capability_installs_what_it_needs(): void
     {
         // Arrange

@@ -53,7 +53,8 @@
             "Trunk\\Mail\\": "packages/mail/src/",
             "Trunk\\Storage\\": "packages/storage/src/",
             "Trunk\\Pdf\\": "packages/pdf/src/",
-            "Trunk\\OpenApi\\": "packages/openapi/src/"
+            "Trunk\\OpenApi\\": "packages/openapi/src/",
+            "Trunk\\ApiTokens\\": "packages/api-tokens/src/"
         }
     },
     "autoload-dev": {
